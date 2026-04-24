@@ -6,6 +6,8 @@ from waste_management import views
 from waste_management.views import migrate_database 
 
 urlpatterns = [
+    path('create-admin/', create_admin, name='create_admin'),  # Add this line
+
     path('migrate/', migrate_database, name='migrate'),
 
     path('admin/', admin.site.urls),

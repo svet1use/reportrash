@@ -4571,3 +4571,22 @@ def migrate_database(request):
         return JsonResponse({'status': 'success', 'message': 'Migrations completed'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+from django.contrib.auth.models import User
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def create_admin(request):
+    secret = request.GET.get('secret', '')
+    if secret != 'migrate_reportrash_2024':
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    try:
+        if not User.objects.filter(username='admin').exists():
+            User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
+            return JsonResponse({'status': 'success', 'message': 'Superuser created! Username: admin, Password: admin123'})
+        else:
+            return JsonResponse({'status': 'info', 'message': 'Superuser already exists'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
