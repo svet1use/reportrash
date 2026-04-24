@@ -4554,3 +4554,20 @@ def migrate_database(request):
             'message': str(e),
             'traceback': traceback.format_exc()
         }, status=500)
+
+# Temporary migration endpoint
+from django.core.management import call_command
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def migrate_database(request):
+    secret = request.GET.get('secret', '')
+    if secret != 'migrate_reportrash_2024':
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    try:
+        call_command('migrate', interactive=False)
+        return JsonResponse({'status': 'success', 'message': 'Migrations completed'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
