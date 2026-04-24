@@ -4531,4 +4531,26 @@ def user_chat_page(request):
     return render(request, 'waste_management/user_chat.html')
 
 
+from django.http import JsonResponse
+from django.core.management import call_command
+from django.views.decorators.csrf import csrf_exempt
+import traceback
 
+@csrf_exempt
+def migrate_database(request):
+    """Temporary endpoint to run migrations"""
+    # Only allow in production or with a secret key
+    secret = request.GET.get('secret', '')
+    if secret != 'migrate_reportrash_2024':
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    try:
+        # Run migrations
+        call_command('migrate', interactive=False)
+        return JsonResponse({'status': 'success', 'message': 'Migrations completed successfully'})
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error', 
+            'message': str(e),
+            'traceback': traceback.format_exc()
+        }, status=500)
