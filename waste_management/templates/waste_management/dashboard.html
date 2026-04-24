@@ -1,0 +1,1597 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}Dashboard — ReporTrash{% endblock %}
+
+{% block extra_styles %}
+.dashboard-hero {
+  padding: 16px 16px 0;
+  position: relative;
+  overflow: hidden;
+}
+.hero-greeting {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+.hero-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+}
+.hero-name span {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,255,135,0.08);
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.xp-bar-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 12px 0;
+}
+.xp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.xp-label { font-size: 0.72rem; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+.xp-val { font-size: 0.8rem; font-weight: 700; color: var(--accent); }
+
+.progress-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s var(--transition-bounce);
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  transition: all 0.3s var(--transition-smooth);
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0,255,135,0.2);
+  box-shadow: 0 10px 30px rgba(0,255,135,0.1);
+}
+.stat-icon { font-size: 22px; margin-bottom: 8px; }
+.stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 6px;
+  font-family: 'DM Mono', monospace;
+}
+
+/* Chart Containers */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 18px;
+}
+.chart-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chart-container {
+  height: 200px;
+  position: relative;
+}
+.chart-container canvas {
+  max-height: 200px;
+  width: 100%;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: -0.3px;
+}
+.section-link {
+  font-size: 0.75rem;
+  color: var(--accent);
+  text-decoration: none;
+  font-family: 'DM Mono', monospace;
+  transition: color 0.3s ease;
+}
+.section-link:hover {
+  color: var(--accent2);
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+.cat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: visible;
+  z-index: 1;
+}
+.cat-card:hover {
+  transform: scale(1.04) translateY(-2px);
+  z-index: 100;
+}
+.cat-icon { font-size: 1.6rem; margin-bottom: 6px; }
+.cat-name { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'DM Mono', monospace; }
+.cat-label { font-size: 0.6rem; color: var(--text-muted); margin-top: 2px; }
+
+/* Tooltip styles — same as report page */
+.cat-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 0.7rem;
+  font-family: 'Space Grotesk', sans-serif;
+  white-space: normal;
+  width: 220px;
+  z-index: 99999;
+  margin-bottom: 12px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.2s ease;
+  text-align: left;
+  line-height: 1.5;
+}
+.cat-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: var(--bg-deep) transparent transparent transparent;
+}
+.cat-tooltip .tooltip-title {
+  font-weight: 700;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+}
+.cat-tooltip .tooltip-example {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--glass-border);
+}
+.cat-card:hover .cat-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-8px);
+}
+body.light-mode .cat-tooltip {
+  background: #ffffff;
+  color: #030a0e;
+  border-color: #d0d5dd;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+body.light-mode .cat-tooltip::after {
+  border-color: #ffffff transparent transparent transparent;
+}
+
+.schedule-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.schedule-strip::-webkit-scrollbar { display: none; }
+.sched-card {
+  flex-shrink: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 12px 16px;
+  min-width: 140px;
+}
+.sched-time { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--accent); margin-bottom: 3px; }
+.sched-type { font-size: 0.8rem; font-weight: 600; }
+.sched-purok { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+
+.announcement-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.announcement-card:hover { background: var(--bg-card-hover); }
+.ann-icon { font-size: 1.5rem; flex-shrink: 0; }
+.ann-title { font-size: 0.875rem; font-weight: 600; margin-bottom: 2px; }
+.ann-content { font-size: 0.78rem; color: var(--text-muted); }
+.ann-priority-urgent { border-left: 3px solid var(--danger); }
+.ann-priority-high { border-left: 3px solid var(--warning); }
+.ann-priority-medium { border-left: 3px solid var(--accent2); }
+
+.report-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.report-item:last-child { border-bottom: none; }
+.report-info { flex: 1; }
+.report-title { font-size: 0.875rem; font-weight: 600; margin-bottom: 2px; }
+.report-meta { font-size: 0.7rem; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.quick-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+  color: inherit;
+}
+.quick-btn:hover {
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+}
+.quick-btn-icon { font-size: 1.6rem; }
+.quick-btn-label { font-size: 0.78rem; font-weight: 600; text-align: center; }
+
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s var(--transition-smooth);
+}
+.glass-card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255,255,255,0.15);
+  transform: translateY(-2px);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+}
+.badge-bio { background: rgba(34,197,94,0.15); color: var(--cat-bio); }
+.badge-rec { background: rgba(59,130,246,0.15); color: var(--cat-rec); }
+.badge-res { background: rgba(148,163,184,0.15); color: var(--cat-res); }
+.badge-spe { background: rgba(245,158,11,0.15); color: var(--cat-spe); }
+.badge-haz { background: rgba(239,68,68,0.15); color: var(--cat-haz); }
+.badge-elec { background: rgba(168,85,247,0.15); color: var(--cat-elec); }
+
+.status-badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+}
+.status-pending { background: rgba(245,158,11,0.15); color: var(--warning); }
+.status-collected { background: rgba(34,197,94,0.15); color: var(--success); }
+.status-processed { background: rgba(0,212,255,0.15); color: var(--accent2); }
+.status-disposed { background: rgba(148,163,184,0.15); color: var(--text-secondary); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: var(--bg-deep);
+  box-shadow: 0 4px 20px rgba(0,255,135,0.3);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,255,135,0.45);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .charts-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .stats-grid {
+    gap: 10px;
+  }
+  .stat-card {
+    padding: 12px;
+  }
+  .stat-value {
+    font-size: 1.4rem;
+  }
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .cat-tooltip {
+    width: 180px;
+    font-size: 0.65rem;
+    padding: 8px 12px;
+    left: 0;
+    transform: translateX(0);
+  }
+  .cat-tooltip::after {
+    left: 20px;
+    transform: translateX(0);
+  }
+  .cat-card:hover .cat-tooltip {
+    transform: translateX(0) translateY(-8px);
+  }
+  .hero-name {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hero-name {
+    font-size: 1.3rem;
+  }
+  .category-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .cat-tooltip {
+    width: 160px;
+  }
+}
+
+/* ============================================
+   LIGHT MODE OVERRIDES - Black Outlines & Text
+   ============================================ */
+body.light-mode {
+  --bg-card: rgba(0, 0, 0, 0.03);
+  --bg-card-hover: rgba(0, 0, 0, 0.05);
+  --glass-border: #000000;
+  --glass-strong: rgba(0, 0, 0, 0.2);
+  --text-muted: #000000;  /* Changed from rgba to solid black */
+  --text-secondary: #000000;  /* Changed from rgba to solid black */
+}
+
+/* All containers get BLACK borders (no hover needed) */
+body.light-mode .glass-card,
+body.light-mode .stat-card,
+body.light-mode .chart-card,
+body.light-mode .cat-card,
+body.light-mode .sched-card,
+body.light-mode .announcement-card,
+body.light-mode .quick-btn,
+body.light-mode .xp-bar-wrap {
+  border-color: #000000 !important;
+  border-width: 1.5px !important;
+  background: #ffffff;
+}
+
+/* Announcement cards keep their colored left border */
+body.light-mode .announcement-card {
+  border-left-width: 3px !important;
+}
+body.light-mode .ann-priority-urgent {
+  border-left-color: var(--danger) !important;
+}
+body.light-mode .ann-priority-high {
+  border-left-color: var(--warning) !important;
+}
+body.light-mode .ann-priority-medium {
+  border-left-color: var(--accent2) !important;
+}
+
+/* Hover effects - border stays black */
+body.light-mode .glass-card:hover,
+body.light-mode .stat-card:hover,
+body.light-mode .cat-card:hover,
+body.light-mode .announcement-card:hover,
+body.light-mode .quick-btn:hover {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+}
+
+/* ALL text that was gray becomes BLACK */
+body.light-mode .hero-greeting,
+body.light-mode .xp-label,
+body.light-mode .stat-label,
+body.light-mode .cat-label,
+body.light-mode .report-meta,
+body.light-mode .sched-purok,
+body.light-mode .ann-content,
+body.light-mode .section-link,
+body.light-mode .hero-level,
+body.light-mode .xp-header .xp-label,
+body.light-mode .status-badge,
+body.light-mode .badge,
+body.light-mode .announcement-card .ann-content,
+body.light-mode .report-item .report-meta,
+body.light-mode .sched-card .sched-purok,
+body.light-mode .modal .modal-handle,
+body.light-mode .modal .btn-glass {
+  color: #000000 !important;
+}
+
+/* Keep colored text as is (accent colors) */
+body.light-mode .hero-name span,
+body.light-mode .stat-value[style*="color: var(--accent)"],
+body.light-mode .stat-value[style*="color: var(--accent2)"],
+body.light-mode .stat-value[style*="color: var(--accent3)"],
+body.light-mode .stat-value[style*="color: var(--warning)"],
+body.light-mode .section-link,
+body.light-mode .hero-level i,
+body.light-mode .hero-level {
+  color: inherit !important;
+}
+
+/* Specific colored elements keep their colors */
+body.light-mode .xp-header .xp-val {
+  color: #059669 !important;
+}
+
+body.light-mode .stat-value[style*="color: var(--accent)"] {
+  color: #059669 !important;
+}
+
+body.light-mode .stat-value[style*="color: var(--accent2)"] {
+  color: #0284c7 !important;
+}
+
+body.light-mode .stat-value[style*="color: var(--accent3)"] {
+  color: #ea580c !important;
+}
+
+body.light-mode .stat-value[style*="color: var(--warning)"] {
+  color: #d97706 !important;
+}
+
+/* Category cards - keep colored text */
+body.light-mode .cat-name {
+  opacity: 1;
+}
+
+body.light-mode .badge-bio { color: var(--cat-bio) !important; }
+body.light-mode .badge-rec { color: var(--cat-rec) !important; }
+body.light-mode .badge-res { color: var(--cat-res) !important; }
+body.light-mode .badge-spe { color: var(--cat-spe) !important; }
+body.light-mode .badge-haz { color: var(--cat-haz) !important; }
+body.light-mode .badge-elec { color: var(--cat-elec) !important; }
+
+body.light-mode .status-pending { color: var(--warning) !important; }
+body.light-mode .status-collected { color: var(--success) !important; }
+body.light-mode .status-processed { color: var(--accent2) !important; }
+body.light-mode .status-disposed { color: var(--text-secondary) !important; }
+
+/* Progress bar text */
+body.light-mode .progress-bar {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Report items border */
+body.light-mode .report-item {
+  border-bottom-color: rgba(0, 0, 0, 0.15);
+}
+
+/* Modal in light mode */
+body.light-mode .modal {
+  background: #ffffff;
+  border: 1.5px solid #000000;
+}
+
+body.light-mode .modal .btn-glass {
+  border-color: #000000;
+  background: #f5f5f5;
+  color: #000000;
+}
+
+body.light-mode .modal .btn-glass:hover {
+  background: #e5e5e5;
+}
+
+/* Quick action buttons text */
+body.light-mode .quick-btn-label {
+  color: #000000 !important;
+}
+
+/* Schedule card time (keep accent color) */
+body.light-mode .sched-time {
+  color: #059669 !important;
+}
+
+/* ============================================
+   GUIDELINES STYLES
+   ============================================ */
+.guidelines-modal .modal {
+  max-width: 680px;
+  max-height: 85vh;
+}
+
+.guidelines-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.guidelines-section {
+  margin-bottom: 8px;
+}
+
+.guidelines-section h4 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guidelines-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.guidelines-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 16px;
+  transition: all 0.3s var(--transition-smooth);
+}
+
+.guidelines-card:hover {
+  transform: translateY(-2px);
+  background: var(--bg-card-hover);
+  border-color: var(--glass-strong);
+}
+
+.guidelines-card .card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.guidelines-card .card-header i {
+  font-size: 1.4rem;
+}
+
+.guidelines-card.do .card-header i { color: var(--success); }
+.guidelines-card.dont .card-header i { color: var(--danger); }
+.guidelines-card.tip .card-header i { color: var(--accent2); }
+
+.guidelines-card .card-header h5 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.guidelines-card ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.guidelines-card li {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.guidelines-card li:last-child {
+  margin-bottom: 0;
+}
+
+.guidelines-card.do li { list-style-type: '✓ '; }
+.guidelines-card.dont li { list-style-type: '✗ '; }
+.guidelines-card.tip li { list-style-type: '💡 '; }
+
+.guidelines-card.do li::marker { color: var(--success); }
+.guidelines-card.dont li::marker { color: var(--danger); }
+.guidelines-card.tip li::marker { color: var(--accent2); }
+
+.guidelines-footer {
+  background: rgba(0,255,135,0.08);
+  border-radius: 16px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  border: 1px solid rgba(0,255,135,0.15);
+  margin-top: 8px;
+}
+
+.guidelines-footer p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-family: 'DM Mono', monospace;
+}
+
+.guidelines-footer .btn-sm {
+  padding: 6px 14px;
+  font-size: 0.7rem;
+}
+
+/* Guidelines Quick Access Card in Dashboard */
+.guidelines-quick-card {
+  background: linear-gradient(135deg, rgba(0,255,135,0.05), rgba(0,212,255,0.05));
+  border: 1px solid rgba(0,255,135,0.2);
+  border-radius: 20px;
+  padding: 16px 20px;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.3s var(--transition-smooth);
+}
+
+.guidelines-quick-card:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(0,255,135,0.1), rgba(0,212,255,0.1));
+  border-color: rgba(0,255,135,0.4);
+}
+
+.guidelines-quick-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.guidelines-quick-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(0,255,135,0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.guidelines-quick-text h4 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0 0 2px 0;
+}
+
+.guidelines-quick-text p {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.guidelines-quick-btn {
+  background: var(--accent);
+  color: var(--bg-deep);
+  border: none;
+  padding: 8px 18px;
+  border-radius: 40px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'DM Mono', monospace;
+}
+
+.guidelines-quick-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(0,255,135,0.3);
+}
+
+/* ============================================
+   LIGHT MODE - GUIDELINES (Black Outlines)
+   ============================================ */
+body.light-mode .guidelines-card {
+  background: #ffffff;
+  border-color: #000000 !important;
+  border-width: 1.5px !important;
+}
+
+body.light-mode .guidelines-card:hover {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+}
+
+body.light-mode .guidelines-card .card-header {
+  border-bottom-color: rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode .guidelines-card li {
+  color: #030a0e;
+}
+
+body.light-mode .guidelines-footer {
+  background: rgba(5, 150, 105, 0.08);
+  border: 1.5px solid #000000;
+}
+
+body.light-mode .guidelines-footer p {
+  color: #059669;
+}
+
+body.light-mode .guidelines-quick-card {
+  background: #ffffff;
+  border: 1.5px solid #000000 !important;
+}
+
+body.light-mode .guidelines-quick-card:hover {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+}
+
+body.light-mode .guidelines-quick-icon {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode .guidelines-quick-text h4 {
+  color: #030a0e;
+}
+
+body.light-mode .guidelines-quick-text p {
+  color: #666666;
+}
+
+body.light-mode .guidelines-quick-btn {
+  background: #059669;
+  color: #ffffff;
+}
+
+body.light-mode .guidelines-modal .modal {
+  background: #ffffff;
+  border: 1.5px solid #000000;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .guidelines-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .guidelines-quick-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .guidelines-quick-left {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .guidelines-modal .modal {
+    max-width: 95%;
+    padding: 20px;
+  }
+  
+  .guidelines-footer {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+{% endblock %}
+
+{% block content %}
+
+<!-- Announcement Detail Modal -->
+<div class="modal-overlay" id="annModal">
+  <div class="modal" style="max-width:560px; padding:28px;">
+    <div class="modal-handle"></div>
+    <div id="annModalBody"></div>
+    <button class="btn btn-glass" onclick="closeAnnModal()" style="width:100%; justify-content:center; margin-top:20px;">
+      <i class="fas fa-times"></i> Close
+    </button>
+  </div>
+</div>
+
+<!-- Guidelines Modal -->
+<div class="modal-overlay" id="guidelinesModal">
+  <div class="modal guidelines-modal" style="max-width: 680px; padding: 28px;">
+    <div class="modal-handle"></div>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+      <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 18px; display: flex; align-items: center; justify-content: center;">
+        <i class="fas fa-clipboard-list" style="color: var(--bg-deep); font-size: 1.5rem;"></i>
+      </div>
+      <div>
+        <h2 style="font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; margin: 0;">Community Guidelines</h2>
+        <p style="font-size: 0.7rem; color: var(--text-muted); margin: 4px 0 0 0; font-family: 'DM Mono', monospace;">Do's & Don'ts — Keeping our waste management system effective</p>
+      </div>
+      <button onclick="closeGuidelinesModal()" style="margin-left: auto; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="guidelines-content">
+      <div class="guidelines-grid">
+        <!-- DO's Section -->
+        <div class="guidelines-card do">
+          <div class="card-header">
+            <i class="fas fa-check-circle"></i>
+            <h5>DO's — Best Practices</h5>
+          </div>
+          <ul>
+            <li>Take clear, well-lit photos of waste before reporting</li>
+            <li>Provide accurate location details (address, purok, landmarks)</li>
+            <li>Select the correct waste category for your report</li>
+            <li>Include detailed descriptions of the waste type and volume</li>
+            <li>Update your profile with correct contact information</li>
+            <li>Follow your barangay's collection schedule</li>
+            <li>Respond to admin notes or verification requests</li>
+            <li>Separate waste properly before disposal</li>
+            <li>Report only actual, existing waste issues in your area</li>
+            <li>Engage respectfully in community discussions</li>
+          </ul>
+        </div>
+
+        <!-- DON'Ts Section -->
+        <div class="guidelines-card dont">
+          <div class="card-header">
+            <i class="fas fa-ban"></i>
+            <h5>DON'Ts — Strictly Prohibited</h5>
+          </div>
+          <ul>
+            <li>Don't upload fake, stock, or AI-generated images</li>
+            <li>Don't submit duplicate reports for the same issue</li>
+            <li>Don't report non-existent or false waste problems</li>
+            <li>Don't use offensive language in descriptions or comments</li>
+            <li>Don't spam the system with multiple identical reports</li>
+            <li>Don't claim points for someone else's report</li>
+            <li>Don't share personal information of other users</li>
+            <li>Don't upload inappropriate or unrelated images</li>
+            <li>Don't harass or bully other community members</li>
+            <li>Don't misuse the reporting system for personal gain</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Additional Guidelines -->
+      <div class="guidelines-section">
+        <div class="guidelines-grid">
+          <div class="guidelines-card tip">
+            <div class="card-header">
+              <i class="fas fa-leaf"></i>
+              <h5> Waste Sorting Guidelines</h5>
+            </div>
+            <ul>
+              <li><strong>Biodegradable:</strong> Food scraps, garden waste, leaves, compostable items</li>
+              <li><strong>Recyclable:</strong> Plastics, paper, glass bottles, metal cans, cardboard</li>
+              <li><strong>Residual:</strong> Mixed waste, soiled materials, diapers, sanitary products</li>
+              <li><strong>Special Waste:</strong> Furniture, construction debris, bulky items</li>
+              <li><strong>Hazardous:</strong> Chemicals, paint, batteries, medical waste, electronics</li>
+              <li><strong>E-Waste:</strong> Phones, computers, broken appliances, cables</li>
+            </ul>
+          </div>
+
+          <div class="guidelines-card tip">
+            <div class="card-header">
+              <i class="fas fa-gavel"></i>
+              <h5>Consequences of Violations</h5>
+            </div>
+            <ul>
+              <li><strong>First offense:</strong> Warning notification + temporary posting restrictions</li>
+              <li><strong>Second offense:</strong> Points deduction (50-100 points)</li>
+              <li><strong>Third offense:</strong> Account suspension (7-30 days)</li>
+              <li><strong>Severe violations:</strong> Permanent account ban</li>
+              <li>Flagged reports are reviewed by admins</li>
+              <li>False reports may result in point reversals</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="guidelines-footer">
+        <p><i class="fas fa-shield-alt"></i> We're building a cleaner, greener community — report responsibly!</p>
+        <button class="btn-sm" onclick="closeGuidelinesModal()" style="background: var(--accent); color: var(--bg-deep); border: none; padding: 6px 16px; border-radius: 40px; cursor: pointer; font-weight: 600;">
+          Got it, thanks! <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-wrap">
+  <div class="dashboard-hero">
+    <div class="hero-greeting"><i class="fas fa-sun" style="margin-right:6px;"></i>Good day</div>
+    <div class="hero-name">Hello, <span>{{ user.first_name|default:user.username }}</span></div>
+    <div class="hero-level"><i class="fas fa-star"></i> {{ profile.level }} · {{ profile.points }} pts</div>
+
+    <div class="xp-bar-wrap" style="margin-top: 14px;">
+      <div class="xp-header">
+        <span class="xp-label">Eco Progress</span>
+        <span class="xp-val">{{ profile.points }} / 500 pts</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="xpFill" style="width: 0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+      <div class="stat-value" style="color: var(--accent);">{{ total_reports }}</div>
+      <div class="stat-label">Total Reports</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+      <div class="stat-value" style="color: var(--accent);">{{ pending }}</div>
+      <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+      <div class="stat-value" style="color: var(--accent);">{{ collected }}</div>
+      <div class="stat-label">Collected</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fas fa-calendar-week"></i></div>
+      <div class="stat-value" style="color: var(--accent);">{{ recent }}</div>
+      <div class="stat-label">This Week</div>
+    </div>
+  </div>
+<!-- Guidelines Quick Access Card -->
+<div class="guidelines-quick-card" onclick="openGuidelinesModal()">
+  <div class="guidelines-quick-left">
+    <div class="guidelines-quick-icon">
+      <i class="fas fa-clipboard-list"></i>
+    </div>
+    <div class="guidelines-quick-text">
+      <h4> Community Guidelines</h4>
+      <p>Do's & Don'ts for waste reporting • Updated regularly</p>
+    </div>
+  </div>
+  <button class="guidelines-quick-btn" onclick="event.stopPropagation(); openGuidelinesModal();">
+    View Guidelines <i class="fas fa-arrow-right"></i>
+  </button>
+</div>
+  <!-- Charts Row -->
+  <div class="charts-row">
+    <!-- Monthly Reports Chart -->
+    <div class="chart-card">
+      <div class="chart-title">
+        <i class="fas fa-chart-line"></i> Monthly Reports
+      </div>
+      <div class="chart-container">
+        <canvas id="monthlyChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Waste Distribution Chart -->
+    <div class="chart-card">
+      <div class="chart-title">
+        <i class="fas fa-chart-pie"></i> Waste by Category
+      </div>
+      <div class="chart-container">
+        <canvas id="categoryChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- By Category Cards -->
+  <div class="section-header">
+    <div class="section-title"><i class="fas fa-recycle"></i> By Category</div>
+  </div>
+  <div class="category-grid" style="overflow: visible;">
+    <div class="cat-card" style="border-color: rgba(34,197,94,0.2);">
+      <div class="cat-icon"><i class="fas fa-leaf"></i></div>
+      <div class="cat-name" style="color: var(--cat-bio);">Biodegradable</div>
+      <div class="cat-label" style="color: var(--cat-bio);" id="cat-bio">0</div>
+      <div class="cat-tooltip">
+        <div class="tooltip-title"><i class="fas fa-leaf" style="color:var(--cat-bio);"></i> Biodegradable</div>
+        <div>Organic waste that decomposes naturally — food scraps, garden waste, leaves.</div>
+        <div class="tooltip-example">e.g. rotting food, yard trimmings, compostable materials</div>
+      </div>
+    </div>
+    <div class="cat-card" style="border-color: rgba(59,130,246,0.2);">
+      <div class="cat-icon"><i class="fas fa-recycle"></i></div>
+      <div class="cat-name" style="color: var(--cat-rec);">Recyclable</div>
+      <div class="cat-label" style="color: var(--cat-rec);" id="cat-rec">0</div>
+      <div class="cat-tooltip">
+        <div class="tooltip-title"><i class="fas fa-recycle" style="color:var(--cat-rec);"></i> Recyclable</div>
+        <div>Materials that can be processed and reused — plastic, paper, glass, metal.</div>
+        <div class="tooltip-example">e.g. bottles, cans, cardboard, newspapers</div>
+      </div>
+    </div>
+    <div class="cat-card" style="border-color: rgba(148,163,184,0.2);">
+      <div class="cat-icon"><i class="fas fa-trash"></i></div>
+      <div class="cat-name" style="color: var(--cat-res);">Residual</div>
+      <div class="cat-label" style="color: var(--cat-res);" id="cat-res">0</div>
+      <div class="cat-tooltip">
+        <div class="tooltip-title"><i class="fas fa-trash" style="color:var(--cat-res);"></i> Residual</div>
+        <div>General waste that can't be recycled or composted — mixed or leftover garbage.</div>
+        <div class="tooltip-example">e.g. mixed trash, missed collection, soiled materials</div>
+      </div>
+    </div>
+    <div class="cat-card" style="border-color: rgba(245,158,11,0.2);">
+      <div class="cat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+      <div class="cat-name" style="color: var(--cat-spe);">Special</div>
+      <div class="cat-label" style="color: var(--cat-spe);" id="cat-spe">0</div>
+      <div class="cat-tooltip">
+        <div class="tooltip-title"><i class="fas fa-exclamation-triangle" style="color:var(--cat-spe);"></i> Special Waste</div>
+        <div>Bulky or oversized items that need special handling or disposal.</div>
+        <div class="tooltip-example">e.g. furniture, construction debris, large appliances</div>
+      </div>
+    </div>
+    <div class="cat-card" style="border-color: rgba(239,68,68,0.2);">
+      <div class="cat-icon"><i class="fas fa-skull-crossbones"></i></div>
+      <div class="cat-name" style="color: var(--cat-haz);">Hazardous</div>
+      <div class="cat-label" style="color: var(--cat-haz);" id="cat-haz">0</div>
+      <div class="cat-tooltip">
+        <div class="tooltip-title"><i class="fas fa-skull-crossbones" style="color:var(--cat-haz);"></i> Hazardous</div>
+        <div>Dangerous materials that pose health or environmental risks.</div>
+        <div class="tooltip-example">e.g. chemicals, medical waste, toxic substances, paint</div>
+      </div>
+    </div>
+    <div class="cat-card" style="border-color: rgba(168,85,247,0.2);">
+      <div class="cat-icon"><i class="fas fa-battery-quarter"></i></div>
+      <div class="cat-name" style="color: var(--cat-elec);">E-Waste</div>
+      <div class="cat-label" style="color: var(--cat-elec);" id="cat-elec">0</div>
+      <div class="cat-tooltip">
+        <div class="tooltip-title"><i class="fas fa-battery-quarter" style="color:var(--cat-elec);"></i> E-Waste</div>
+        <div>Discarded electronic devices and components that need special disposal.</div>
+        <div class="tooltip-example">e.g. phones, batteries, TVs, broken appliances</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div style="margin-top: 20px;">
+    <div class="section-header">
+      <div class="section-title"><i class="fas fa-bolt"></i> Quick Actions</div>
+    </div>
+    <div class="quick-actions">
+      <a href="/report/" class="quick-btn">
+        <span class="quick-btn-icon"><i class="fas fa-file-alt"></i></span>
+        <span class="quick-btn-label">New Report</span>
+      </a>
+      <a href="/schedules/" class="quick-btn">
+        <span class="quick-btn-icon"><i class="fas fa-calendar-alt"></i></span>
+        <span class="quick-btn-label">Schedules</span>
+      </a>
+      <a href="/community/" class="quick-btn">
+        <span class="quick-btn-icon"><i class="fas fa-comments"></i></span>
+        <span class="quick-btn-label">Community</span>
+      </a>
+      <a href="/history/" class="quick-btn">
+        <span class="quick-btn-icon"><i class="fas fa-chart-bar"></i></span>
+        <span class="quick-btn-label">My History</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Today's Collections -->
+  {% if schedules_today %}
+  <div style="margin-top: 20px;">
+    <div class="section-header">
+      <div class="section-title"><i class="fas fa-truck"></i> Today's Collections</div>
+      <a href="/schedules/" class="section-link">View all →</a>
+    </div>
+    <div class="schedule-strip">
+      {% for sched in schedules_today %}
+      <div class="sched-card">
+        <div class="sched-time">{{ sched.time_start|time:"g:i A" }}</div>
+        <div class="sched-type">{{ sched.get_waste_category_display }}</div>
+        <div class="sched-purok">{{ sched.purok }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Announcements -->
+  {% if announcements %}
+  <div style="margin-top: 20px;">
+    <div class="section-header">
+      <div class="section-title"><i class="fas fa-bullhorn"></i> Announcements</div>
+    </div>
+    {% for ann in announcements %}
+    <div class="announcement-card ann-priority-{{ ann.priority }}"
+      onclick="openAnnModal(this)"
+      data-title="{{ ann.title|escapejs }}"
+      data-content-id="ann-content-{{ ann.id }}"
+      data-priority="{{ ann.priority }}"
+      data-emoji="{{ ann.emoji|default:'' }}"
+      data-date="{{ ann.created_at|date:'F d, Y' }}"
+      data-target="{{ ann.target_barangay|default:'' }}">
+      <template id="ann-content-{{ ann.id }}">{{ ann.content }}</template>
+      <span class="ann-icon">{{ ann.emoji|default:'📢' }}</span>
+      <div style="flex:1; min-width:0;">
+        <div class="ann-title">{{ ann.title }}</div>
+        <div class="ann-content">{{ ann.content|truncatechars:80 }}</div>
+        <div style="margin-top:6px; font-size:0.68rem; font-family:'DM Mono',monospace; color:var(--text-muted); display:flex; gap:10px; align-items:center;">
+          <span>{{ ann.created_at|date:"M d, Y" }}</span>
+          <span style="padding:1px 8px; border-radius:10px; font-size:0.62rem; font-weight:700;
+            {% if ann.priority == 'urgent' %}background:rgba(239,68,68,0.15); color:var(--danger);
+            {% elif ann.priority == 'high' %}background:rgba(245,158,11,0.15); color:var(--warning);
+            {% elif ann.priority == 'medium' %}background:rgba(0,212,255,0.15); color:var(--accent2);
+            {% else %}background:rgba(148,163,184,0.15); color:var(--text-secondary);{% endif %}">
+            {{ ann.priority|title }}
+          </span>
+          <span style="color:var(--accent); font-size:0.65rem;">Tap to read more →</span>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Recent Reports -->
+  <div style="margin-top: 20px; margin-bottom: 20px;">
+    <div class="section-header">
+      <div class="section-title"><i class="fas fa-clock"></i> Recent Reports</div>
+      <a href="/history/" class="section-link">See all →</a>
+    </div>
+    <div class="glass-card" style="padding: 14px 16px;">
+      {% for report in recent_reports %}
+      <div class="report-item">
+        <div class="report-info">
+          <div class="report-title">{{ report.title }}</div>
+          <div class="report-meta">{{ report.reported_at|date:"M d, Y" }} · {{ report.get_category_display }}</div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+          <span class="status-badge status-{{ report.status }}">{{ report.get_status_display }}</span>
+          <span class="badge badge-{{ report.category|slice:':3' }}">{{ report.get_category_display|slice:':10' }}</span>
+        </div>
+      </div>
+      {% empty %}
+      <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 2.5rem; margin-bottom: 8px;"><i class="fas fa-leaf"></i></div>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">No reports yet. Start by submitting your first waste report!</p>
+        <a href="/report/" class="btn btn-primary" style="margin-top: 12px; display: inline-flex;"><i class="fas fa-plus"></i> Submit Report →</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Data from Django context
+  const catData = {{ cat_data|safe }};
+  const monthlyData = {{ monthly_data|safe }};
+  const totalPoints = {{ profile.points }};
+
+  // XP Progress Bar
+  const xpPct = Math.min((totalPoints / 500) * 100, 100);
+  setTimeout(() => {
+    const xpFill = document.getElementById('xpFill');
+    if (xpFill) xpFill.style.width = xpPct + '%';
+  }, 300);
+
+  // Category labels mapping
+  const catMap = { 
+    biodegradable: 'bio', 
+    recyclable: 'rec', 
+    residual: 'res', 
+    special: 'spe', 
+    hazardous: 'haz', 
+    electronic: 'elec' 
+  };
+  
+  // Update category cards
+  Object.entries(catData).forEach(([cat, val]) => {
+    const id = 'cat-' + catMap[cat];
+    const el = document.getElementById(id);
+    if (el) el.textContent = Math.round(val) || 0;
+  });
+
+  // Monthly Reports Chart (Line Chart)
+  const monthlyCtx = document.getElementById('monthlyChart');
+  if (monthlyCtx && monthlyData.length > 0) {
+    const months = monthlyData.map(d => d.month);
+    const counts = monthlyData.map(d => d.count);
+    
+    new Chart(monthlyCtx, {
+      type: 'line',
+      data: {
+        labels: months,
+        datasets: [{
+          label: 'Reports',
+          data: counts,
+          borderColor: '#00ff87',
+          backgroundColor: 'rgba(0, 255, 135, 0.1)',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: '#00d4ff',
+          pointBorderColor: '#030a0e',
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            backgroundColor: 'rgba(3, 10, 14, 0.9)',
+            titleColor: '#f0fdf4',
+            bodyColor: '#00ff87'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(255, 255, 255, 0.05)'
+            },
+            ticks: {
+              color: '#f0fdf4',
+              stepSize: 1
+            }
+          },
+          x: {
+            grid: {
+              color: 'rgba(255, 255, 255, 0.05)'
+            },
+            ticks: {
+              color: '#f0fdf4'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Waste Category Chart (Pie/Doughnut)
+  const categoryCtx = document.getElementById('categoryChart');
+  if (categoryCtx && Object.keys(catData).length > 0) {
+    const categories = {
+      'biodegradable': 'Biodegradable',
+      'recyclable': 'Recyclable',
+      'residual': 'Residual',
+      'special': 'Special',
+      'hazardous': 'Hazardous',
+      'electronic': 'E-Waste'
+    };
+    
+    const labels = [];
+    const data = [];
+    const backgroundColors = [
+      '#22c55e',  // Biodegradable - Green
+      '#3b82f6',  // Recyclable - Blue
+      '#94a3b8',  // Residual - Gray
+      '#f59e0b',  // Special - Orange
+      '#ef4444',  // Hazardous - Red
+      '#a855f7'   // Electronic - Purple
+    ];
+    
+    Object.entries(catData).forEach(([cat, val]) => {
+      if (val > 0) {
+        labels.push(categories[cat] || cat);
+        data.push(val);
+      }
+    });
+    
+    // If no data, show placeholder
+    if (data.length === 0) {
+      labels.push('No Data');
+      data.push(1);
+    }
+    
+    new Chart(categoryCtx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: backgroundColors.slice(0, data.length),
+          borderWidth: 0,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#f0fdf4',
+              font: {
+                size: 10,
+                family: 'DM Mono, monospace'
+              },
+              boxWidth: 10,
+              padding: 8
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(3, 10, 14, 0.9)',
+            titleColor: '#f0fdf4',
+            bodyColor: '#00ff87',
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.raw || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
+          }
+        },
+        cutout: '60%'
+      }
+    });
+  }
+
+  // Light mode chart color adjustments
+  function updateChartColors() {
+    const isLightMode = document.body.classList.contains('light-mode');
+    const charts = Chart.instances;
+    
+    Object.values(charts).forEach(chart => {
+      if (chart.config.type === 'line') {
+        if (chart.config.options.scales) {
+          chart.config.options.scales.y.ticks.color = isLightMode ? '#000000' : '#f0fdf4';
+          chart.config.options.scales.x.ticks.color = isLightMode ? '#000000' : '#f0fdf4';
+        }
+        chart.update();
+      } else if (chart.config.type === 'doughnut') {
+        if (chart.config.options.plugins && chart.config.options.plugins.legend) {
+          chart.config.options.plugins.legend.labels.color = isLightMode ? '#000000' : '#f0fdf4';
+        }
+        chart.update();
+      }
+    });
+  }
+  
+  // Listen for theme changes
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.attributeName === 'class') {
+        updateChartColors();
+      }
+    });
+  });
+  observer.observe(document.body, { attributes: true });
+  
+  // Initial chart color update
+  setTimeout(updateChartColors, 100);
+  
+  // ── Announcement Modal ──────────────────────────────────────
+  const priorityMap = {
+    urgent: { label: 'Urgent',  bg: 'rgba(239,68,68,0.15)',   color: 'var(--danger)' },
+    high:   { label: 'High',    bg: 'rgba(245,158,11,0.15)',  color: 'var(--warning)' },
+    medium: { label: 'Medium',  bg: 'rgba(0,212,255,0.15)',   color: 'var(--accent2)' },
+    low:    { label: 'Low',     bg: 'rgba(148,163,184,0.15)', color: 'var(--text-secondary)' },
+  };
+
+  function openAnnModal(el) {
+    const d = el.dataset;
+    const p = priorityMap[d.priority] || priorityMap.medium;
+    const emoji = d.emoji || '📢';
+    // Read HTML content from the <template> element to preserve bold/italic/underline
+    const contentTemplateId = d.contentId;
+    const contentTemplate = document.getElementById(contentTemplateId);
+    const contentHTML = contentTemplate ? contentTemplate.innerHTML : '';
+    const barangay = d.target
+      ? `<div style="margin-top:14px; padding:10px 14px; border-radius:12px;
+                     background:rgba(255,255,255,0.04); border:1px solid var(--glass-border);
+                     font-size:0.78rem; color:var(--text-muted); font-family:'DM Mono',monospace;">
+           <i class="fas fa-map-marker-alt"></i> Targeted barangay: <strong style="color:var(--text-secondary);">${d.target}</strong>
+         </div>`
+      : '';
+
+    document.getElementById('annModalBody').innerHTML = `
+      <div style="display:flex; align-items:center; gap:14px; margin-bottom:20px;">
+        <div style="width:56px; height:56px; border-radius:16px; flex-shrink:0;
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:1.8rem; background:rgba(0,255,135,0.1);">
+          ${emoji}
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:0.68rem; font-family:'DM Mono',monospace; color:var(--accent);
+                      margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">
+            Announcement
+          </div>
+          <div style="font-family:'Syne',sans-serif; font-size:1.15rem; font-weight:800; line-height:1.3; word-break:break-word;">
+            ${d.title}
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <span style="padding:3px 12px; border-radius:20px; font-size:0.68rem; font-weight:700;
+                     font-family:'DM Mono',monospace; background:${p.bg}; color:${p.color};">
+          ${p.label}
+        </span>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.04); border:1px solid var(--glass-border);
+                  border-radius:16px; padding:20px; font-size:0.95rem; line-height:1.8;
+                  color:var(--text-secondary); white-space:pre-line; word-break:break-word;
+                  text-align:justify; hyphens:auto;">
+        ${contentHTML.trim()}
+      </div>
+
+      ${barangay}
+
+      <div style="margin-top:14px; font-size:0.75rem; color:var(--text-muted); font-family:'DM Mono',monospace;">
+        <i class="far fa-calendar-alt"></i> ${d.date}
+      </div>`;
+
+    document.getElementById('annModal').classList.add('open');
+  }
+
+  function closeAnnModal() {
+    document.getElementById('annModal').classList.remove('open');
+  }
+
+  document.getElementById('annModal').addEventListener('click', function(e) {
+    if (e.target === this) closeAnnModal();
+  });
+
+  // ==================== GUIDELINES MODAL FUNCTIONS ====================
+
+// Check if user has seen guidelines before (first time)
+const HAS_SEEN_GUIDELINES_KEY = 'reportrash_has_seen_guidelines';
+
+function openGuidelinesModal() {
+  const modal = document.getElementById('guidelinesModal');
+  if (modal) modal.classList.add('open');
+}
+
+function closeGuidelinesModal() {
+  const modal = document.getElementById('guidelinesModal');
+  if (modal) modal.classList.remove('open');
+  // Mark as seen when closed
+  localStorage.setItem(HAS_SEEN_GUIDELINES_KEY, 'true');
+}
+
+// Auto-show guidelines on first visit
+function checkFirstVisitAndShowGuidelines() {
+  const hasSeen = localStorage.getItem(HAS_SEEN_GUIDELINES_KEY);
+  if (!hasSeen) {
+    // Small delay to allow page to load smoothly
+    setTimeout(() => {
+      openGuidelinesModal();
+    }, 800);
+  }
+}
+
+// Close modal when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+  const guidelinesModal = document.getElementById('guidelinesModal');
+  if (guidelinesModal) {
+    guidelinesModal.addEventListener('click', function(e) {
+      if (e.target === guidelinesModal) {
+        closeGuidelinesModal();
+      }
+    });
+  }
+  
+  // Show guidelines on first visit
+  checkFirstVisitAndShowGuidelines();
+});
+
+// Also add ESC key to close guidelines modal
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('guidelinesModal');
+    if (modal && modal.classList.contains('open')) {
+      closeGuidelinesModal();
+    }
+  }
+});
+</script>
+{% endblock %}

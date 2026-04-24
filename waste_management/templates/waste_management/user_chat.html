@@ -1,0 +1,909 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}Chat — ReporTrash{% endblock %}
+
+{% block extra_styles %}
+.chat-page-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 16px;
+    height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+}
+.chat-header {
+    margin-bottom: 16px;
+    flex-shrink: 0;
+}
+.chat-header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.chat-header p {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+.mode-toggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-shrink: 0;
+}
+.mode-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 30px;
+    border: 1px solid var(--glass-border);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.mode-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #030a0e;
+    border-color: transparent;
+}
+.mode-btn.ai-active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #030a0e;
+}
+.mode-btn.human-active {
+    background: linear-gradient(135deg, var(--accent2), var(--accent4));
+    color: #030a0e;
+}
+.chat-messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    border: 1px solid var(--glass-border);
+    min-height: 0;
+}
+.chat-messages-area::-webkit-scrollbar {
+    width: 4px;
+}
+.chat-messages-area::-webkit-scrollbar-track {
+    background: var(--glass);
+    border-radius: 4px;
+}
+.chat-messages-area::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 4px;
+}
+.message {
+    max-width: 75%;
+    display: flex;
+    flex-direction: column;
+}
+.message-user {
+    align-self: flex-end;
+}
+.message-user .message-bubble {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #030a0e;
+    border-radius: 18px 18px 4px 18px;
+}
+.message-ai {
+    align-self: flex-start;
+}
+.message-ai .message-bubble {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: 18px 18px 18px 4px;
+}
+.message-admin {
+    align-self: flex-start;
+}
+.message-admin .message-bubble {
+    background: linear-gradient(135deg, var(--accent2), var(--accent4));
+    color: #030a0e;
+    border-radius: 18px 18px 18px 4px;
+}
+.message-system {
+    align-self: center;
+    background: rgba(245,158,11,0.1);
+    font-size: 0.7rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: var(--warning);
+    max-width: 90%;
+    text-align: center;
+}
+.message-bubble {
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    word-break: break-word;
+}
+.message-time {
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+    margin-left: 8px;
+    margin-right: 8px;
+}
+.message-user .message-time {
+    text-align: right;
+}
+.message-sender {
+    font-size: 0.6rem;
+    margin-bottom: 3px;
+    margin-left: 8px;
+    color: var(--text-muted);
+}
+.chat-input-area {
+    padding: 16px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    border: 1px solid var(--glass-border);
+    margin-top: 12px;
+    flex-shrink: 0;
+}
+.input-wrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 6px 6px 6px 16px;
+}
+.chat-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-family: inherit;
+    resize: none;
+    max-height: 100px;
+    min-height: 36px;
+    padding: 6px 0;
+}
+.chat-input::placeholder {
+    color: var(--text-muted);
+}
+.chat-send-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #030a0e;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+.chat-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.chat-bottom-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+.delete-chat-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+}
+.delete-chat-btn:hover {
+    color: var(--danger);
+    background: rgba(239,68,68,0.1);
+}
+.typing-indicator {
+    align-self: flex-start;
+    padding: 8px 14px;
+    background: var(--glass);
+    border-radius: 18px;
+    display: flex;
+    gap: 4px;
+}
+.typing-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: typing 1.4s ease infinite;
+}
+@keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+}
+.empty-chat {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+}
+.empty-chat i {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    opacity: 0.4;
+}
+.delete-modal {
+    max-width: 350px;
+    text-align: center;
+}
+.delete-modal .modal-icon {
+    font-size: 3rem;
+    color: var(--danger);
+    margin-bottom: 16px;
+}
+.delete-modal h3 {
+    margin-bottom: 8px;
+}
+.delete-modal p {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+}
+.delete-modal-buttons {
+    display: flex;
+    gap: 12px;
+}
+.delete-modal-buttons button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.delete-confirm-btn {
+    background: var(--danger);
+    border: none;
+    color: white;
+}
+.delete-cancel-btn {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+}
+@media (max-width: 768px) {
+    .chat-page-container {
+        padding: 12px;
+        height: calc(100vh - 70px);
+    }
+    .mode-btn {
+        padding: 8px;
+        font-size: 0.75rem;
+    }
+    .message {
+        max-width: 85%;
+    }
+    .message-bubble {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+}
+
+/* ============================================
+   LIGHT MODE OVERRIDES - Black Outlines & Text
+   ============================================ */
+body.light-mode {
+  --bg-card: rgba(0, 0, 0, 0.03);
+  --bg-card-hover: rgba(0, 0, 0, 0.05);
+  --glass-border: #000000;
+  --glass-strong: rgba(0, 0, 0, 0.2);
+  --text-muted: #000000;
+  --text-secondary: #000000;
+}
+
+/* All containers get BLACK borders */
+body.light-mode .chat-messages-area,
+body.light-mode .chat-input-area,
+body.light-mode .mode-btn,
+body.light-mode .input-wrapper,
+body.light-mode .message-ai .message-bubble,
+body.light-mode .delete-cancel-btn,
+body.light-mode .typing-indicator {
+  border-color: #000000 !important;
+  border-width: 1.5px !important;
+}
+
+body.light-mode .chat-messages-area {
+  background: #ffffff;
+}
+
+body.light-mode .chat-input-area {
+  background: #ffffff;
+}
+
+/* Mode buttons in light mode */
+body.light-mode .mode-btn {
+  background: #ffffff;
+  border: 1.5px solid #000000 !important;
+  color: #000000;
+}
+
+body.light-mode .mode-btn.active {
+  background: linear-gradient(135deg, #22c55e, #06b6d4);
+  color: white;
+  border-color: transparent !important;
+}
+
+/* Input area */
+body.light-mode .input-wrapper {
+  background: #f8fafc;
+  border: 1.5px solid #000000 !important;
+}
+
+body.light-mode .chat-input {
+  color: #000000;
+}
+
+body.light-mode .chat-input::placeholder {
+  color: #666666;
+}
+
+/* Message bubbles */
+body.light-mode .message-ai .message-bubble {
+  background: #f0f0f0;
+  color: #000000;
+  border: 1.5px solid #000000 !important;
+}
+
+body.light-mode .message-user .message-bubble {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+}
+
+body.light-mode .message-admin .message-bubble {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  color: white;
+}
+
+body.light-mode .message-system {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1.5px solid #000000 !important;
+}
+
+/* Text colors */
+body.light-mode .message-time,
+body.light-mode .message-sender,
+body.light-mode .chat-header p,
+body.light-mode .empty-chat,
+body.light-mode .delete-chat-btn {
+  color: #000000 !important;
+}
+
+body.light-mode .delete-chat-btn:hover {
+  color: #ef4444 !important;
+  background: rgba(239,68,68,0.1);
+}
+
+/* Typing indicator */
+body.light-mode .typing-indicator {
+  background: #f0f0f0;
+  border: 1.5px solid #000000 !important;
+}
+
+body.light-mode .typing-dot {
+  background: #22c55e;
+}
+
+/* Modal in light mode */
+body.light-mode .modal {
+  background: #ffffff;
+  border: 1.5px solid #000000 !important;
+}
+
+body.light-mode .delete-cancel-btn {
+  background: #f5f5f5;
+  border: 1.5px solid #000000 !important;
+  color: #000000;
+}
+
+body.light-mode .delete-confirm-btn {
+  background: #ef4444;
+  border: none;
+  color: white;
+}
+
+/* Scrollbar */
+body.light-mode .chat-messages-area::-webkit-scrollbar-track {
+  background: #e5e5e5;
+}
+
+body.light-mode .chat-messages-area::-webkit-scrollbar-thumb {
+  background: #000000;
+}
+{% endblock %}
+
+{% block content %}
+<div class="chat-page-container">
+    <div class="chat-header">
+        <div>
+            <h1><i class="fas fa-comment-dots"></i> Messages</h1>
+            <p id="statusText">Chat with AI assistant or switch to human support</p>
+        </div>
+    </div>
+
+    <div class="mode-toggle">
+        <button class="mode-btn" id="aiModeBtn" onclick="switchMode('ai')">
+            <i class="fas fa-robot"></i> AI Assistant
+        </button>
+        <button class="mode-btn" id="humanModeBtn" onclick="switchMode('human')">
+            <i class="fas fa-headset"></i> Human Support
+        </button>
+    </div>
+
+    <div class="chat-messages-area" id="chatMessagesArea">
+        <div class="empty-chat">
+            <i class="fas fa-comment-dots"></i>
+            <h3>Start a conversation</h3>
+            <p>Type a message below to chat with AI or request human support</p>
+        </div>
+    </div>
+
+    <div class="chat-input-area">
+        <div class="input-wrapper">
+            <textarea class="chat-input" id="chatInput" placeholder="Type a message..." rows="1" onkeydown="handleKey(event)"></textarea>
+            <button class="chat-send-btn" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+        <div class="chat-bottom-actions">
+            <button class="delete-chat-btn" onclick="showDeleteModal()">
+                <i class="fas fa-trash-alt"></i> Clear chat history
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal delete-modal">
+        <div class="modal-handle"></div>
+        <div class="modal-icon"><i class="fas fa-trash-alt"></i></div>
+        <h3>Clear Chat History?</h3>
+        <p>This will permanently delete all messages. This action cannot be undone.</p>
+        <div class="delete-modal-buttons">
+            <button class="delete-cancel-btn" onclick="closeDeleteModal()">Cancel</button>
+            <button class="delete-confirm-btn" onclick="confirmDeleteConversation()">Clear</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentMode = 'ai';
+let currentSessionId = null;
+let isLoading = false;
+let pollInterval = null;
+
+// Keywords for mode switching
+const SWITCH_TO_HUMAN_KEYWORDS = [
+    'talk to admin', 'speak to admin', 'human support', 'real person', 
+    'live agent', 'contact admin', 'i need a human', 'talk to human',
+    'help me', 'admin please', 'human', 'customer support',
+    'can i talk to admin', 'chat with admin', 'speak to human'
+];
+
+const SWITCH_TO_AI_KEYWORDS = [
+    'talk to ai', 'switch to ai', 'back to ai', 'ai assistant',
+    'go back to ai', 'ai please', 'trashbot', 'back to bot',
+    'switch to ai mode', 'ai mode', 'back to assistant'
+];
+
+function showDeleteModal() {
+    document.getElementById('deleteModal').classList.add('open');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('open');
+}
+
+async function confirmDeleteConversation() {
+    closeDeleteModal();
+    try {
+        const response = await fetch('/api/chat/delete-conversation/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
+        });
+        const data = await response.json();
+        if (data.success) {
+            currentSessionId = null;
+            if (currentMode === 'ai') {
+                document.getElementById('chatMessagesArea').innerHTML = `
+                    <div class="message message-ai">
+                        <div class="message-sender"><i class="fas fa-robot"></i> TrashBot AI</div>
+                        <div class="message-bubble">👋 Hello! I'm TrashBot AI. Ask me about waste reporting, points, schedules, or type "talk to admin" to get human support.</div>
+                        <div class="message-time">Just now</div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('chatMessagesArea').innerHTML = `
+                    <div class="empty-chat">
+                        <i class="fas fa-headset"></i>
+                        <h3>Human Support</h3>
+                        <p>Type a message below to chat with an admin</p>
+                    </div>
+                `;
+            }
+            showToast('Chat history cleared', 'success');
+        }
+    } catch (error) {
+        showToast('Network error', 'error');
+    }
+}
+
+async function switchMode(mode) {
+    if (mode === currentMode) return;
+    
+    if (mode === 'human') {
+        const btn = document.getElementById('humanModeBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Switching...';
+        
+        try {
+            const response = await fetch('/api/chat/request-human/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            const data = await response.json();
+            if (data.success) {
+                currentMode = 'human';
+                updateModeUI();
+                await loadMessages();
+                addSystemMessage('🆘 Switched to Human Support. An admin will respond shortly.');
+            } else if (data.error) {
+                showToast(data.error, 'error');
+            }
+        } catch (error) {
+            showToast('Network error', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-headset"></i> Human Support';
+        }
+    } else {
+        // Switch to AI mode
+        currentMode = 'ai';
+        updateModeUI();
+        
+        // Send a message to trigger AI mode switch
+        const response = await fetch('/api/chat/user-send/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ message: 'switch to ai', session_id: currentSessionId })
+        });
+        const data = await response.json();
+        
+        if (data.mode === 'ai') {
+            currentSessionId = data.session_id;
+            await loadMessages();
+            if (data.reply && !data.reply.includes('Switched to AI')) {
+                addAIMessage(data.reply, 'ai');
+            }
+        } else {
+            await loadMessages();
+            addSystemMessage('🤖 Switched to AI Assistant. Ask me anything about waste reporting!');
+        }
+    }
+}
+
+function updateModeUI() {
+    const aiBtn = document.getElementById('aiModeBtn');
+    const humanBtn = document.getElementById('humanModeBtn');
+    const statusText = document.getElementById('statusText');
+    
+    if (currentMode === 'ai') {
+        aiBtn.classList.add('active', 'ai-active');
+        humanBtn.classList.remove('active', 'human-active');
+        statusText.innerHTML = '🤖 AI Assistant Mode - Ask me about waste reporting';
+        document.getElementById('chatInput').placeholder = 'Ask me about waste reporting, points, schedules...';
+    } else {
+        humanBtn.classList.add('active', 'human-active');
+        aiBtn.classList.remove('active', 'ai-active');
+        statusText.innerHTML = '👥 Human Support Mode - An admin will assist you';
+        document.getElementById('chatInput').placeholder = 'Type your message for admin support...';
+    }
+}
+
+async function loadMessages() {
+    try {
+        const response = await fetch(`/api/chat/user-history/?mode=${currentMode}&session_id=${currentSessionId || ''}`);
+        const data = await response.json();
+        
+        if (currentMode === 'ai') {
+            currentSessionId = data.session_id;
+        }
+        
+        renderMessages(data.messages || []);
+        
+        if (currentMode === 'human') {
+            const statusText = document.getElementById('statusText');
+            if (data.has_pending_human) {
+                statusText.innerHTML = '⏳ Waiting for admin to respond...';
+            } else if (data.has_active_human) {
+                statusText.innerHTML = '💬 Connected with support team';
+            } else {
+                statusText.innerHTML = '👥 Human Support Mode - Type your message';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading messages:', error);
+    }
+}
+
+function renderMessages(messages) {
+    const container = document.getElementById('chatMessagesArea');
+    if (!messages || messages.length === 0) {
+        if (currentMode === 'ai') {
+            container.innerHTML = `
+                <div class="message message-ai">
+                    <div class="message-sender"><i class="fas fa-robot"></i> TrashBot AI</div>
+                    <div class="message-bubble">👋 Hello! I'm TrashBot AI. Ask me about waste reporting, points, schedules, or type "talk to admin" to get human support. <br> <br> 📌Reminder: TrashBot AI can make mistakes. Check important info.</div>
+                    <div class="message-time">Just now</div>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="empty-chat">
+                    <i class="fas fa-headset"></i>
+                    <h3>Human Support</h3>
+                    <p>Type a message below to chat with an admin</p>
+                </div>
+            `;
+        }
+        return;
+    }
+    
+    container.innerHTML = messages.map(msg => {
+        const sender = msg.sender || msg.role;
+        let messageClass = '';
+        let senderName = '';
+        let senderIcon = '';
+        
+        if (sender === 'user') {
+            messageClass = 'message-user';
+        } else if (sender === 'admin') {
+            messageClass = 'message-admin';
+            senderName = 'Support Team';
+            senderIcon = 'fa-headset';
+        } else if (sender === 'ai') {
+            messageClass = 'message-ai';
+            senderName = 'TrashBot AI';
+            senderIcon = 'fa-robot';
+        } else {
+            messageClass = 'message-ai';
+            senderName = 'TrashBot AI';
+            senderIcon = 'fa-robot';
+        }
+        
+        if (msg.is_system || sender === 'system') {
+            return `<div class="message message-system">${escapeHtml(msg.content || msg.message)}<div class="message-time">${msg.created_at || 'Just now'}</div></div>`;
+        }
+        
+        const content = msg.content || msg.message;
+        const time = msg.created_at || 'Just now';
+        
+        return `
+            <div class="message ${messageClass}">
+                ${senderName ? `<div class="message-sender"><i class="fas ${senderIcon}"></i> ${senderName}</div>` : ''}
+                <div class="message-bubble">${formatMessage(content)}</div>
+                <div class="message-time">${time}</div>
+            </div>
+        `;
+    }).join('');
+    
+    container.scrollTop = container.scrollHeight;
+}
+
+function addMessage(content, sender, isSystem = false) {
+    const container = document.getElementById('chatMessagesArea');
+    
+    if (isSystem) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message message-system';
+        msgDiv.innerHTML = `<div>${escapeHtml(content)}</div><div class="message-time">Just now</div>`;
+        container.appendChild(msgDiv);
+    } else if (sender === 'user') {
+        const userMsg = document.createElement('div');
+        userMsg.className = 'message message-user';
+        userMsg.innerHTML = `<div class="message-bubble">${escapeHtml(content)}</div><div class="message-time">Just now</div>`;
+        container.appendChild(userMsg);
+    } else {
+        const senderName = sender === 'admin' ? 'Support Team' : 'TrashBot AI';
+        const senderIcon = sender === 'admin' ? 'fa-headset' : 'fa-robot';
+        const messageClass = sender === 'admin' ? 'message-admin' : 'message-ai';
+        
+        const botMsg = document.createElement('div');
+        botMsg.className = messageClass;
+        botMsg.innerHTML = `
+            <div class="message-sender"><i class="fas ${senderIcon}"></i> ${senderName}</div>
+            <div class="message-bubble">${formatMessage(content)}</div>
+            <div class="message-time">Just now</div>
+        `;
+        container.appendChild(botMsg);
+    }
+    
+    container.scrollTop = container.scrollHeight;
+}
+
+function addSystemMessage(text) {
+    addMessage(text, null, true);
+}
+
+function addUserMessage(text) {
+    addMessage(text, 'user', false);
+}
+
+function addAIMessage(text, sender) {
+    addMessage(text, sender || 'ai', false);
+}
+
+function showTypingIndicator() {
+    const container = document.getElementById('chatMessagesArea');
+    const existing = document.getElementById('typing-indicator');
+    if (existing) existing.remove();
+    
+    const typing = document.createElement('div');
+    typing.className = 'typing-indicator';
+    typing.id = 'typing-indicator';
+    typing.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+    container.appendChild(typing);
+    container.scrollTop = container.scrollHeight;
+}
+
+function hideTypingIndicator() {
+    const typingEl = document.getElementById('typing-indicator');
+    if (typingEl) typingEl.remove();
+}
+
+async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message || isLoading) return;
+    
+    input.value = '';
+    input.style.height = 'auto';
+    
+    // Add user message immediately
+    addUserMessage(message);
+    
+    isLoading = true;
+    const sendBtn = document.querySelector('.chat-send-btn');
+    if (sendBtn) sendBtn.disabled = true;
+    
+    showTypingIndicator();
+    
+    try {
+        const response = await fetch('/api/chat/user-send/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ message: message, session_id: currentSessionId })
+        });
+        
+        const data = await response.json();
+        
+        hideTypingIndicator();
+        
+        if (data.error) {
+            addSystemMessage(`⚠️ ${data.error}`);
+        } else {
+            if (data.mode === 'human' && currentMode !== 'human') {
+                currentMode = 'human';
+                updateModeUI();
+            }
+            
+            if (data.mode === 'ai' && currentMode !== 'ai') {
+                currentMode = 'ai';
+                updateModeUI();
+            }
+            
+            if (data.human_requested) {
+                addSystemMessage(data.reply);
+                await loadMessages();
+            } else if (data.reply) {
+                addAIMessage(data.reply, data.sender);
+            }
+            
+            if (currentMode === 'ai' && data.session_id) {
+                currentSessionId = data.session_id;
+            }
+        }
+    } catch (error) {
+        hideTypingIndicator();
+        addSystemMessage('⚠️ Network error. Please try again.');
+        console.error('Send error:', error);
+    } finally {
+        isLoading = false;
+        if (sendBtn) sendBtn.disabled = false;
+        document.getElementById('chatInput').focus();
+    }
+}
+
+function handleKey(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+    }
+}
+
+function formatMessage(text) {
+    if (!text) return '';
+    return escapeHtml(text)
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n/g, '<br>');
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function autoResize(el) {
+    if (el) {
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+    }
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+    toast.style.cssText = `position:fixed;bottom:80px;right:20px;z-index:10000;background:${type === 'success' ? 'var(--success)' : 'var(--danger)'};color:white;padding:8px 16px;border-radius:8px;font-size:0.75rem;`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    updateModeUI();
+    loadMessages();
+    
+    const input = document.getElementById('chatInput');
+    if (input) {
+        input.addEventListener('input', () => autoResize(input));
+    }
+    
+    const modal = document.getElementById('deleteModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeDeleteModal();
+        });
+    }
+    
+    // Poll for new messages every 3 seconds
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(() => { loadMessages(); }, 3000);
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (pollInterval) clearInterval(pollInterval);
+});
+</script>
+{% endblock %}

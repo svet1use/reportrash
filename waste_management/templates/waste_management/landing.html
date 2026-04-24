@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<title>ReporTrash — Smart Waste Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800;900&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root {
+    /* Dark mode (default) */
+    --bg: #030a0e;
+    --accent: #00ff87;
+    --accent2: #00d4ff;
+    --accent3: #ff6b35;
+    --text: #f0fdf4;
+    --muted: rgba(240,253,244,0.45);
+    --glass: rgba(255,255,255,0.05);
+    --glass-border: rgba(255,255,255,0.10);
+    --glass-strong: rgba(255,255,255,0.12);
+    --transition-smooth: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  /* Light mode */
+  body.light-mode {
+    --bg: #f0fdf4;
+    --accent: #059669;
+    --accent2: #0284c7;
+    --accent3: #ea580c;
+    --text: #030a0e;
+    --muted: rgba(3,10,14,0.55);
+    --glass: rgba(0,0,0,0.05);
+    --glass-border: rgba(0,0,0,0.12);
+    --glass-strong: rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  /* Background effects */
+  .bg-mesh {
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 15% -5%, rgba(0,255,135,0.10) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 90% 110%, rgba(0,212,255,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 60% 40%, rgba(255,107,53,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    animation: mesh-shift 20s ease-in-out infinite alternate;
+  }
+  
+  body.light-mode .bg-mesh {
+    background:
+      radial-gradient(ellipse 80% 50% at 15% -5%, rgba(5,150,105,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 90% 110%, rgba(2,132,199,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 60% 40%, rgba(234,88,12,0.04) 0%, transparent 60%);
+  }
+
+  @keyframes mesh-shift {
+    0% { opacity: 0.5; transform: scale(1); }
+    100% { opacity: 1; transform: scale(1.1); }
+  }
+
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+    animation: grid-pulse 4s ease-in-out infinite;
+  }
+  
+  body.light-mode .grid-bg {
+    background-image:
+      linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
+  }
+
+  @keyframes grid-pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.5; }
+  }
+
+  .particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .particle {
+    position: absolute;
+    width: 3px; height: 3px;
+    background: var(--accent);
+    border-radius: 50%;
+    opacity: 0;
+    animation: particle-float linear infinite;
+  }
+  @keyframes particle-float {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.3; }
+    100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+  }
+
+  /* Navigation - Desktop */
+  nav {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 1400px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: rgba(3,10,14,0.7);
+    backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+    animation: nav-slide 0.8s var(--transition-bounce);
+  }
+  
+  body.light-mode nav {
+    background: rgba(240,253,244,0.9);
+    border: 1px solid rgba(0,0,0,0.12);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+  }
+
+  @keyframes nav-slide {
+    from { transform: translate(-50%, -100%); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .nav-brand-icon {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.3s ease;
+  }
+  .nav-brand:hover .nav-brand-icon {
+    transform: rotate(180deg);
+  }
+  .nav-brand-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-link {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    padding: 8px 16px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+  .nav-link:hover { 
+    color: var(--text); 
+    background: rgba(255,255,255,0.05);
+  }
+  body.light-mode .nav-link:hover {
+    background: rgba(0,0,0,0.05);
+  }
+  .nav-cta {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #030a0e !important;
+    font-weight: 700;
+  }
+
+  /* Theme toggle button */
+  .theme-toggle-nav {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s var(--transition-bounce);
+    margin-left: 8px;
+  }
+  .theme-toggle-nav:hover {
+    transform: rotate(15deg) scale(1.1);
+    background: var(--glass-strong);
+    border-color: var(--accent);
+  }
+  body.light-mode .theme-toggle-nav i.fa-moon {
+    display: inline;
+  }
+  body.light-mode .theme-toggle-nav i.fa-sun {
+    display: none;
+  }
+  body:not(.light-mode) .theme-toggle-nav i.fa-moon {
+    display: none;
+  }
+  body:not(.light-mode) .theme-toggle-nav i.fa-sun {
+    display: inline;
+  }
+
+  /* Hide Features and About on mobile - show only on desktop */
+  .nav-link.features-link, .nav-link.about-link {
+    display: inline-block;
+  }
+
+  /* Main container - max-width 1400px */
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+    width: 100%;
+  }
+
+  /* Hero section */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding-top: 100px;
+    padding-bottom: 60px;
+  }
+
+  .hero-container {
+    display: flex;
+    align-items: center;
+    gap: 60px;
+    width: 100%;
+  }
+  .hero-left {
+    flex: 1;
+    text-align: left;
+  }
+  .hero-right {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,255,135,0.08);
+    border: 1px solid rgba(0,255,135,0.2);
+    border-radius: 100px;
+    padding: 8px 18px;
+    font-size: 0.78rem;
+    color: var(--accent);
+    margin-bottom: 28px;
+    animation: fade-up 0.6s var(--transition-smooth) both;
+  }
+  body.light-mode .hero-badge {
+    background: rgba(5,150,105,0.1);
+    border-color: rgba(5,150,105,0.2);
+  }
+  .badge-dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse-dot 2s ease infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent); }
+    50% { opacity: 0.5; box-shadow: 0 0 4px var(--accent); }
+  }
+
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 4.5rem;
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -3px;
+    margin-bottom: 28px;
+    animation: fade-up 0.7s 0.1s var(--transition-smooth) both;
+  }
+  .hero-title-line {
+    display: block;
+  }
+  .hero-title-line.gradient {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent) 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: text-shimmer 3s linear infinite;
+  }
+  @keyframes text-shimmer {
+    from { background-position: 0% center; }
+    to { background-position: 200% center; }
+  }
+  .hero-title-line.outline {
+    -webkit-text-stroke: 2px rgba(240,253,244,0.2);
+    -webkit-text-fill-color: transparent;
+  }
+  body.light-mode .hero-title-line.outline {
+    -webkit-text-stroke: 2px rgba(3,10,14,0.15);
+  }
+
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.6;
+    margin-bottom: 40px;
+    animation: fade-up 0.8s 0.2s var(--transition-smooth) both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    animation: fade-up 0.9s 0.3s var(--transition-smooth) both;
+  }
+
+  .btn-hero-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 32px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #030a0e;
+    text-decoration: none;
+    transition: all 0.3s var(--transition-bounce);
+  }
+  .btn-hero-primary:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 50px rgba(0,255,135,0.45);
+  }
+  body.light-mode .btn-hero-primary:hover {
+    box-shadow: 0 12px 50px rgba(5,150,105,0.35);
+  }
+
+  .btn-hero-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 32px;
+    border-radius: 16px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--text);
+    text-decoration: none;
+    transition: all 0.3s var(--transition-bounce);
+  }
+  .btn-hero-ghost:hover {
+    background: var(--glass-strong);
+    transform: translateY(-3px) scale(1.02);
+  }
+
+  /* Hero visual */
+  .hero-visual {
+    position: relative;
+    width: 100%;
+    max-width: 550px;
+    animation: fade-up 1s 0.4s var(--transition-smooth) both;
+  }
+  .hero-mockup {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    padding: 20px;
+    transition: all 0.5s var(--transition-bounce);
+  }
+  .hero-mockup:hover {
+    transform: translateY(-10px);
+    border-color: rgba(0,255,135,0.3);
+  }
+  body.light-mode .hero-mockup {
+    background: var(--glass);
+    border-color: var(--glass-border);
+  }
+  .mockup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .mockup-dots { display: flex; gap: 6px; }
+  .mockup-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .mockup-dot:nth-child(1) { background: #ff5f57; }
+  .mockup-dot:nth-child(2) { background: #ffbd2e; }
+  .mockup-dot:nth-child(3) { background: #28c840; }
+  .mockup-title {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .mockup-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .mockup-stat {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 12px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  body.light-mode .mockup-stat {
+    background: rgba(0,0,0,0.04);
+    border-color: rgba(0,0,0,0.08);
+  }
+  .mockup-stat:hover {
+    transform: translateY(-5px);
+    border-color: rgba(0,255,135,0.3);
+  }
+  .mockup-stat-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .mockup-stat-lbl { font-size: 0.65rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+  .mockup-chart {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 14px;
+    height: 80px;
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  body.light-mode .mockup-chart {
+    background: rgba(0,0,0,0.03);
+    border-color: rgba(0,0,0,0.08);
+  }
+  .chart-bar {
+    flex: 1;
+    border-radius: 4px 4px 0 0;
+    background: linear-gradient(180deg, rgba(0,255,135,0.7), rgba(0,212,255,0.3));
+    animation: bar-grow 1s var(--transition-bounce) both;
+    transform-origin: bottom;
+  }
+  body.light-mode .chart-bar {
+    background: linear-gradient(180deg, rgba(5,150,105,0.7), rgba(2,132,199,0.3));
+  }
+  @keyframes bar-grow {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+  }
+
+  .mockup-nav {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 8px;
+    display: flex;
+    justify-content: space-around;
+  }
+  body.light-mode .mockup-nav {
+    background: rgba(0,0,0,0.04);
+    border-color: rgba(0,0,0,0.08);
+  }
+  .mockup-nav-item {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.3s;
+  }
+  .mockup-nav-item:hover {
+    transform: scale(1.2);
+    background: rgba(255,255,255,0.1);
+  }
+  .mockup-nav-item.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+  }
+
+  /* Features */
+  .features {
+    position: relative;
+    z-index: 1;
+    padding: 80px 0;
+  }
+  .features-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    text-align: left;
+    margin-bottom: 16px;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s var(--transition-bounce);
+  }
+  .features-label.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .features-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 3rem;
+    font-weight: 800;
+    text-align: left;
+    letter-spacing: -2px;
+    margin-bottom: 60px;
+    line-height: 1;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s var(--transition-bounce);
+    transition-delay: 0.1s;
+  }
+  .features-title.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .feature-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 28px;
+    transition: all 0.4s var(--transition-bounce);
+    opacity: 0;
+    transform: translateY(50px) scale(0.9);
+    text-align: left;
+  }
+  .feature-card.revealed {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  .feature-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: rgba(0,255,135,0.3);
+  }
+  body.light-mode .feature-card:hover {
+    border-color: rgba(5,150,105,0.3);
+  }
+  .feature-icon { font-size: 2.2rem; margin-bottom: 16px; display: block; }
+  .feature-icon i {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .feature-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+  .feature-desc {
+    font-size: 0.875rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* Stats */
+  .stats-section {
+    position: relative;
+    z-index: 1;
+    padding: 60px 0;
+  }
+  .stats-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+    flex-wrap: wrap;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    padding: 40px 50px;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.8s var(--transition-bounce);
+  }
+  .stats-row.revealed {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .stats-row:hover {
+    border-color: rgba(0,255,135,0.3);
+  }
+  .stat-item { text-align: center; flex: 1; }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 3rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-desc { color: var(--muted); font-size: 0.875rem; }
+
+  /* CTA */
+  .cta-section {
+    position: relative;
+    z-index: 1;
+    padding: 80px 0;
+    text-align: center;
+  }
+  .cta-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 3.5rem;
+    font-weight: 900;
+    letter-spacing: -2px;
+    margin-bottom: 20px;
+    line-height: 1;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s var(--transition-bounce);
+  }
+  .cta-title.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .cta-title span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .cta-sub {
+    color: var(--muted);
+    font-size: 1rem;
+    margin-bottom: 40px;
+    line-height: 1.7;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s var(--transition-bounce);
+    transition-delay: 0.1s;
+  }
+  .cta-sub.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .cta-section .btn-hero-primary {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s var(--transition-bounce);
+    transition-delay: 0.2s;
+    display: inline-flex;
+  }
+  .cta-section .btn-hero-primary.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  footer {
+    text-align: center;
+    padding: 30px 20px;
+    color: rgba(240,253,244,0.2);
+    font-size: 0.8rem;
+    font-family: 'DM Mono', monospace;
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+  
+  body.light-mode footer {
+    color: rgba(0, 0, 0, 0.3);
+    border-top-color: rgba(0,0,0,0.08);
+  }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Desktop cursor */
+  @media (min-width: 769px) {
+    .cursor, .cursor-dot {
+      display: block;
+    }
+  }
+  .cursor, .cursor-dot {
+    display: none;
+  }
+
+  /* ============================================
+     LIGHT MODE OUTLINES - BLACK BORDERS
+  ============================================ */
+  body.light-mode nav,
+  body.light-mode .hero-mockup,
+  body.light-mode .mockup-stat,
+  body.light-mode .mockup-chart,
+  body.light-mode .mockup-nav,
+  body.light-mode .feature-card,
+  body.light-mode .stats-row,
+  body.light-mode .hero-badge,
+  body.light-mode .btn-hero-ghost,
+  body.light-mode .theme-toggle-nav {
+    border-color: #000000 !important;
+    border-width: 1.5px !important;
+  }
+
+  body.light-mode .feature-card {
+    background: #ffffff;
+  }
+
+  body.light-mode .stats-row {
+    background: #ffffff;
+  }
+
+  body.light-mode .hero-mockup {
+    background: #ffffff;
+  }
+
+  body.light-mode .mockup-stat {
+    background: #f5f5f5;
+  }
+
+  body.light-mode .mockup-chart {
+    background: #f5f5f5;
+  }
+
+  body.light-mode .mockup-nav {
+    background: #f5f5f5;
+  }
+
+  body.light-mode .btn-hero-ghost {
+    background: #f5f5f5;
+    color: #1a202c;
+  }
+
+  body.light-mode .btn-hero-ghost:hover {
+    background: #ffffff;
+  }
+
+  body.light-mode .theme-toggle-nav {
+    background: #f5f5f5;
+  }
+
+  body.light-mode .theme-toggle-nav:hover {
+    background: #ffffff;
+  }
+
+    /* ============================================
+     MOBILE RESPONSIVE - Simplified Navigation
+     Hide Get Started button on mobile
+  ============================================ */
+  @media (max-width: 1024px) {
+    .hero-title {
+      font-size: 3.5rem;
+    }
+    .features-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .hero-container {
+      flex-direction: column;
+      text-align: center;
+      gap: 40px;
+    }
+    .hero-left {
+      text-align: center;
+    }
+    .hero-sub {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hero-actions {
+      justify-content: center;
+    }
+    .hero-right {
+      justify-content: center;
+    }
+    .container {
+      padding: 0 20px;
+    }
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+    .stats-row {
+      flex-direction: column;
+      text-align: center;
+      gap: 30px;
+      padding: 30px 20px;
+    }
+    .cta-title {
+      font-size: 2.2rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2.5rem;
+      letter-spacing: -1px;
+    }
+    .hero-title-line.outline {
+      -webkit-text-stroke: 1px rgba(240,253,244,0.2);
+    }
+    .features-title {
+      font-size: 2rem;
+    }
+    .nav-link.features-link, .nav-link.about-link {
+      display: none;
+    }
+    /* Hide Get Started button on mobile */
+    .nav-link.nav-cta {
+      display: none;
+    }
+    /* Make nav links container responsive */
+    .nav-links {
+      gap: 4px;
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+    .nav-link {
+      padding: 6px 10px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+    /* Theme toggle - ensure it fits */
+    .theme-toggle-nav {
+      width: 32px;
+      height: 32px;
+      margin-left: 2px;
+      flex-shrink: 0;
+    }
+    /* Adjust nav padding to give more space */
+    nav {
+      padding: 10px 16px;
+      width: calc(100% - 20px);
+      top: 10px;
+    }
+    /* Brand text smaller on mobile */
+    .nav-brand-text {
+      font-size: 0.9rem;
+    }
+    .nav-brand-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .hero-title {
+      font-size: 2rem;
+    }
+    .btn-hero-primary, .btn-hero-ghost {
+      padding: 10px 16px;
+      font-size: 0.8rem;
+    }
+    .hero-badge {
+      font-size: 0.65rem;
+      padding: 5px 12px;
+    }
+    .features-title {
+      font-size: 1.3rem;
+    }
+    .stat-num {
+      font-size: 1.8rem;
+    }
+    /* Further reduce nav spacing on very small screens */
+    .nav-links {
+      gap: 2px;
+    }
+    .nav-link {
+      padding: 5px 8px;
+      font-size: 0.7rem;
+    }
+    .theme-toggle-nav {
+      width: 30px;
+      height: 30px;
+      font-size: 12px;
+    }
+    .nav-brand-text {
+      font-size: 0.8rem;
+    }
+    .nav-brand-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+    }
+    nav {
+      padding: 8px 12px;
+      top: 8px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="bg-mesh"></div>
+  <div class="grid-bg"></div>
+  <div class="particles" id="particles"></div>
+
+  <nav>
+    <a href="/" class="nav-brand">
+      <div class="nav-brand-icon"><i class="fas fa-leaf"></i></div>
+      <div class="nav-brand-text">ReporTrash</div>
+    </a>
+    <div class="nav-links">
+      <a href="#features" class="nav-link features-link">Features</a>
+      <a href="#about" class="nav-link about-link">About</a>
+      <a href="/login/" class="nav-link">Sign In</a>
+      <a href="/signup/" class="nav-link nav-cta">Get Started</a>
+      <div class="theme-toggle-nav" id="themeToggle" onclick="toggleTheme()">
+        <i class="fas fa-sun"></i>
+        <i class="fas fa-moon"></i>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="hero">
+      <div class="hero-container">
+        <div class="hero-left">
+          <div class="hero-badge">
+            <span class="badge-dot"></span>
+            <span>Zero Waste · Smart City</span>
+          </div>
+          <div class="hero-title">
+            <span class="hero-title-line">Report. Track.</span>
+            <span class="hero-title-line gradient">Transform Waste.</span>
+            <span class="hero-title-line outline">Together.</span>
+          </div>
+          <div class="hero-sub">
+            Empowering communities with real‑time waste reporting, AI insights, and eco‑rewards.
+          </div>
+          <div class="hero-actions">
+            <a href="/signup/" class="btn-hero-primary"><i class="fas fa-leaf"></i> Join Now</a>
+            <a href="#features" class="btn-hero-ghost"><i class="fas fa-play"></i> Explore</a>
+          </div>
+        </div>
+        <div class="hero-right">
+          <div class="hero-visual">
+            <div class="hero-mockup">
+              <div class="mockup-header">
+                <div class="mockup-dots">
+                  <div class="mockup-dot"></div>
+                  <div class="mockup-dot"></div>
+                  <div class="mockup-dot"></div>
+                </div>
+                <div class="mockup-title">dashboard.reportrash.ph</div>
+              </div>
+              <div class="mockup-stats">
+                <div class="mockup-stat">
+                  <div class="mockup-stat-val">247</div>
+                  <div class="mockup-stat-lbl">Reports</div>
+                </div>
+                <div class="mockup-stat">
+                  <div class="mockup-stat-val">2.8k</div>
+                  <div class="mockup-stat-lbl">Points</div>
+                </div>
+                <div class="mockup-stat">
+                  <div class="mockup-stat-val">89%</div>
+                  <div class="mockup-stat-lbl">Collected</div>
+                </div>
+              </div>
+              <div class="mockup-chart">
+                <div class="chart-bar" style="height: 28px;"></div>
+                <div class="chart-bar" style="height: 44px;"></div>
+                <div class="chart-bar" style="height: 36px;"></div>
+                <div class="chart-bar" style="height: 52px;"></div>
+                <div class="chart-bar" style="height: 68px;"></div>
+                <div class="chart-bar" style="height: 74px;"></div>
+                <div class="chart-bar" style="height: 62px;"></div>
+                <div class="chart-bar" style="height: 48px;"></div>
+              </div>
+              <div class="mockup-nav">
+                <div class="mockup-nav-item"><i class="fas fa-home"></i></div>
+                <div class="mockup-nav-item active"><i class="fas fa-chart-bar"></i></div>
+                <div class="mockup-nav-item"><i class="fas fa-plus-circle"></i></div>
+                <div class="mockup-nav-item"><i class="fas fa-users"></i></div>
+                <div class="mockup-nav-item"><i class="fas fa-user"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="features" id="features">
+      <div class="features-label" id="featuresLabel">Why ReporTrash?</div>
+      <div class="features-title" id="featuresTitle">Smart waste management<br>for every barangay</div>
+      <div class="features-grid">
+        <div class="feature-card" id="feat1">
+          <span class="feature-icon"><i class="fas fa-map-marked-alt"></i></span>
+          <div class="feature-title">Real‑time reporting</div>
+          <div class="feature-desc">Pinpoint waste hotspots with GPS‑tagged reports. See live status updates from collection teams.</div>
+        </div>
+        <div class="feature-card" id="feat2">
+          <span class="feature-icon"><i class="fas fa-robot"></i></span>
+          <div class="feature-title">AI‑powered insights</div>
+          <div class="feature-desc">Our AI analyzes patterns, predicts collection needs, and suggests eco‑friendly actions.</div>
+        </div>
+        <div class="feature-card" id="feat3">
+          <span class="feature-icon"><i class="fas fa-star"></i></span>
+          <div class="feature-title">Eco‑rewards system</div>
+          <div class="feature-desc">Earn points for every report, climb leaderboards, and unlock badges.</div>
+        </div>
+        <div class="feature-card" id="feat4">
+          <span class="feature-icon"><i class="fas fa-chart-line"></i></span>
+          <div class="feature-title">Track impact</div>
+          <div class="feature-desc">See waste diversion metrics, CO₂ reduction, and community progress.</div>
+        </div>
+        <div class="feature-card" id="feat5">
+          <span class="feature-icon"><i class="fas fa-comments"></i></span>
+          <div class="feature-title">Community hub</div>
+          <div class="feature-desc">Share eco‑tips, discuss solutions, and connect with neighbors.</div>
+        </div>
+        <div class="feature-card" id="feat6">
+          <span class="feature-icon"><i class="fas fa-bell"></i></span>
+          <div class="feature-title">Smart notifications</div>
+          <div class="feature-desc">Get real‑time alerts about collection schedules, announcements, and achievements.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-section">
+      <div class="stats-row" id="statsRow">
+        <div class="stat-item">
+          <div class="stat-num">500+</div>
+          <div class="stat-desc">Reports submitted</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">89%</div>
+          <div class="stat-desc">Collection rate</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">1,200+</div>
+          <div class="stat-desc">Active users</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">2.8k</div>
+          <div class="stat-desc">Points earned</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-section" id="about">
+      <div class="cta-title" id="ctaTitle">
+        Ready to make a difference?<br><span>Join ReporTrash today</span>
+      </div>
+      <div class="cta-sub" id="ctaSub">
+        Be part of the movement transforming waste management in your community.
+        Report, earn rewards, and help create a cleaner, greener future.
+      </div>
+      <a href="/signup/" class="btn-hero-primary" id="ctaBtn">
+        <i class="fas fa-leaf"></i> Start Reporting — It's Free
+      </a>
+    </div>
+
+    <footer>
+      <p>© 2026 ReporTrash — Report the Mess. We handle the Rest.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Theme toggle
+    function toggleTheme() {
+      if (document.body.classList.contains('light-mode')) {
+        document.body.classList.remove('light-mode');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.body.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+    
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      document.body.classList.add('light-mode');
+    }
+
+    // Scroll animations
+    const observerOptions = { threshold: 0.15, rootMargin: '0px 0px -50px 0px' };
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+        }
+      });
+    }, observerOptions);
+
+    const targets = [
+      'featuresLabel', 'featuresTitle', 'feat1', 'feat2', 'feat3', 'feat4', 'feat5', 'feat6',
+      'statsRow', 'ctaTitle', 'ctaSub', 'ctaBtn'
+    ];
+    targets.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    // Particles
+    const particlesEl = document.getElementById('particles');
+    if (particlesEl) {
+      for (let i = 0; i < 40; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.cssText = `
+          left: ${Math.random() * 100}%;
+          width: ${Math.random() * 4 + 2}px;
+          height: ${Math.random() * 4 + 2}px;
+          animation-duration: ${Math.random() * 15 + 10}s;
+          animation-delay: ${Math.random() * 15}s;
+          opacity: ${Math.random() * 0.5};
+        `;
+        particlesEl.appendChild(p);
+      }
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const href = this.getAttribute('href');
+        if (href === '#') return;
+        const target = document.querySelector(href);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

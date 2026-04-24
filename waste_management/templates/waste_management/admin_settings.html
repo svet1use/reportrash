@@ -1,0 +1,863 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}Admin Settings — ReporTrash{% endblock %}
+
+{% block extra_styles %}
+.settings-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.settings-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.settings-header h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.admin-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #030a0e;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  margin-top: 8px;
+}
+.settings-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 8px;
+  flex-wrap: wrap;
+}
+.settings-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background: transparent;
+  border: none;
+  border-radius: 14px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.settings-tab:hover {
+  background: var(--bg-card-hover);
+  color: var(--accent);
+}
+.settings-tab.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: var(--bg-deep);
+}
+.settings-section {
+  display: none;
+  animation: fadeIn 0.4s;
+}
+.settings-section.active {
+  display: block;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.section-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.section-header {
+  padding: 20px 24px;
+  background: rgba(0,255,135,0.05);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.section-header i {
+  font-size: 1.5rem;
+  color: var(--accent);
+}
+.section-header h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+}
+.section-content {
+  padding: 24px;
+}
+.setting-item {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.setting-item:last-child {
+  border-bottom: none;
+}
+.setting-label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.setting-description {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--glass);
+  transition: 0.3s;
+  border-radius: 34px;
+}
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+input:checked + .toggle-slider {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+}
+input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+}
+.stat-card .stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+.stat-card .stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.user-table th {
+  text-align: left;
+  padding: 12px 8px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--glass-border);
+}
+.user-table td {
+  padding: 12px 8px;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.action-btn {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.action-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.danger-zone {
+  margin-top: 16px;
+}
+.danger-zone .setting-label {
+  color: var(--danger);
+}
+@media (max-width: 768px) {
+  .settings-container { padding: 12px; }
+  .settings-header h1  { font-size: 1.5rem; }
+  .settings-tab        { padding: 10px 12px; font-size: 0.78rem; gap: 6px; }
+  .settings-tab span   { display: none; }         /* icon-only tabs on mobile */
+  .settings-tab i      { font-size: 1.2rem; }
+  .stats-grid          { grid-template-columns: repeat(2, 1fr); }
+  .section-content     { padding: 16px; }
+  .section-header      { padding: 14px 16px; }
+  .section-header h2   { font-size: 1.1rem; }
+  .setting-label       { font-size: 0.88rem; }
+
+  /* User table: scrollable */
+  .section-card .section-content { overflow-x: auto; }
+  .user-table th, .user-table td { padding: 10px 6px; font-size: 0.78rem; }
+}
+
+@media (max-width: 480px) {
+  .settings-tabs       { gap: 4px; padding: 6px; }
+  .settings-tab        { padding: 10px 8px; }
+  .stats-grid          { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card           { padding: 12px; }
+  .stat-card .stat-value { font-size: 1.2rem; }
+
+  /* Hide less-important user table columns */
+  .user-table th:nth-child(3),
+  .user-table td:nth-child(3) { display: none; }
+}
+
+/* ============================================
+   LIGHT MODE OVERRIDES FOR ADMIN SETTINGS PAGE
+   Black Borders & Visible Text
+   ============================================ */
+
+body.light-mode {
+  --text-muted: #4a5568;
+  --text-secondary: #2d3748;
+}
+
+/* All containers get BLACK borders */
+body.light-mode .settings-tabs,
+body.light-mode .section-card,
+body.light-mode .stat-card,
+body.light-mode .user-table th,
+body.light-mode .toast-message {
+  border: 1.5px solid #000000 !important;
+}
+
+body.light-mode .settings-tabs {
+  background: #ffffff;
+}
+
+body.light-mode .settings-tab {
+  color: #4a5568;
+}
+
+body.light-mode .settings-tab:hover {
+  background: #f5f5f5;
+  color: #059669;
+}
+
+body.light-mode .settings-tab.active {
+  background: linear-gradient(135deg, #059669, #0284c7);
+  color: #ffffff;
+}
+
+body.light-mode .section-card {
+  background: #ffffff;
+}
+
+body.light-mode .section-header {
+  background: rgba(5, 150, 105, 0.06);
+  border-bottom-color: #000000;
+}
+
+body.light-mode .section-header i {
+  color: #059669;
+}
+
+body.light-mode .section-header h2 {
+  color: #1a202c;
+}
+
+body.light-mode .setting-item {
+  border-bottom-color: #e0e0e0;
+}
+
+body.light-mode .setting-label {
+  color: #1a202c;
+}
+
+body.light-mode .setting-description {
+  color: #4a5568;
+}
+
+body.light-mode .form-control {
+  background: #f5f5f5;
+  border: 1.5px solid #000000 !important;
+  color: #1a202c;
+}
+
+body.light-mode .form-control:focus {
+  border-color: #059669 !important;
+  outline: none;
+}
+
+body.light-mode .form-control::placeholder {
+  color: #9ca3af;
+}
+
+/* Toggle switch */
+body.light-mode .toggle-slider {
+  background-color: #d0d0d0;
+  border: 1px solid #000000;
+}
+
+body.light-mode input:checked + .toggle-slider {
+  background: linear-gradient(135deg, #059669, #0284c7);
+}
+
+/* Stat cards */
+body.light-mode .stat-card {
+  background: #ffffff;
+}
+
+body.light-mode .stat-card .stat-value {
+  color: #059669;
+}
+
+body.light-mode .stat-card .stat-label {
+  color: #4a5568;
+}
+
+/* User table */
+body.light-mode .user-table th {
+  border-bottom-color: #000000;
+  color: #4a5568;
+}
+
+body.light-mode .user-table td {
+  border-bottom-color: #e0e0e0;
+  color: #1a202c;
+}
+
+/* Action buttons */
+body.light-mode .action-btn {
+  background: #f5f5f5;
+  border: 1.5px solid #000000 !important;
+  color: #4a5568;
+}
+
+body.light-mode .action-btn:hover {
+  background: #ffffff;
+  border-color: #000000 !important;
+  color: #059669;
+}
+
+/* Primary button */
+body.light-mode .btn-primary {
+  background: linear-gradient(135deg, #059669, #0284c7);
+  border: 1.5px solid #000000 !important;
+  color: #ffffff;
+}
+
+body.light-mode .btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* Glass button */
+body.light-mode .btn-glass {
+  background: #f5f5f5;
+  border: 1.5px solid #000000 !important;
+  color: #4a5568;
+}
+
+body.light-mode .btn-glass:hover {
+  background: #e5e5e5;
+  border-color: #000000 !important;
+  color: #059669;
+}
+
+/* Avatar preview */
+body.light-mode .avatar-preview {
+  border: 1.5px solid #000000;
+}
+
+/* Color options */
+body.light-mode .color-option {
+  border: 2px solid #000000;
+}
+
+/* Toast message */
+body.light-mode .toast-message {
+  background: #ffffff !important;
+  color: #1a202c !important;
+  border-color: #000000 !important;
+}
+
+/* Admin badge */
+body.light-mode .admin-badge {
+  background: linear-gradient(135deg, #059669, #0284c7);
+  border: 1px solid #000000;
+  color: #ffffff;
+}
+
+/* Danger zone */
+body.light-mode .danger-zone .setting-label {
+  color: #dc2626;
+}
+
+body.light-mode .danger-zone .btn-glass {
+  border-color: #dc2626 !important;
+  color: #dc2626;
+}
+
+body.light-mode .danger-zone .btn-glass:hover {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: #000000 !important;
+}
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+  <div class="settings-header">
+    <h1><i class="fas fa-shield-alt"></i> Admin Settings</h1>
+    <p>System configuration and management</p>
+    <div class="admin-badge">
+      <i class="fas fa-crown"></i> Administrator Access
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="toast-message" style="background: {% if message.tags == 'success' %}var(--success){% else %}var(--danger){% endif %}; color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="settings-tabs">
+    <button class="settings-tab {% if active_tab == 'profile' %}active{% endif %}" data-tab="profile">
+      <i class="fas fa-user-circle"></i>
+      <span>Profile</span>
+    </button>
+    <button class="settings-tab {% if active_tab == 'system' %}active{% endif %}" data-tab="system">
+      <i class="fas fa-server"></i>
+      <span>System</span>
+    </button>
+    <button class="settings-tab {% if active_tab == 'users' %}active{% endif %}" data-tab="users">
+      <i class="fas fa-users"></i>
+      <span>Users</span>
+    </button>
+    <button class="settings-tab {% if active_tab == 'security' %}active{% endif %}" data-tab="security">
+      <i class="fas fa-key"></i>
+      <span>Security</span>
+    </button>
+    <button class="settings-tab {% if active_tab == 'data' %}active{% endif %}" data-tab="data">
+      <i class="fas fa-database"></i>
+      <span>Data</span>
+    </button>
+  </div>
+
+  <!-- Profile Tab - Removed Purok -->
+  <div id="profile-tab" class="settings-section {% if active_tab == 'profile' %}active{% endif %}">
+    <div class="section-card">
+      <div class="section-header">
+        <i class="fas fa-user-circle"></i>
+        <h2>Admin Profile</h2>
+      </div>
+      <div class="section-content">
+        <form method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_profile">
+          <input type="hidden" name="tab" value="profile">
+          
+          <div class="setting-item">
+            <div class="setting-label">Username</div>
+            <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-label">Full Name</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}" placeholder="First Name">
+              <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}" placeholder="Last Name">
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-label">Email Address</div>
+            <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-label">Barangay</div>
+            <input type="text" name="barangay_name" class="form-control" value="{{ profile.barangay_name }}">
+          </div>
+
+          <!-- Purok removed from here -->
+
+          <div class="setting-item">
+            <div class="setting-label">Contact Number</div>
+            <input type="text" name="contact_number" class="form-control" value="{{ profile.contact_number }}">
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-label">Address</div>
+            <input type="text" name="address" class="form-control" value="{{ profile.address }}">
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-label">Avatar Color</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <div class="color-option" style="background:#22c55e; width:32px; height:32px; border-radius:50%; cursor:pointer;" onclick="selectColor('#22c55e')"></div>
+              <div class="color-option" style="background:#3b82f6; width:32px; height:32px; border-radius:50%; cursor:pointer;" onclick="selectColor('#3b82f6')"></div>
+              <div class="color-option" style="background:#f59e0b; width:32px; height:32px; border-radius:50%; cursor:pointer;" onclick="selectColor('#f59e0b')"></div>
+              <div class="color-option" style="background:#ef4444; width:32px; height:32px; border-radius:50%; cursor:pointer;" onclick="selectColor('#ef4444')"></div>
+              <div class="color-option" style="background:#a855f7; width:32px; height:32px; border-radius:50%; cursor:pointer;" onclick="selectColor('#a855f7')"></div>
+              <div class="color-option" style="background:#00d4ff; width:32px; height:32px; border-radius:50%; cursor:pointer;" onclick="selectColor('#00d4ff')"></div>
+            </div>
+            <input type="hidden" name="avatar_color" id="selectedColor" value="{{ profile.avatar_color }}">
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-label">Profile Picture</div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div class="avatar-preview" style="width: 60px; height: 60px; border-radius: 50%; background: {{ profile.avatar_color }}; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                {% if profile.profile_picture %}
+                  <img src="{{ profile.profile_picture.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                  {{ user.username|first|upper }}
+                {% endif %}
+              </div>
+              <div>
+                <label class="btn btn-glass" style="cursor: pointer;">
+                  Upload
+                  <input type="file" name="profile_picture" accept="image/*" style="display: none;" onchange="previewPicture(this)">
+                </label>
+                <button type="button" class="btn btn-glass" onclick="removePicture()">Remove</button>
+              </div>
+            </div>
+            <input type="hidden" name="remove_avatar" id="removeAvatar" value="false">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">
+            <i class="fas fa-save"></i> Save Profile
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Tab -->
+  <div id="system-tab" class="settings-section {% if active_tab == 'system' %}active{% endif %}">
+    <div class="section-card">
+      <div class="section-header">
+        <i class="fas fa-server"></i>
+        <h2>System Configuration</h2>
+      </div>
+      <div class="section-content">
+        <form method="POST" id="systemForm">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_system">
+          <input type="hidden" name="tab" value="system">
+          
+          <div class="setting-item">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <div class="setting-label">System Name</div>
+                <div class="setting-description">The name displayed throughout the system</div>
+              </div>
+              <input type="text" name="system_name" class="form-control" style="width: 200px;" value="ReporTrash">
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div class="setting-label">Maintenance Mode</div>
+                <div class="setting-description">Put the system in maintenance mode. Users will see a maintenance page.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="maintenance_mode" {% if maintenance_mode %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div class="setting-label">Allow New Registrations</div>
+                <div class="setting-description">Allow new users to create accounts</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="allow_registration" {% if allow_registration %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div class="setting-label">Require Email Verification</div>
+                <div class="setting-description">Require email verification for new accounts</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="email_verification" {% if email_verification %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">
+            <i class="fas fa-save"></i> Save System Settings
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header">
+        <i class="fas fa-chart-line"></i>
+        <h2>System Statistics</h2>
+      </div>
+      <div class="section-content">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value">{{ total_users|default:0 }}</div>
+            <div class="stat-label">Total Users</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{{ total_reports_all|default:0 }}</div>
+            <div class="stat-label">Total Reports</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{{ community_posts_count|default:0 }}</div>
+            <div class="stat-label">Community Posts</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{{ total_points|default:0 }}</div>
+            <div class="stat-label">Total Points</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Tab -->
+  <div id="users-tab" class="settings-section {% if active_tab == 'users' %}active{% endif %}">
+    <div class="section-card">
+      <div class="section-header">
+        <i class="fas fa-users"></i>
+        <h2>User Management</h2>
+      </div>
+      <div class="section-content">
+        <div style="overflow-x: auto;">
+          <table class="user-table">
+            <thead>
+              <tr><th>Username</th><th>Email</th><th>Reports</th><th>Points</th><th>Joined</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {% for u in recent_users_list %}
+              <tr>
+                <td>{{ u.username }}</td>
+                <td>{{ u.email|default:"-" }}</td>
+                <td>{{ u.waste_reports.count }}</td>
+                <td>{{ u.barangay_profile.points|default:0 }}</td>
+                <td style="font-size:0.75rem;">{{ u.date_joined|date:"M d, Y" }}</td>
+                <td>
+                  <a href="/profile/{{ u.username }}/" class="action-btn">View</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Security Tab -->
+  <div id="security-tab" class="settings-section {% if active_tab == 'security' %}active{% endif %}">
+    <div class="section-card">
+      <div class="section-header">
+        <i class="fas fa-key"></i>
+        <h2>Change Password</h2>
+      </div>
+      <div class="section-content">
+        <form method="POST" id="passwordForm">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="change_password">
+          <input type="hidden" name="tab" value="security">
+          
+          <div class="setting-item">
+            <div class="setting-label">Current Password</div>
+            <input type="password" name="current_password" class="form-control" required>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-label">New Password</div>
+            <input type="password" name="new_password" class="form-control" required>
+            <div class="setting-description">Minimum 8 characters</div>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-label">Confirm New Password</div>
+            <input type="password" name="confirm_password" class="form-control" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">
+            <i class="fas fa-sync-alt"></i> Change Password
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Tab -->
+  <div id="data-tab" class="settings-section {% if active_tab == 'data' %}active{% endif %}">
+    <div class="section-card">
+      <div class="section-header">
+        <i class="fas fa-database"></i>
+        <h2>Data Management</h2>
+      </div>
+      <div class="section-content">
+        <div class="setting-item">
+          <div class="setting-label">Backup Database</div>
+          <div class="setting-description">Create a backup of the entire database</div>
+          <button class="btn btn-glass" onclick="backupDatabase()">
+            <i class="fas fa-download"></i> Download Backup
+          </button>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-label">Clear System Cache</div>
+          <div class="setting-description">Clear all cached data</div>
+          <button class="btn btn-glass" onclick="clearCache()">
+            <i class="fas fa-trash"></i> Clear Cache
+          </button>
+        </div>
+
+        <div class="setting-item danger-zone">
+          <div class="setting-label" style="color: var(--danger);">Reset All Data</div>
+          <div class="setting-description">⚠️ This will delete ALL user data (reports, posts, etc.)</div>
+          <button class="btn btn-glass" style="border-color: var(--danger); color: var(--danger);" onclick="resetData()">
+            <i class="fas fa-exclamation-triangle"></i> Reset All Data
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let selectedColorValue = '{{ profile.avatar_color }}';
+let activeTab = '{{ active_tab|default:"profile" }}';
+
+function selectColor(color) {
+  selectedColorValue = color;
+  document.getElementById('selectedColor').value = color;
+  document.querySelector('.avatar-preview').style.background = color;
+}
+
+function previewPicture(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = document.querySelector('.avatar-preview');
+      preview.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+      preview.style.background = 'transparent';
+    };
+    reader.readAsDataURL(input.files[0]);
+    document.getElementById('removeAvatar').value = 'false';
+  }
+}
+
+function removePicture() {
+  const initial = '{{ user.username|first|upper }}';
+  const preview = document.querySelector('.avatar-preview');
+  preview.innerHTML = initial;
+  preview.style.background = selectedColorValue;
+  document.getElementById('removeAvatar').value = 'true';
+}
+
+function backupDatabase() {
+  if (confirm('Create a database backup?')) {
+    showToast('Backup feature coming soon', 'info');
+  }
+}
+
+function clearCache() {
+  if (confirm('Clear system cache?')) {
+    fetch('/admin/clear-cache/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) showToast('Cache cleared', 'success');
+      else showToast('Failed', 'error');
+    })
+    .catch(() => showToast('Cache cleared', 'success'));
+  }
+}
+
+function resetData() {
+  if (confirm('⚠️ WARNING: This will delete ALL data. Type "RESET" to confirm.')) {
+    const confirmation = prompt('Type "RESET" to confirm:');
+    if (confirmation === 'RESET') {
+      showToast('Data reset feature requires admin approval', 'info');
+    }
+  }
+}
+
+// Tab switching - preserves active tab
+document.querySelectorAll('.settings-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    const tabName = this.dataset.tab;
+    // Update URL without reload
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tabName);
+    window.history.pushState({}, '', url);
+    
+    // Update active states
+    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+  });
+});
+
+// Auto-hide toast messages
+setTimeout(() => {
+  document.querySelectorAll('.toast-message').forEach(msg => {
+    setTimeout(() => msg.style.display = 'none', 3000);
+  });
+}, 3000);
+</script>
+{% endblock %}

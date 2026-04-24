@@ -1,0 +1,1527 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}Analytics & Archive — ReporTrash Admin{% endblock %}
+
+{% block extra_styles %}
+/* ============================================================
+   ADMIN ANALYTICS & DELETED RECORDS — ReporTrash
+   ============================================================ */
+
+.analytics-wrap {
+  padding: 0 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── Page header ── */
+.page-header { padding: 20px 0 18px; }
+.page-h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+}
+.page-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── Back nav ── */
+.back-nav {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--text-muted); text-decoration: none;
+  font-size: 0.80rem; font-family: 'DM Mono', monospace;
+  margin-bottom: 4px; transition: color 0.2s;
+}
+.back-nav:hover { color: var(--accent); }
+
+/* ── Tabs ── */
+.main-tabs {
+  display: flex; gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px; padding: 6px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.main-tab {
+  flex: 1; min-width: 140px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 18px; border-radius: 12px;
+  background: transparent; border: none;
+  color: var(--text-muted); font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; transition: all 0.3s;
+}
+.main-tab i { font-size: 1rem; }
+.main-tab:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+.main-tab.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #030a0e;
+}
+.main-tab.active i { color: #030a0e; }
+body.light-mode .main-tab.active { color: #ffffff; }
+body.light-mode .main-tab.active i { color: #ffffff; }
+
+.tab-panel { display: none; animation: fadeUp 0.35s ease both; }
+.tab-panel.active { display: block; }
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(12px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ── Section title ── */
+.sec-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 1rem;
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 14px;
+}
+.sec-title i { color: var(--accent); }
+
+/* ── KPI row ── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px; margin-bottom: 24px;
+}
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px; padding: 18px 20px;
+  position: relative; overflow: hidden;
+  transition: all 0.3s;
+}
+.kpi-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: var(--kpi-color, var(--accent));
+}
+.kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  border-color: var(--kpi-color, var(--accent));
+}
+.kpi-label {
+  font-size: 0.68rem; font-family: 'DM Mono', monospace;
+  color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: 0.8px; margin-bottom: 8px;
+}
+.kpi-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 2rem; font-weight: 800; line-height: 1;
+  color: var(--kpi-color, var(--accent));
+}
+.kpi-sub {
+  font-size: 0.7rem; color: var(--text-muted);
+  font-family: 'DM Mono', monospace; margin-top: 6px;
+}
+
+/* ── Chart grid ── */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px; margin-bottom: 24px;
+}
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 22px; padding: 20px;
+  transition: all 0.3s;
+}
+.chart-card:hover { border-color: rgba(0,255,135,0.2); }
+.chart-card.wide { grid-column: 1 / -1; }
+.chart-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 0.95rem;
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 16px; color: var(--text-primary);
+}
+.chart-title i { color: var(--accent); }
+.chart-wrap { position: relative; height: 240px; }
+.chart-wrap.tall { height: 320px; }
+
+/* ── Affected areas: purok heat bars ── */
+.area-list { display: flex; flex-direction: column; gap: 10px; }
+.area-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 60px 80px;
+  align-items: center; gap: 12px;
+  padding: 10px 14px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  transition: all 0.2s;
+}
+.area-row:hover { background: var(--bg-card-hover); }
+.area-row.top-1 { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
+.area-row.top-2 { border-color: rgba(245,158,11,0.25); background: rgba(245,158,11,0.04); }
+.area-row.top-3 { border-color: rgba(168,85,247,0.2); background: rgba(168,85,247,0.03); }
+.area-name {
+  font-size: 0.82rem; font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.area-bar-track {
+  height: 8px; background: var(--glass-strong);
+  border-radius: 100px; overflow: hidden;
+}
+.area-bar-fill {
+  height: 100%; border-radius: 100px;
+  transition: width 1s cubic-bezier(0.34,1.56,0.64,1);
+  background: linear-gradient(90deg, var(--bar-color, var(--accent)), var(--bar-color2, var(--accent2)));
+}
+.area-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem; font-weight: 700;
+  color: var(--text-primary); text-align: right;
+}
+.area-rank {
+  font-size: 0.65rem; font-family: 'DM Mono', monospace;
+  color: var(--text-muted); text-align: right;
+}
+.rank-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  font-size: 0.65rem; font-weight: 800;
+}
+.rank-1 { background: rgba(239,68,68,0.2); color: #ef4444; }
+.rank-2 { background: rgba(245,158,11,0.2); color: #f59e0b; }
+.rank-3 { background: rgba(168,85,247,0.2); color: #a855f7; }
+.rank-n { background: var(--glass); color: var(--text-muted); }
+
+/* ── Map container ── */
+.map-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 22px; overflow: hidden;
+  margin-bottom: 24px;
+}
+.map-header {
+  padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--glass-border);
+}
+.map-header-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 0.95rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.map-header-title i { color: var(--accent); }
+#heatMapContainer { height: 420px; width: 100%; }
+
+/* Category legend dots */
+.cat-legend {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  padding: 12px 20px;
+  border-top: 1px solid var(--glass-border);
+}
+.cat-dot {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.7rem; font-family: 'DM Mono', monospace;
+  color: var(--text-muted);
+}
+.cat-dot::before {
+  content: ''; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--dot-color);
+}
+
+/* ── Deleted records table ── */
+.archive-toolbar {
+  display: flex; gap: 10px; align-items: center;
+  flex-wrap: wrap; margin-bottom: 16px;
+}
+.archive-search {
+  flex: 1; min-width: 200px;
+  display: flex; align-items: center; gap: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px; overflow: hidden;
+  transition: border-color 0.2s;
+}
+.archive-search:focus-within { border-color: rgba(0,255,135,0.4); }
+.archive-search i {
+  padding: 0 12px; color: var(--text-muted); font-size: 0.85rem; flex-shrink: 0;
+}
+.archive-search input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text-primary); font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.875rem; padding: 10px 0;
+}
+.archive-search input::placeholder { color: var(--text-muted); }
+.filter-select {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px; padding: 9px 14px;
+  color: var(--text-primary);
+  font-family: 'DM Mono', monospace; font-size: 0.78rem;
+  cursor: pointer; appearance: none;
+  -webkit-appearance: none;
+}
+body.light-mode .filter-select { background: rgba(0,0,0,0.04); }
+
+.table-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 22px; overflow: hidden;
+  margin-bottom: 20px;
+}
+.del-table { width: 100%; border-collapse: collapse; }
+.del-table th {
+  text-align: left; padding: 14px 16px 12px;
+  font-size: 0.68rem; color: var(--text-muted);
+  font-family: 'DM Mono', monospace; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  border-bottom: 1px solid var(--glass-border);
+  white-space: nowrap; background: rgba(255,255,255,0.01);
+}
+body.light-mode .del-table th { background: rgba(0,0,0,0.02); }
+.del-table td {
+  padding: 11px 16px;
+  font-size: 0.82rem;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+body.light-mode .del-table td { border-bottom-color: rgba(0,0,0,0.04); }
+.del-table tr:last-child td { border-bottom: none; }
+.del-table tr:hover td { background: rgba(255,255,255,0.02); }
+body.light-mode .del-table tr:hover td { background: rgba(0,0,0,0.02); }
+.del-title { font-weight: 600; color: var(--text-primary); }
+.del-meta { font-size: 0.7rem; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
+
+/* Category badge */
+.cat-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 100px;
+  font-size: 0.65rem; font-weight: 700;
+  font-family: 'DM Mono', monospace; white-space: nowrap;
+}
+.cat-bio  { background: rgba(34,197,94,0.12); color: #22c55e; }
+.cat-rec  { background: rgba(59,130,246,0.12); color: #3b82f6; }
+.cat-res  { background: rgba(148,163,184,0.12); color: #94a3b8; }
+.cat-spe  { background: rgba(245,158,11,0.12); color: #f59e0b; }
+.cat-haz  { background: rgba(239,68,68,0.12); color: #ef4444; }
+.cat-elec { background: rgba(168,85,247,0.12); color: #a855f7; }
+
+/* Who deleted badge */
+.deleted-by-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 8px; font-size: 0.65rem;
+  font-family: 'DM Mono', monospace;
+}
+.del-by-user  { background: rgba(0,212,255,0.1); color: var(--accent2); }
+.del-by-admin { background: rgba(239,68,68,0.1); color: var(--danger); }
+
+/* Image thumbnail */
+.thumb {
+  width: 38px; height: 38px; border-radius: 8px;
+  object-fit: cover; border: 1px solid var(--glass-border);
+  cursor: pointer; transition: transform 0.2s;
+}
+.thumb:hover { transform: scale(1.1); }
+.no-img {
+  width: 38px; height: 38px; border-radius: 8px;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 0.7rem;
+}
+
+/* Pagination */
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px; margin-top: 12px; padding: 0 4px;
+}
+.page-info { font-size: 0.75rem; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+.page-btns { display: flex; gap: 6px; }
+.page-btn {
+  padding: 6px 14px; border-radius: 10px; font-size: 0.78rem;
+  background: var(--bg-card); border: 1px solid var(--glass-border);
+  color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+  font-family: 'DM Mono', monospace;
+}
+.page-btn:hover, .page-btn.active { border-color: var(--accent); color: var(--accent); }
+.page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-state i { font-size: 3rem; opacity: 0.2; margin-bottom: 14px; display: block; }
+
+/* ── Image lightbox ── */
+.lightbox {
+  position: fixed; inset: 0; z-index: 99999;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.lightbox.open { display: flex; }
+.lightbox img {
+  max-width: 90vw; max-height: 85vh;
+  border-radius: 16px; object-fit: contain;
+  box-shadow: 0 20px 80px rgba(0,0,0,0.6);
+}
+.lightbox-close {
+  position: absolute; top: 20px; right: 20px;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 50%; width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; cursor: pointer; font-size: 1rem;
+  transition: all 0.2s;
+}
+.lightbox-close:hover { background: rgba(239,68,68,0.3); }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .area-row { grid-template-columns: 100px 1fr 50px; }
+  .area-rank { display: none; }
+  .kpi-value { font-size: 1.6rem; }
+  .chart-wrap { height: 180px; }
+  .del-table th:nth-child(5),
+  .del-table th:nth-child(6),
+  .del-table td:nth-child(5),
+  .del-table td:nth-child(6) { display: none; }
+}
+
+
+/* ============================================
+   LIGHT MODE OVERRIDES FOR ANALYTICS PAGE
+   Black Borders & Visible Text
+   ============================================ */
+
+body.light-mode {
+  --text-muted: #4a5568;
+  --text-secondary: #2d3748;
+}
+
+/* All containers get BLACK borders */
+body.light-mode .kpi-card,
+body.light-mode .chart-card,
+body.light-mode .map-wrap,
+body.light-mode .table-wrap,
+body.light-mode .main-tabs,
+body.light-mode .area-row,
+body.light-mode .archive-search,
+body.light-mode .filter-select,
+body.light-mode .page-btn,
+body.light-mode .lightbox-close {
+  border: 1.5px solid #000000 !important;
+}
+
+/* Card backgrounds */
+body.light-mode .kpi-card,
+body.light-mode .chart-card,
+body.light-mode .map-wrap,
+body.light-mode .table-wrap,
+body.light-mode .main-tabs {
+  background: #ffffff;
+}
+
+body.light-mode .kpi-card:hover,
+body.light-mode .chart-card:hover {
+  background: #fafafa;
+}
+
+/* KPI values - keep accent colors */
+body.light-mode .kpi-value {
+  color: #059669 !important;
+}
+
+body.light-mode .kpi-label {
+  color: #4a5568;
+}
+
+body.light-mode .kpi-sub {
+  color: #4a5568;
+}
+
+/* Area rows */
+body.light-mode .area-row {
+  background: #f5f5f5;
+}
+
+body.light-mode .area-row:hover {
+  background: #e8e8e8;
+}
+
+body.light-mode .area-name {
+  color: #1a202c;
+}
+
+body.light-mode .area-count {
+  color: #1a202c;
+}
+
+body.light-mode .area-rank {
+  color: #4a5568;
+}
+
+/* Rank badges in light mode */
+body.light-mode .rank-1 {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+body.light-mode .rank-2 {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+
+body.light-mode .rank-3 {
+  background: rgba(168, 85, 247, 0.15);
+  color: #9333ea;
+}
+
+body.light-mode .rank-n {
+  background: rgba(0, 0, 0, 0.05);
+  color: #4a5568;
+}
+
+/* Top row highlights */
+body.light-mode .area-row.top-1 {
+  border-color: #dc2626 !important;
+  background: rgba(220, 38, 38, 0.05);
+}
+
+body.light-mode .area-row.top-2 {
+  border-color: #d97706 !important;
+  background: rgba(217, 119, 6, 0.04);
+}
+
+body.light-mode .area-row.top-3 {
+  border-color: #9333ea !important;
+  background: rgba(147, 51, 234, 0.03);
+}
+
+/* Main tabs */
+body.light-mode .main-tab {
+  color: #4a5568;
+}
+
+body.light-mode .main-tab:hover {
+  background: #f5f5f5;
+  color: #059669;
+}
+
+body.light-mode .main-tab.active {
+  background: linear-gradient(135deg, #059669, #0284c7);
+  color: #ffffff;
+}
+
+body.light-mode .main-tab.active i {
+  color: #ffffff;
+}
+
+/* Section titles */
+body.light-mode .sec-title,
+body.light-mode .chart-title,
+body.light-mode .map-header-title {
+  color: #1a202c;
+}
+
+body.light-mode .sec-title i,
+body.light-mode .chart-title i,
+body.light-mode .map-header-title i {
+  color: #059669;
+}
+
+/* Archive table */
+body.light-mode .del-table th {
+  color: #4a5568;
+  border-bottom-color: #000000;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body.light-mode .del-table td {
+  border-bottom-color: #e0e0e0;
+  color: #1a202c;
+}
+
+body.light-mode .del-table tr:hover td {
+  background: #f5f5f5;
+}
+
+body.light-mode .del-title {
+  color: #1a202c;
+}
+
+body.light-mode .del-meta {
+  color: #4a5568;
+}
+
+/* Category badges in light mode */
+body.light-mode .cat-bio {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid #000000;
+  color: #16a34a;
+}
+
+body.light-mode .cat-rec {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid #000000;
+  color: #2563eb;
+}
+
+body.light-mode .cat-res {
+  background: rgba(100, 116, 139, 0.12);
+  border: 1px solid #000000;
+  color: #475569;
+}
+
+body.light-mode .cat-spe {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid #000000;
+  color: #d97706;
+}
+
+body.light-mode .cat-haz {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid #000000;
+  color: #dc2626;
+}
+
+body.light-mode .cat-elec {
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid #000000;
+  color: #9333ea;
+}
+
+/* Deleted by badges */
+body.light-mode .del-by-user {
+  background: rgba(2, 132, 199, 0.1);
+  border: 1px solid #000000;
+  color: #0284c7;
+}
+
+body.light-mode .del-by-admin {
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid #000000;
+  color: #dc2626;
+}
+
+/* Search and filter inputs */
+body.light-mode .archive-search {
+  background: #f5f5f5;
+}
+
+body.light-mode .archive-search input {
+  color: #1a202c;
+}
+
+body.light-mode .archive-search input::placeholder {
+  color: #9ca3af;
+}
+
+body.light-mode .archive-search i {
+  color: #4a5568;
+}
+
+body.light-mode .filter-select {
+  background: #f5f5f5;
+  color: #1a202c;
+}
+
+/* Pagination */
+body.light-mode .page-btn {
+  background: #f5f5f5;
+  color: #4a5568;
+}
+
+body.light-mode .page-btn:hover,
+body.light-mode .page-btn.active {
+  background: #059669;
+  border-color: #000000 !important;
+  color: #ffffff;
+}
+
+body.light-mode .page-info {
+  color: #4a5568;
+}
+
+/* Empty state */
+body.light-mode .empty-state {
+  color: #4a5568;
+}
+
+body.light-mode .empty-state i {
+  opacity: 0.3;
+  color: #4a5568;
+}
+
+/* Thumbnail images */
+body.light-mode .thumb {
+  border: 1px solid #000000;
+}
+
+body.light-mode .no-img {
+  background: #f5f5f5;
+  border: 1px solid #000000;
+  color: #4a5568;
+}
+
+/* Map container */
+body.light-mode #heatMapContainer {
+  border: 1.5px solid #000000 !important;
+  border-radius: 14px;
+}
+
+/* Category legend dots */
+body.light-mode .cat-legend {
+  border-top-color: #000000;
+}
+
+body.light-mode .cat-dot {
+  color: #4a5568;
+}
+
+/* Back navigation */
+body.light-mode .back-nav {
+  color: #4a5568;
+}
+
+body.light-mode .back-nav:hover {
+  color: #059669;
+}
+
+/* Page header */
+body.light-mode .page-sub {
+  color: #4a5568 !important;
+}
+
+/* Chart tooltips in light mode */
+body.light-mode .chartjs-tooltip {
+  background: #ffffff !important;
+  border: 1px solid #000000 !important;
+  color: #1a202c !important;
+}
+
+/* Keep chart text visible */
+body.light-mode canvas {
+  filter: none;
+}
+{% endblock %}
+
+{% block content %}
+<div class="analytics-wrap">
+
+  <a href="{% url 'dashboard' %}" class="back-nav">
+    <i class="fas fa-arrow-left"></i> Back to Admin Dashboard
+  </a>
+
+  <div class="page-header">
+    <div class="page-h1">Analytics & Archive</div>
+    <div class="page-sub">Affected area intelligence · Deleted records audit trail</div>
+  </div>
+
+  <!-- ══ Main tab switcher ══ -->
+  <div class="main-tabs">
+    <button class="main-tab active" data-panel="analytics" onclick="switchTab('analytics')">
+      <i class="fas fa-chart-bar"></i> Affected Areas Analytics
+    </button>
+    <button class="main-tab" data-panel="archive" onclick="switchTab('archive')">
+      <i class="fas fa-archive"></i> Deleted Records Archive
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       TAB 1: ANALYTICS
+  ══════════════════════════════════════════ -->
+  <div id="panel-analytics" class="tab-panel active">
+
+    <!-- KPI row -->
+    <div class="kpi-row">
+      <div class="kpi-card" style="--kpi-color: var(--danger);">
+        <div class="kpi-label"><i class="fas fa-exclamation-circle"></i> Most Affected Purok</div>
+        <div class="kpi-value" style="font-size:1.3rem; line-height:1.3; text-transform:capitalize;">
+          {{ top_purok|default:"—" }}
+        </div>
+        <div class="kpi-sub">{{ top_purok_count|default:0 }} total reports</div>
+      </div>
+      <div class="kpi-card" style="--kpi-color: var(--warning);">
+        <div class="kpi-label"><i class="fas fa-fire-alt"></i> Hottest Category</div>
+        <div class="kpi-value" style="font-size:1.3rem; text-transform:capitalize;">
+          {{ top_category|default:"—" }}
+        </div>
+        <div class="kpi-sub">Most reported waste type</div>
+      </div>
+      <div class="kpi-card" style="--kpi-color: var(--accent);">
+        <div class="kpi-label"><i class="fas fa-map-marker-alt"></i> Active Puroks</div>
+        <div class="kpi-value">{{ total_puroks|default:0 }}</div>
+        <div class="kpi-sub">With at least 1 report</div>
+      </div>
+      <div class="kpi-card" style="--kpi-color: var(--accent2);">
+        <div class="kpi-label"><i class="fas fa-clipboard-list"></i> Total Reports</div>
+        <div class="kpi-value">{{ total_reports_all|default:0 }}</div>
+        <div class="kpi-sub">All time</div>
+      </div>
+      <div class="kpi-card" style="--kpi-color:#a855f7;">
+        <div class="kpi-label"><i class="fas fa-clock"></i> Pending Resolution</div>
+        <div class="kpi-value">{{ pending_total|default:0 }}</div>
+        <div class="kpi-sub">Awaiting action</div>
+      </div>
+    </div>
+
+    <!-- Heatmap -->
+    <div class="map-wrap">
+      <div class="map-header">
+        <div class="map-header-title">
+          <i class="fas fa-map"></i> Waste Report Cluster Map — Barangay Zone 1
+        </div>
+        <div style="font-size:0.72rem; color:var(--text-muted); font-family:'DM Mono',monospace;">
+          Circle size = number of reports · Click to see details
+        </div>
+      </div>
+      <div id="heatMapContainer"></div>
+      <div class="cat-legend">
+        <span class="cat-dot" style="--dot-color:#22c55e;">Biodegradable</span>
+        <span class="cat-dot" style="--dot-color:#3b82f6;">Recyclable</span>
+        <span class="cat-dot" style="--dot-color:#94a3b8;">Residual</span>
+        <span class="cat-dot" style="--dot-color:#f59e0b;">Special</span>
+        <span class="cat-dot" style="--dot-color:#ef4444;">Hazardous</span>
+        <span class="cat-dot" style="--dot-color:#a855f7;">E-Waste</span>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="chart-grid">
+
+      <!-- Most affected puroks bar chart -->
+      <div class="chart-card wide">
+        <div class="chart-title">
+          <i class="fas fa-map-marker-alt"></i> Most Affected Puroks (by report count)
+        </div>
+        <div class="chart-wrap tall">
+          <canvas id="purokChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Category breakdown per top purok -->
+      <div class="chart-card">
+        <div class="chart-title">
+          <i class="fas fa-chart-pie"></i> Waste Type Breakdown
+        </div>
+        <div class="chart-wrap">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Monthly trend -->
+      <div class="chart-card">
+        <div class="chart-title">
+          <i class="fas fa-chart-line"></i> Monthly Report Trend
+        </div>
+        <div class="chart-wrap">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Status distribution -->
+      <div class="chart-card">
+        <div class="chart-title">
+          <i class="fas fa-tasks"></i> Report Status Distribution
+        </div>
+        <div class="chart-wrap">
+          <canvas id="statusChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Pending vs resolved by area -->
+      <div class="chart-card">
+        <div class="chart-title">
+          <i class="fas fa-balance-scale"></i> Pending vs. Resolved (Top 6 Puroks)
+        </div>
+        <div class="chart-wrap">
+          <canvas id="pendingChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Purok heat table -->
+    <div class="chart-card" style="margin-bottom:24px;">
+      <div class="chart-title">
+        <i class="fas fa-fire"></i> Purok Severity Ranking
+      </div>
+      <div class="area-list" id="areaList">
+        {% for item in purok_stats %}
+        {% with forloop.counter as rank %}
+        <div class="area-row {% if rank == 1 %}top-1{% elif rank == 2 %}top-2{% elif rank == 3 %}top-3{% endif %}">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="rank-badge {% if rank == 1 %}rank-1{% elif rank == 2 %}rank-2{% elif rank == 3 %}rank-3{% else %}rank-n{% endif %}">
+              {% if rank == 1 %}🔴{% elif rank == 2 %}🟠{% elif rank == 3 %}🟣{% else %}{{ rank }}{% endif %}
+            </span>
+            <span class="area-name" title="{{ item.purok }}">{{ item.purok|capfirst|default:"Unknown" }}</span>
+          </div>
+          <div class="area-bar-track">
+            <div class="area-bar-fill"
+              style="width:{{ item.pct|default:0 }}%;
+              --bar-color:{% if rank == 1 %}#ef4444{% elif rank == 2 %}#f59e0b{% elif rank == 3 %}#a855f7{% else %}#00ff87{% endif %};
+              --bar-color2:{% if rank == 1 %}#f97316{% elif rank == 2 %}#eab308{% elif rank == 3 %}#00d4ff{% else %}#00d4ff{% endif %};">
+            </div>
+          </div>
+          <div class="area-count">{{ item.count }}</div>
+          <div class="area-rank">{{ item.pct|default:0 }}%</div>
+        </div>
+        {% endwith %}
+        {% empty %}
+        <div style="text-align:center; padding:30px; color:var(--text-muted);">
+          <i class="fas fa-map" style="font-size:2rem; opacity:0.2; display:block; margin-bottom:10px;"></i>
+          No location data available yet.
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div><!-- /panel-analytics -->
+
+
+  <!-- ══════════════════════════════════════════
+       TAB 2: DELETED RECORDS
+  ══════════════════════════════════════════ -->
+  <div id="panel-archive" class="tab-panel">
+
+    <!-- KPI row -->
+    <div class="kpi-row">
+      <div class="kpi-card" style="--kpi-color:var(--danger);">
+        <div class="kpi-label"><i class="fas fa-trash-alt"></i> Total Deleted</div>
+        <div class="kpi-value">{{ total_deleted|default:0 }}</div>
+        <div class="kpi-sub">All time records removed</div>
+      </div>
+      <div class="kpi-card" style="--kpi-color:var(--warning);">
+        <div class="kpi-label"><i class="fas fa-user"></i> Deleted by Users</div>
+        <div class="kpi-value">{{ deleted_by_user|default:0 }}</div>
+        <div class="kpi-sub">Self-removed reports</div>
+      </div>
+      <div class="kpi-card" style="--kpi-color:var(--accent2);">
+        <div class="kpi-label"><i class="fas fa-user-shield"></i> Deleted by Admin</div>
+        <div class="kpi-value">{{ deleted_by_admin|default:0 }}</div>
+        <div class="kpi-sub">Admin-moderated removals</div>
+      </div>
+      <div class="kpi-card" style="--kpi-color:#a855f7;">
+        <div class="kpi-label"><i class="far fa-calendar-alt"></i> This Month</div>
+        <div class="kpi-value">{{ deleted_this_month|default:0 }}</div>
+        <div class="kpi-sub">Deletions in current month</div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="archive-toolbar">
+      <div class="archive-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="archiveSearchInput" placeholder="Search by title, reporter, purok, location…" oninput="filterArchive()">
+      </div>
+      <select class="filter-select" id="archiveCatFilter" onchange="filterArchive()">
+        <option value="">All Categories</option>
+        <option value="biodegradable">Biodegradable</option>
+        <option value="recyclable">Recyclable</option>
+        <option value="residual">Residual</option>
+        <option value="special">Special</option>
+        <option value="hazardous">Hazardous</option>
+        <option value="electronic">Electronic</option>
+      </select>
+      <select class="filter-select" id="archiveDelFilter" onchange="filterArchive()">
+        <option value="">All Deletions</option>
+        <option value="user">By User</option>
+        <option value="admin">By Admin</option>
+      </select>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <div style="overflow-x:auto;">
+        <table class="del-table" id="archiveTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Photo</th>
+              <th>Report</th>
+              <th>Category</th>
+              <th>Location / Purok</th>
+              <th>Reporter</th>
+              <th>Reported</th>
+              <th>Deleted</th>
+              <th>Deleted By</th>
+            </tr>
+          </thead>
+          <tbody id="archiveTbody">
+            {% for rec in deleted_records %}
+            <tr class="archive-row"
+              data-title="{{ rec.title|lower }}"
+              data-reporter="{{ rec.reporter_username|lower }}"
+              data-purok="{{ rec.purok|lower }}"
+              data-location="{{ rec.location|lower }}"
+              data-cat="{{ rec.category }}"
+              data-delby="{{ rec.deleted_by_role|default:'user' }}">
+              <td style="color:var(--text-muted); font-family:'DM Mono',monospace; font-size:0.72rem;">{{ rec.id }}</td>
+              <td>
+                {% if rec.image %}
+                  <img src="{{ rec.image }}" class="thumb" onclick="openLightbox('{{ rec.image }}')" alt="photo">
+                {% else %}
+                  <div class="no-img"><i class="fas fa-image"></i></div>
+                {% endif %}
+              </td>
+              <td>
+                <div class="del-title">{{ rec.title }}</div>
+                {% if rec.description %}
+                <div class="del-meta">{{ rec.description|truncatechars:60 }}</div>
+                {% endif %}
+              </td>
+              <td>
+                <span class="cat-badge cat-{{ rec.category }}">
+                  {% if rec.category == 'biodegradable' %}🌿
+                  {% elif rec.category == 'recyclable' %}♻️
+                  {% elif rec.category == 'hazardous' %}⚠️
+                  {% elif rec.category == 'electronic' %}💻
+                  {% elif rec.category == 'special' %}📦
+                  {% else %}🗑️{% endif %}
+                  {{ rec.get_category_display|default:rec.category|capfirst }}
+                </span>
+              </td>
+              <td>
+                <div style="font-size:0.82rem;">{{ rec.location|default:"—" }}</div>
+                {% if rec.purok %}
+                <div style="font-size:0.7rem; color:var(--accent); font-family:'DM Mono',monospace; margin-top:2px;">
+                  <i class="fas fa-map-marker-alt"></i> {{ rec.purok|capfirst }}
+                </div>
+                {% endif %}
+              </td>
+              <td>
+                <div style="font-size:0.82rem; font-weight:600;">{{ rec.reporter_username|default:"—" }}</div>
+                {% if rec.reporter_full_name %}
+                <div class="del-meta">{{ rec.reporter_full_name }}</div>
+                {% endif %}
+              </td>
+              <td>
+                <div style="font-size:0.78rem; font-family:'DM Mono',monospace;">
+                  {{ rec.reported_at|date:"M d, Y" }}
+                </div>
+                <div class="del-meta">{{ rec.reported_at|date:"g:i A" }}</div>
+              </td>
+              <td>
+                <div style="font-size:0.78rem; font-family:'DM Mono',monospace; color:var(--danger);">
+                  {{ rec.deleted_at|date:"M d, Y" }}
+                </div>
+                <div class="del-meta">{{ rec.deleted_at|date:"g:i A" }}</div>
+              </td>
+              <td>
+                <span class="deleted-by-badge {% if rec.deleted_by_role == 'admin' %}del-by-admin{% else %}del-by-user{% endif %}">
+                  <i class="fas fa-{% if rec.deleted_by_role == 'admin' %}user-shield{% else %}user{% endif %}"></i>
+                  {{ rec.deleted_by_username|default:rec.deleted_by_role|capfirst }}
+                </span>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="9">
+                <div class="empty-state">
+                  <i class="fas fa-archive"></i>
+                  <div style="font-size:1rem; font-weight:600; margin-bottom:6px;">No deleted records yet</div>
+                  <div style="font-size:0.82rem;">When reports are deleted, they will appear here for audit purposes.</div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pagination info -->
+    <div class="pagination">
+      <div class="page-info" id="archivePageInfo">
+        Showing <span id="visibleCount">{{ deleted_records|length }}</span> of {{ total_deleted|default:0 }} records
+      </div>
+      {% if deleted_records.has_other_pages %}
+      <div class="page-btns">
+        {% if deleted_records.has_previous %}
+        <a href="?tab=archive&page={{ deleted_records.previous_page_number }}" class="page-btn">
+          <i class="fas fa-chevron-left"></i> Prev
+        </a>
+        {% endif %}
+        {% for num in deleted_records.paginator.page_range %}
+          {% if deleted_records.number == num %}
+          <span class="page-btn active">{{ num }}</span>
+          {% elif num|add:"-2" <= deleted_records.number and num <= deleted_records.number|add:"2" %}
+          <a href="?tab=archive&page={{ num }}" class="page-btn">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if deleted_records.has_next %}
+        <a href="?tab=archive&page={{ deleted_records.next_page_number }}" class="page-btn">
+          Next <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+  </div><!-- /panel-archive -->
+
+</div><!-- /analytics-wrap -->
+
+<!-- Image lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()"><i class="fas fa-times"></i></button>
+  <img id="lightboxImg" src="" alt="Report photo">
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+
+/* ════════════════════════════════════════
+   DATA FROM DJANGO CONTEXT
+════════════════════════════════════════ */
+const PUROK_LABELS    = {{ purok_labels_json|default:"[]"|safe }};
+const PUROK_COUNTS    = {{ purok_counts_json|default:"[]"|safe }};
+const PUROK_PENDING   = {{ purok_pending_json|default:"[]"|safe }};
+const PUROK_RESOLVED  = {{ purok_resolved_json|default:"[]"|safe }};
+const CAT_LABELS      = {{ cat_labels_json|default:"[]"|safe }};
+const CAT_DATA        = {{ cat_data_json|default:"[]"|safe }};
+const TREND_LABELS    = {{ trend_labels_json|default:"[]"|safe }};
+const TREND_DATA      = {{ trend_data_json|default:"[]"|safe }};
+const STATUS_LABELS   = {{ status_labels_json|default:"[]"|safe }};
+const STATUS_DATA     = {{ status_data_json|default:"[]"|safe }};
+const MAP_REPORTS     = {{ reports_map_json|default:"[]"|safe }};
+const PUROK_CLUSTERS  = {{ purok_clusters_json|default:"[]"|safe }};
+
+const IS_LIGHT = () => document.body.classList.contains('light-mode');
+const TICK_COL = () => IS_LIGHT() ? '#1a202c' : '#f0fdf4';
+const GRID_COL = () => IS_LIGHT() ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.05)';
+const TOOLTIP  = () => ({
+  backgroundColor: IS_LIGHT() ? 'rgba(255,255,255,0.95)' : 'rgba(3,10,14,0.92)',
+  titleColor:      IS_LIGHT() ? '#030a0e' : '#f0fdf4',
+  bodyColor:       IS_LIGHT() ? '#059669' : '#00ff87',
+  borderColor:     IS_LIGHT() ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
+  borderWidth: 1,
+  padding: 10,
+  cornerRadius: 8,
+});
+
+const CAT_COLORS = {
+  biodegradable: '#22c55e',
+  recyclable:    '#3b82f6',
+  residual:      '#94a3b8',
+  special:       '#f59e0b',
+  hazardous:     '#ef4444',
+  electronic:    '#a855f7',
+};
+const CAT_COLOR_LIST = ['#22c55e','#3b82f6','#94a3b8','#f59e0b','#ef4444','#a855f7'];
+const STATUS_COLORS  = { pending:'#f59e0b', in_progress:'#00d4ff', collected:'#22c55e', processed:'#a855f7', disposed:'#64748b', rejected:'#ef4444' };
+
+/* ════════════════════════════════════════
+   TAB SWITCHING
+════════════════════════════════════════ */
+function switchTab(name) {
+  document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[data-panel="${name}"]`).classList.add('active');
+  document.getElementById(`panel-${name}`).classList.add('active');
+  if (name === 'analytics') initAllCharts();
+}
+
+/* ════════════════════════════════════════
+   CHART.JS — ALL CHARTS
+════════════════════════════════════════ */
+let chartsInit = false;
+let chartInstances = {};
+
+function initAllCharts() {
+  if (chartsInit) return;
+  chartsInit = true;
+
+  // ── 1. Purok bar chart ──
+  const purokCtx = document.getElementById('purokChart');
+  if (purokCtx && PUROK_LABELS.length) {
+    chartInstances.purok = new Chart(purokCtx, {
+      type: 'bar',
+      data: {
+        labels: PUROK_LABELS.map(l => l ? l.charAt(0).toUpperCase() + l.slice(1) : 'Unknown'),
+        datasets: [{
+          label: 'Total Reports',
+          data: PUROK_COUNTS,
+          backgroundColor: PUROK_LABELS.map((_, i) =>
+            i === 0 ? 'rgba(239,68,68,0.75)' :
+            i === 1 ? 'rgba(245,158,11,0.7)'  :
+            i === 2 ? 'rgba(168,85,247,0.65)' : 'rgba(0,255,135,0.55)'),
+          borderColor: PUROK_LABELS.map((_, i) =>
+            i === 0 ? '#ef4444' : i === 1 ? '#f59e0b' : i === 2 ? '#a855f7' : '#00ff87'),
+          borderWidth: 1.5,
+          borderRadius: 8,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          tooltip: TOOLTIP(),
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            grid: { color: GRID_COL() },
+            ticks: { color: TICK_COL(), stepSize: 1 }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: TICK_COL(), font: { size: 11 } }
+          }
+        }
+      }
+    });
+  }
+
+  // ── 2. Category doughnut ──
+  const catCtx = document.getElementById('categoryChart');
+  if (catCtx && CAT_LABELS.length) {
+    chartInstances.cat = new Chart(catCtx, {
+      type: 'doughnut',
+      data: {
+        labels: CAT_LABELS.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+        datasets: [{
+          data: CAT_DATA,
+          backgroundColor: CAT_LABELS.map(l => CAT_COLORS[l] || '#94a3b8'),
+          borderWidth: 0, hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '62%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: TICK_COL(), font: { size: 10, family: 'DM Mono, monospace' }, boxWidth: 10, padding: 8 }
+          },
+          tooltip: { ...TOOLTIP(), callbacks: {
+            label: ctx => {
+              const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+              return ` ${ctx.label}: ${ctx.raw} (${((ctx.raw/total)*100).toFixed(1)}%)`;
+            }
+          }}
+        }
+      }
+    });
+  }
+
+  // ── 3. Monthly trend line ──
+  const trendCtx = document.getElementById('trendChart');
+  if (trendCtx) {
+    chartInstances.trend = new Chart(trendCtx, {
+      type: 'line',
+      data: {
+        labels: TREND_LABELS,
+        datasets: [{
+          label: 'Reports',
+          data: TREND_DATA,
+          borderColor: '#00ff87',
+          backgroundColor: 'rgba(0,255,135,0.06)',
+          borderWidth: 2.5, tension: 0.4, fill: true,
+          pointBackgroundColor: '#00d4ff',
+          pointBorderColor: IS_LIGHT() ? '#fff' : '#030a0e',
+          pointRadius: 4, pointHoverRadius: 7
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: TOOLTIP() },
+        scales: {
+          y: { beginAtZero: true, grid: { color: GRID_COL() }, ticks: { color: TICK_COL() } },
+          x: { grid: { color: GRID_COL() }, ticks: { color: TICK_COL() } }
+        }
+      }
+    });
+  }
+
+  // ── 4. Status polar area ──
+  const statusCtx = document.getElementById('statusChart');
+  if (statusCtx && STATUS_LABELS.length) {
+    chartInstances.status = new Chart(statusCtx, {
+      type: 'polarArea',
+      data: {
+        labels: STATUS_LABELS.map(l => l.charAt(0).toUpperCase() + l.slice(1).replace('_',' ')),
+        datasets: [{
+          data: STATUS_DATA,
+          backgroundColor: STATUS_LABELS.map(l => (STATUS_COLORS[l] || '#94a3b8') + 'bb'),
+          borderColor: STATUS_LABELS.map(l => STATUS_COLORS[l] || '#94a3b8'),
+          borderWidth: 1.5
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position:'bottom', labels: { color: TICK_COL(), font:{size:10, family:'DM Mono, monospace'}, boxWidth:10, padding:8 } },
+          tooltip: TOOLTIP()
+        },
+        scales: { r: { ticks: { color: TICK_COL(), backdropColor:'transparent' }, grid: { color: GRID_COL() } } }
+      }
+    });
+  }
+
+  // ── 5. Pending vs resolved stacked bar ──
+  const pendCtx = document.getElementById('pendingChart');
+  if (pendCtx && PUROK_LABELS.length) {
+    const top6 = PUROK_LABELS.slice(0,6);
+    chartInstances.pend = new Chart(pendCtx, {
+      type: 'bar',
+      data: {
+        labels: top6.map(l => l ? l.charAt(0).toUpperCase() + l.slice(1) : 'Unknown'),
+        datasets: [
+          {
+            label: 'Pending',
+            data: PUROK_PENDING.slice(0,6),
+            backgroundColor: 'rgba(245,158,11,0.7)',
+            borderColor: '#f59e0b', borderWidth:1.5, borderRadius:4
+          },
+          {
+            label: 'Resolved',
+            data: PUROK_RESOLVED.slice(0,6),
+            backgroundColor: 'rgba(34,197,94,0.65)',
+            borderColor: '#22c55e', borderWidth:1.5, borderRadius:4
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: TICK_COL(), font:{size:10, family:'DM Mono, monospace'}, boxWidth:10, padding:8 } },
+          tooltip: TOOLTIP()
+        },
+        scales: {
+          x: { stacked: false, grid:{display:false}, ticks:{color: TICK_COL(), font:{size:10}} },
+          y: { beginAtZero:true, grid:{color: GRID_COL()}, ticks:{color: TICK_COL()} }
+        }
+      }
+    });
+  }
+}
+
+/* ════════════════════════════════════════
+   GOOGLE MAPS HEATMAP / CLUSTER MAP
+════════════════════════════════════════ */
+function initHeatMap() {
+  const center = { lat: 6.7587, lng: 125.3560 };
+
+  const mapStyles = [
+    { featureType:'all', elementType:'labels.text.fill', stylers:[{color: IS_LIGHT() ? '#374151' : '#94a3b8'}] },
+    { featureType:'water', elementType:'geometry', stylers:[{color: IS_LIGHT() ? '#bfdbfe' : '#0f2744'}] },
+    { featureType:'landscape', elementType:'geometry', stylers:[{color: IS_LIGHT() ? '#f3f4f6' : '#0d1a26'}] },
+    { featureType:'road', elementType:'geometry', stylers:[{color: IS_LIGHT() ? '#e5e7eb' : '#1e3a4f'}] },
+    { featureType:'poi', elementType:'geometry', stylers:[{color: IS_LIGHT() ? '#dbeafe' : '#112233'}] },
+  ];
+
+  const map = new google.maps.Map(document.getElementById('heatMapContainer'), {
+    center, zoom: 15,
+    styles: mapStyles,
+    mapTypeControl: true,
+    mapTypeControlOptions: {
+      style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+      position: google.maps.ControlPosition.TOP_RIGHT,
+      mapTypeIds: [google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID]
+    },
+    streetViewControl: false,
+    fullscreenControl: true,
+  });
+
+  // Zone 1 boundary
+  new google.maps.Polygon({
+    paths: [
+       { lat: 6.764225845006448, lng: 125.34758232605773 },
+  { lat: 6.764097995129116, lng: 125.34892343053866 },
+  { lat: 6.763906220249684, lng: 125.35194896224762 },
+  { lat: 6.763727878487998, lng: 125.35271045209343 },
+  { lat: 6.763650520294897, lng: 125.35436295040708 },
+  { lat: 6.763706570155491, lng: 125.35966273772254 },
+  { lat: 6.763789024468523, lng: 125.35925529961375 },
+  { lat: 6.763750516173827, lng: 125.35944845212227 }, 
+  { lat: 6.763746407807963, lng: 125.35729192265369 },
+  
+  // North-East area
+  { lat: 6.7635120160982565, lng: 125.35996340283572 },
+  { lat: 6.7635013619368305, lng: 125.35997413161552 },
+  { lat: 6.762936690533731, lng: 125.36065004832994 },
+  { lat: 6.762361364284115, lng: 125.36137960916757 },
+  { lat: 6.762023208888064, lng: 125.36406156049974 },
+  { lat: 6.760741923670257, lng: 125.36516688805614 },
+  
+  // East/South-East
+  { lat: 6.754477194673094, lng: 125.36458753097254 },
+  { lat: 6.7538166232888734, lng: 125.36452315795746 },
+  { lat: 6.7537953145195235, lng: 125.36448024261408 },
+  { lat: 6.753859240824747, lng: 125.36510251509324 },
+  { lat: 6.753867231619377, lng: 125.36507032865512 },
+  { lat: 6.750130192254154, lng: 125.36505959975325 },
+  
+  // South/West
+  { lat: 6.756245816918306, lng: 125.35587571618939 },
+  { lat: 6.755265617479111, lng: 125.35576842783091 },
+  { lat: 6.756139273597229, lng: 125.34690640942097 },
+  
+  // Back to start
+  { lat: 6.764225845006448, lng: 125.34758232605773 }
+    ],
+    strokeColor: IS_LIGHT() ? '#059669' : '#00ff87',
+    strokeOpacity: 0.6, strokeWeight: 2,
+    fillColor: IS_LIGHT() ? '#059669' : '#00ff87',
+    fillOpacity: 0.04, map
+  });
+
+  // ── Plot purok cluster circles ──
+  PUROK_CLUSTERS.forEach(cluster => {
+    if (!cluster.lat || !cluster.lng) return;
+    const maxCount = PUROK_CLUSTERS[0]?.count || 1;
+    const normalised = cluster.count / maxCount;
+    const radius = 20 + normalised * 50; // px (visual)
+    const color = normalised > 0.75 ? '#ef4444' :
+                  normalised > 0.50 ? '#f59e0b' :
+                  normalised > 0.25 ? '#a855f7' : '#00ff87';
+
+    const circle = new google.maps.Circle({
+      strokeColor: color, strokeOpacity: 0.9, strokeWeight: 2,
+      fillColor: color, fillOpacity: 0.25,
+      map, center: { lat: parseFloat(cluster.lat), lng: parseFloat(cluster.lng) },
+      radius: 30 + normalised * 120, // metres
+    });
+
+    const label = new google.maps.Marker({
+      position: { lat: parseFloat(cluster.lat), lng: parseFloat(cluster.lng) },
+      map,
+      label: {
+        text: String(cluster.count),
+        color: '#ffffff', fontWeight: 'bold', fontSize: '12px'
+      },
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: color, fillOpacity: 0.9,
+        scale: 12 + normalised * 10,
+        strokeColor: '#ffffff', strokeWeight: 2
+      },
+      title: `${cluster.purok} — ${cluster.count} reports`,
+      zIndex: 10
+    });
+
+    const infoWin = new google.maps.InfoWindow({
+      content: `<div style="padding:12px;font-family:sans-serif;min-width:180px;">
+        <strong style="font-size:0.9rem;text-transform:capitalize;">${cluster.purok}</strong><br>
+        <span style="font-size:0.75rem;color:#6b7280;"> ${cluster.count} total reports</span><br>
+        <span style="font-size:0.75rem;color:#f59e0b;">⏳ ${cluster.pending || 0} pending</span>
+        <span style="font-size:0.75rem;color:#22c55e; margin-left:10px;">✅ ${cluster.resolved || 0} resolved</span>
+      </div>`
+    });
+
+    label.addListener('click', () => infoWin.open(map, label));
+    circle.addListener('click', () => infoWin.open(map, label));
+  });
+
+  // ── Individual report dots ──
+  MAP_REPORTS.forEach(r => {
+    if (!r.lat || !r.lng) return;
+    const color = CAT_COLORS[r.category] || '#94a3b8';
+    const marker = new google.maps.Marker({
+      position: { lat: parseFloat(r.lat), lng: parseFloat(r.lng) },
+      map,
+      title: r.title,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: color, fillOpacity: 0.9,
+        scale: 6, strokeColor: '#ffffff', strokeWeight: 1.5
+      },
+      zIndex: 5
+    });
+    const info = new google.maps.InfoWindow({
+      content: `<div style="padding:10px;font-family:sans-serif;max-width:200px;">
+        <strong style="font-size:0.82rem;">${r.title}</strong>
+        <div style="font-size:0.72rem;color:#6b7280;margin-top:4px;">${r.category} · <b>${r.status}</b></div>
+        <div style="font-size:0.7rem;color:#9ca3af;">👤 ${r.reporter} · ${r.date}</div>
+      </div>`
+    });
+    marker.addListener('click', () => info.open(map, marker));
+  });
+}
+
+/* ════════════════════════════════════════
+   ARCHIVE SEARCH / FILTER
+════════════════════════════════════════ */
+function filterArchive() {
+  const q      = document.getElementById('archiveSearchInput').value.toLowerCase().trim();
+  const cat    = document.getElementById('archiveCatFilter').value;
+  const delBy  = document.getElementById('archiveDelFilter').value;
+  const rows   = document.querySelectorAll('.archive-row');
+  let visible  = 0;
+
+  rows.forEach(row => {
+    const textMatch = !q || ['title','reporter','purok','location'].some(
+      attr => (row.dataset[attr] || '').includes(q)
+    );
+    const catMatch   = !cat    || row.dataset.cat   === cat;
+    const delMatch   = !delBy  || row.dataset.delby === delBy;
+    const show = textMatch && catMatch && delMatch;
+    row.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  const countEl = document.getElementById('visibleCount');
+  if (countEl) countEl.textContent = visible;
+}
+
+/* ════════════════════════════════════════
+   LIGHTBOX
+════════════════════════════════════════ */
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ════════════════════════════════════════
+   CHART COLOR UPDATE on theme change
+════════════════════════════════════════ */
+function updateChartTheme() {
+  Object.values(chartInstances).forEach(chart => {
+    const isLine = chart.config.type === 'line';
+    const isDoughnut = chart.config.type === 'doughnut';
+    const isPolar = chart.config.type === 'polarArea';
+    const isBar = chart.config.type === 'bar';
+
+    if (isLine || isBar) {
+      if (chart.config.options.scales?.y) {
+        chart.config.options.scales.y.ticks.color = TICK_COL();
+        chart.config.options.scales.y.grid.color  = GRID_COL();
+      }
+      if (chart.config.options.scales?.x) {
+        chart.config.options.scales.x.ticks.color = TICK_COL();
+        if (chart.config.options.scales.x.grid)
+          chart.config.options.scales.x.grid.color = GRID_COL();
+      }
+    }
+    if (isDoughnut || isPolar) {
+      chart.config.options.plugins.legend.labels.color = TICK_COL();
+    }
+    chart.config.options.plugins.tooltip = { ...chart.config.options.plugins.tooltip, ...TOOLTIP() };
+    chart.update('none');
+  });
+}
+
+// Watch for theme change
+new MutationObserver(updateChartTheme)
+  .observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+// Init charts on load (analytics tab is active by default)
+document.addEventListener('DOMContentLoaded', () => initAllCharts());
+</script>
+
+<!-- Load Google Maps AFTER page content -->
+<script>
+function initHeatMapCallback() { initHeatMap(); }
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCKxMYVbWEynUq4aE2x_aXmmHlrSOCzZWE&libraries=visualization&callback=initHeatMapCallback" async defer></script>
+{% endblock %}

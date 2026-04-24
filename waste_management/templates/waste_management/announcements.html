@@ -1,0 +1,466 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}Announcements — ReporTrash{% endblock %}
+
+{% block extra_styles %}
+/* ============================================
+   ANNOUNCEMENTS PAGE
+   ============================================ */
+.page-header { padding: 20px 16px 14px; }
+.page-h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+}
+.page-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── Filter chips ── */
+.filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0 16px 16px;
+}
+.filter-chip {
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.filter-chip:hover { border-color: var(--accent); color: var(--accent); }
+.filter-chip.active { background: var(--accent); color: var(--bg-deep); border-color: var(--accent); font-weight: 700; }
+
+/* ── Announcement card ── */
+.ann-list { padding: 0 16px; max-width: 800px; margin: 0 auto; }
+
+.ann-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 14px;
+  transition: all 0.3s ease;
+  scroll-margin-top: 100px;
+}
+.ann-card:hover {
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+.ann-card.highlight {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,255,135,0.2);
+}
+
+/* Priority accent strip */
+.ann-card.priority-urgent { border-left: 4px solid var(--danger); }
+.ann-card.priority-high    { border-left: 4px solid var(--warning); }
+.ann-card.priority-medium  { border-left: 4px solid var(--accent2); }
+.ann-card.priority-low     { border-left: 4px solid rgba(148,163,184,0.5); }
+
+.ann-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.ann-emoji {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ann-header-text { flex: 1; min-width: 0; }
+.ann-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+.ann-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+.priority-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+.priority-urgent { background: rgba(239,68,68,0.15); color: var(--danger); }
+.priority-high   { background: rgba(245,158,11,0.15); color: var(--warning); }
+.priority-medium { background: rgba(0,212,255,0.15);  color: var(--accent2); }
+.priority-low    { background: rgba(148,163,184,0.15); color: var(--text-secondary); }
+
+.ann-content {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding-left: 46px; /* align with title */
+}
+.ann-content b,
+.ann-content strong { font-weight: 700; color: var(--text-primary, #f1f5f9); }
+.ann-content i,
+.ann-content em { font-style: italic; }
+.ann-content u { text-decoration: underline; text-underline-offset: 3px; }
+
+.ann-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--glass-border);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+  flex-wrap: wrap;
+}
+.ann-barangay-badge {
+  background: rgba(0,255,135,0.08);
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 8px;
+  padding: 2px 10px;
+  color: var(--accent);
+  font-size: 0.68rem;
+}
+
+/* ── Pinned / Urgent banner ── */
+.urgent-banner {
+  background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(245,158,11,0.08));
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 16px;
+  padding: 12px 16px;
+  margin: 0 16px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: var(--danger);
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  max-width: 400px;
+  margin: 40px auto;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+}
+.empty-icon { font-size: 4rem; margin-bottom: 16px; opacity: 0.25; }
+.empty-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
+.empty-sub { color: var(--text-muted); font-size: 0.85rem; }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .page-h1 { font-size: 1.3rem; }
+  .ann-card { padding: 16px; }
+  .ann-title { font-size: 1rem; }
+  .ann-content { padding-left: 0; font-size: 0.85rem; }
+  .ann-emoji { font-size: 1.6rem; }
+  .filters { gap: 6px; }
+  .filter-chip { padding: 5px 10px; font-size: 0.68rem; }
+}
+
+/* ============================================
+   LIGHT MODE OVERRIDES FOR ANNOUNCEMENTS PAGE
+   Black Borders & Visible Text
+   ============================================ */
+
+/* All containers get BLACK borders */
+body.light-mode .ann-card,
+body.light-mode .empty-state,
+body.light-mode .filter-chip,
+body.light-mode .urgent-banner {
+  border-color: #000000 !important;
+  border-width: 1.5px !important;
+}
+
+body.light-mode .ann-card {
+  background: #ffffff;
+}
+
+body.light-mode .ann-card:hover {
+  background: #fafafa;
+  border-color: #000000 !important;
+}
+
+body.light-mode .ann-card.priority-urgent {
+  border-left-color: #dc2626 !important;
+  border-left-width: 4px !important;
+}
+
+body.light-mode .ann-card.priority-high {
+  border-left-color: #d97706 !important;
+  border-left-width: 4px !important;
+}
+
+body.light-mode .ann-card.priority-medium {
+  border-left-color: #0284c7 !important;
+  border-left-width: 4px !important;
+}
+
+body.light-mode .ann-card.priority-low {
+  border-left-color: #6b7280 !important;
+  border-left-width: 4px !important;
+}
+
+body.light-mode .empty-state {
+  background: #ffffff;
+}
+
+/* Filter chips */
+body.light-mode .filter-chip {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+  color: #4a5568;
+}
+
+body.light-mode .filter-chip:hover {
+  border-color: #000000 !important;
+  color: #059669;
+  background: rgba(5, 150, 105, 0.05);
+}
+
+body.light-mode .filter-chip.active {
+  background: #059669;
+  border-color: #000000 !important;
+  color: #ffffff;
+}
+
+/* Urgent banner */
+body.light-mode .urgent-banner {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(217, 119, 6, 0.08));
+  border-color: #000000 !important;
+  color: #dc2626;
+}
+
+/* All text becomes BLACK for visibility */
+body.light-mode .page-sub,
+body.light-mode .ann-meta,
+body.light-mode .ann-content,
+body.light-mode .ann-footer,
+body.light-mode .empty-sub,
+body.light-mode .urgent-banner span,
+body.light-mode .ann-barangay-badge {
+  color: #4a5568 !important;
+}
+
+/* Title stays darker */
+body.light-mode .ann-title {
+  color: #1a202c !important;
+}
+
+/* Announcement content styling */
+body.light-mode .ann-content b,
+body.light-mode .ann-content strong {
+  color: #1a202c !important;
+}
+
+body.light-mode .ann-content i,
+body.light-mode .ann-content em {
+  color: #4a5568 !important;
+}
+
+body.light-mode .ann-content u {
+  text-decoration-color: #4a5568;
+}
+
+/* Footer border */
+body.light-mode .ann-footer {
+  border-top-color: #e0e0e0;
+}
+
+/* Priority badges */
+body.light-mode .priority-badge.priority-urgent {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+body.light-mode .priority-badge.priority-high {
+  background: rgba(217, 119, 6, 0.1);
+  color: #d97706;
+}
+
+body.light-mode .priority-badge.priority-medium {
+  background: rgba(2, 132, 199, 0.1);
+  color: #0284c7;
+}
+
+body.light-mode .priority-badge.priority-low {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+
+/* Barangay badge */
+body.light-mode .ann-barangay-badge {
+  background: rgba(5, 150, 105, 0.08);
+  border-color: #000000 !important;
+  color: #059669;
+}
+
+/* Highlight effect for announcement from notification */
+body.light-mode .ann-card.highlight {
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.3);
+}
+
+/* Empty state */
+body.light-mode .empty-icon {
+  opacity: 0.3;
+  color: #4a5568;
+}
+
+body.light-mode .empty-title {
+  color: #1a202c;
+}
+
+/* Empty state link */
+body.light-mode .empty-sub a {
+  color: #059669 !important;
+}
+
+body.light-mode .empty-sub a:hover {
+  color: #047857 !important;
+}
+
+/* Keep emoji colors as is */
+body.light-mode .ann-emoji {
+  filter: none;
+}
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap" style="padding:0;">
+  <div class="page-header" style="padding: 20px 16px 10px;">
+    <div class="page-h1">📢 Announcements</div>
+    <div class="page-sub">Official updates from your barangay admin</div>
+  </div>
+
+  <!-- Priority filter chips -->
+  <div class="filters">
+    <a href="?priority=all"    class="filter-chip {% if not priority_filter or priority_filter == 'all' %}active{% endif %}">All</a>
+    <a href="?priority=urgent" class="filter-chip {% if priority_filter == 'urgent' %}active{% endif %}">
+      <i class="fas fa-exclamation-circle"></i> Urgent
+    </a>
+    <a href="?priority=high"   class="filter-chip {% if priority_filter == 'high' %}active{% endif %}">
+      <i class="fas fa-arrow-up"></i> High
+    </a>
+    <a href="?priority=medium" class="filter-chip {% if priority_filter == 'medium' %}active{% endif %}">Medium</a>
+    <a href="?priority=low"    class="filter-chip {% if priority_filter == 'low' %}active{% endif %}">Low</a>
+  </div>
+
+  <!-- Urgent banner (only if there are urgent ones) -->
+  {% for ann in announcements %}
+    {% if ann.priority == 'urgent' and forloop.first %}
+    <div class="urgent-banner" style="margin: 0 16px 16px; max-width:800px;">
+      <i class="fas fa-exclamation-triangle" style="font-size:1.1rem; flex-shrink:0;"></i>
+      <span>There are <strong>urgent announcements</strong> that need your attention.</span>
+    </div>
+    {% endif %}
+  {% endfor %}
+
+  <!-- Announcement cards -->
+  <div class="ann-list">
+    {% for ann in announcements %}
+    <div class="ann-card priority-{{ ann.priority }}" id="announcement-{{ ann.id }}">
+      <div class="ann-header">
+        <div class="ann-emoji">{{ ann.emoji|default:"📢" }}</div>
+        <div class="ann-header-text">
+          <div class="ann-title">{{ ann.title }}</div>
+          <div class="ann-meta">
+            <span><i class="far fa-clock"></i> {{ ann.created_at|date:"F d, Y" }}</span>
+            <span class="priority-badge priority-{{ ann.priority }}">
+              {% if ann.priority == 'urgent' %}<i class="fas fa-exclamation-circle"></i> {% endif %}
+              {{ ann.priority|title }}
+            </span>
+            {% if ann.target_barangay %}
+            <span class="ann-barangay-badge"><i class="fas fa-map-marker-alt"></i> {{ ann.target_barangay }}</span>
+            {% else %}
+            <span class="ann-barangay-badge"><i class="fas fa-globe"></i> All Barangays</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="ann-content">{{ ann.content }}</div>
+
+      <div class="ann-footer">
+        <span><i class="fas fa-user-shield"></i> Posted by Admin</span>
+        <span>·</span>
+        <span>{{ ann.created_at|timesince }} ago</span>
+        {% if ann.send_notification %}
+        <span>·</span>
+        <span style="color:var(--accent);"><i class="fas fa-bell"></i> Residents were notified</span>
+        {% endif %}
+      </div>
+    </div>
+
+    {% empty %}
+    <div class="empty-state">
+      <div class="empty-icon"><i class="fas fa-bullhorn"></i></div>
+      <div class="empty-title">No announcements yet</div>
+      <div class="empty-sub">
+        {% if priority_filter and priority_filter != 'all' %}
+          No {{ priority_filter }} priority announcements found.
+          <br><a href="?priority=all" style="color:var(--accent); text-decoration:none; margin-top:12px; display:inline-block;">View all announcements</a>
+        {% else %}
+          Check back later for updates from your barangay admin.
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Scroll to and highlight a specific announcement when arriving from a notification.
+  // Supports ?ann_id=X (from bell, ensures correct page) and #announcement-X (direct links).
+  document.addEventListener('DOMContentLoaded', function () {
+    const params = new URLSearchParams(window.location.search);
+    const annId = params.get('ann_id');
+    const hash = window.location.hash;
+
+    const targetId = annId
+      ? 'announcement-' + annId
+      : (hash.startsWith('#announcement-') ? hash.slice(1) : null);
+
+    if (targetId) {
+      const target = document.getElementById(targetId);
+      if (target) {
+        setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 250);
+        target.classList.add('highlight');
+        setTimeout(() => target.classList.remove('highlight'), 3500);
+      }
+    }
+  });
+</script>
+{% endblock %}

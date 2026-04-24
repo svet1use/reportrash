@@ -1,0 +1,1103 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}Edit Report — ReporTrash{% endblock %}
+
+{% block extra_styles %}
+.page-header { padding: 20px 0 0; margin-bottom: 16px; }
+.page-h1 { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 4px; }
+.page-sub { font-size: 0.82rem; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+
+/* Category Selector */
+.category-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 6px;
+  position: relative;
+}
+.cat-option {
+  background: #0d1f2d;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: visible;
+  z-index: 1;
+}
+.cat-option:hover { 
+  transform: scale(1.03); 
+  z-index: 100; 
+}
+.cat-option.selected { 
+  transform: scale(1.05); 
+  border-width: 2px; 
+  z-index: 2;
+}
+.cat-option-icon { font-size: 1.8rem; margin-bottom: 5px; }
+.cat-option-name { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; font-family: 'DM Mono', monospace; }
+.cat-option-pts { font-size: 0.6rem; color: var(--text-muted); margin-top: 2px; }
+.cat-option-check {
+  position: absolute; top: 6px; right: 6px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent); display: flex; align-items: center; justify-content: center;
+  font-size: 10px; opacity: 0; transition: all 0.3s;
+  color: #030a0e;
+}
+.cat-option.selected .cat-option-check { opacity: 1; }
+
+/* Tooltip Styles */
+.cat-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 0.7rem;
+  font-family: 'Space Grotesk', sans-serif;
+  white-space: normal;
+  width: 260px;
+  z-index: 99999;
+  margin-bottom: 12px;
+  border: 1px solid rgba(0,255,135,0.15);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.2s ease;
+  text-align: left;
+  line-height: 1.4;
+}
+.cat-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: var(--bg-deep) transparent transparent transparent;
+}
+.cat-tooltip .tooltip-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+}
+.cat-tooltip .tooltip-example {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--glass-border);
+}
+.cat-option:hover .cat-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-8px);
+}
+
+/* Light mode tooltip */
+body.light-mode .cat-tooltip {
+  background: #ffffff;
+  color: #030a0e;
+  border-color: #e0e0e0;
+}
+body.light-mode .cat-tooltip::after {
+  border-color: #ffffff transparent transparent transparent;
+}
+
+/* Glass card overflow */
+.glass-card {
+  overflow: visible !important;
+}
+
+/* Google Maps Container */
+#map-container {
+  width: 100%;
+  height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  border: 1px solid rgba(0,255,135,0.15);
+}
+.map-error-message {
+  background: rgba(239,68,68,0.1);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 8px;
+  display: none;
+}
+.map-error-message.show {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--danger);
+  font-size: 0.8rem;
+}
+.location-info {
+  background: rgba(0,255,135,0.06);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.location-coords {
+  font-family: 'DM Mono', monospace;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+.get-location-btn {
+  background: rgba(0,255,135,0.1);
+  border: 1px solid rgba(0,255,135,0.2);
+  border-radius: 100px;
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.get-location-btn:hover {
+  background: var(--accent);
+  color: #030a0e;
+}
+.get-location-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.location-accuracy {
+  font-size: 0.65rem;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.accuracy-high { color: var(--success); }
+.accuracy-medium { color: var(--warning); }
+.accuracy-low { color: var(--danger); }
+
+/* Zone Restriction Info */
+.zone-restriction-info {
+  background: rgba(0,255,135,0.08);
+  border: 1px solid rgba(0,255,135,0.2);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-top: 8px;
+  font-size: 0.7rem;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+body.light-mode .zone-restriction-info {
+  background: rgba(5, 150, 105, 0.08);
+  border-color: #000000;
+  color: #059669;
+}
+
+/* Purok Dropdown */
+.purok-select-wrap { position: relative; }
+.purok-chevron {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--text-muted); font-size: 0.75rem; pointer-events: none;
+  transition: transform 0.2s;
+}
+.purok-select-wrap.open .purok-chevron { transform: translateY(-50%) rotate(180deg); }
+.purok-dropdown {
+  display: none;
+  position: absolute;
+  background: #0d1f2d;
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 14px;
+  max-height: 220px; overflow-y: auto;
+  z-index: 999999;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+  scrollbar-width: thin;
+  min-width: 200px;
+}
+.purok-dropdown::-webkit-scrollbar { width: 4px; }
+.purok-dropdown::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.purok-select-wrap.open .purok-dropdown { display: block; }
+.purok-option {
+  padding: 10px 14px; font-size: 0.85rem; cursor: pointer;
+  transition: background 0.15s; color: var(--text-secondary);
+  text-transform: capitalize;
+}
+.purok-option:hover, .purok-option.highlighted { background: rgba(0,255,135,0.08); color: var(--accent); }
+.purok-option.blank-option { color: var(--text-muted); font-style: italic; border-bottom: 1px solid var(--glass-border); }
+.purok-no-result { padding: 10px 14px; font-size: 0.82rem; color: var(--text-muted); font-style: italic; }
+
+/* Light mode dropdown */
+body.light-mode .purok-dropdown {
+  background: #ffffff;
+  border-color: #000000;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.14);
+}
+body.light-mode .purok-option { color: rgba(3,10,14,0.75); }
+body.light-mode .purok-option:hover,
+body.light-mode .purok-option.highlighted { background: rgba(5,150,105,0.08); color: #059669; }
+body.light-mode .purok-option.blank-option { color: rgba(3,10,14,0.40); border-bottom-color: rgba(0,0,0,0.10); }
+
+/* Light Mode Overrides */
+body.light-mode .cat-option {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+  color: #1a202c;
+}
+body.light-mode .cat-option.selected {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: #000000 !important;
+}
+body.light-mode .glass-card {
+  background: #ffffff;
+  border-color: #000000 !important;
+}
+body.light-mode .form-control,
+body.light-mode .purok-search-input {
+  background: #ffffff;
+  border-color: #000000 !important;
+  color: #1a202c;
+}
+body.light-mode .form-control::placeholder,
+body.light-mode .purok-search-input::placeholder {
+  color: #9ca3af !important;
+}
+body.light-mode .location-info {
+  background: #f5f5f5;
+  border: 1.5px solid #000000 !important;
+}
+body.light-mode .get-location-btn {
+  background: #e0e0e0;
+  border-color: #000000;
+  color: #1a202c;
+}
+body.light-mode .get-location-btn:hover {
+  background: #059669;
+  color: white;
+}
+
+/* Field Counter */
+.field-counter {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-align: right;
+  margin-top: 3px;
+}
+.field-counter.warning {
+  color: var(--warning);
+}
+
+/* Error Message */
+.error-message {
+  color: var(--danger);
+  font-size: 0.7rem;
+  font-family: 'DM Mono', monospace;
+  margin-top: 5px;
+  display: none;
+  align-items: center;
+  gap: 5px;
+}
+.error-message.show { display: flex; }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .category-selector {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .cat-option {
+    padding: 10px 6px;
+  }
+  .cat-option-icon {
+    font-size: 1.4rem;
+  }
+  .cat-option-name {
+    font-size: 0.55rem;
+  }
+  .cat-option-pts {
+    font-size: 0.5rem;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  #map-container {
+    height: 250px;
+  }
+  .location-info {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 8px 12px;
+  }
+  .location-coords {
+    font-size: 0.6rem;
+  }
+  .get-location-btn {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+  }
+  .cat-tooltip {
+    width: 200px;
+    font-size: 0.65rem;
+    padding: 8px 12px;
+    left: 0;
+    transform: translateX(0);
+  }
+  .cat-tooltip::after {
+    left: 20px;
+    transform: translateX(0);
+  }
+  .cat-option:hover .cat-tooltip {
+    transform: translateX(0) translateY(-8px);
+  }
+}
+
+@media (max-width: 480px) {
+  .category-selector {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .cat-option-icon {
+    font-size: 1.2rem;
+  }
+  .glass-card {
+    padding: 12px;
+  }
+  .location-info {
+    flex-direction: column;
+    text-align: center;
+  }
+  .cat-tooltip {
+    width: 180px;
+  }
+}
+
+/* Image Upload Area */
+.img-upload-area {
+  border: 2px dashed rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  overflow: hidden;
+}
+.img-upload-area:hover {
+  border-color: rgba(0,255,135,0.3);
+  background: rgba(0,255,135,0.03);
+}
+.img-upload-icon { font-size: 2rem; margin-bottom: 8px; }
+#imgPreview { display: none; width: 100%; border-radius: 12px; max-height: 150px; object-fit: cover; margin-top: 12px; }
+
+/* Light mode */
+body.light-mode .img-upload-area {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+}
+body.light-mode .img-upload-area:hover {
+  border-color: #059669 !important;
+  background: rgba(5,150,105,0.05);
+}
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+  <div class="page-header">
+    <div class="page-h1">
+      <i class="fas fa-edit"></i> Edit Report
+    </div>
+    <div class="page-sub">Update your waste report details</div>
+  </div>
+
+  <form method="post" id="editReportForm">
+    {% csrf_token %}
+    
+    <!-- Report Details -->
+    <div class="glass-card" style="margin-bottom: 14px;">
+      <div class="form-group">
+        <label class="form-label">Report Title *</label>
+        <input type="text" name="title" class="form-control" id="reportTitle" value="{{ report.title }}" maxlength="100" required>
+        <div class="field-counter" id="titleCounter">{{ report.title|length }}/100</div>
+      </div>
+
+      <!-- Category Selection with Tooltips -->
+      <div class="form-group">
+        <label class="form-label" style="margin-bottom: 10px;">Waste Category *</label>
+        <div class="category-selector">
+          <div class="cat-option {% if report.category == 'biodegradable' %}selected{% endif %}" data-cat="biodegradable" data-pts="5" onclick="selectCat(this)">
+            <div class="cat-option-check">✓</div>
+            <div class="cat-option-icon"><i class="fas fa-leaf"></i></div>
+            <div class="cat-option-name" style="color: var(--cat-bio);">Biodeg.</div>
+            <div class="cat-option-pts">5</div>
+            <div class="cat-tooltip">
+              <div class="tooltip-title">Biodegradable</div>
+              <div>Use this for reports about organic waste like food or leaves.</div>
+              <div class="tooltip-example">Example: illegal dumping of food waste or compostable materials</div>
+            </div>
+          </div>
+          <div class="cat-option {% if report.category == 'recyclable' %}selected{% endif %}" data-cat="recyclable" data-pts="10" onclick="selectCat(this)">
+            <div class="cat-option-check">✓</div>
+            <div class="cat-option-icon"><i class="fas fa-recycle"></i></div>
+            <div class="cat-option-name" style="color: var(--cat-rec);">Recycle</div>
+            <div class="cat-option-pts">10</div>
+            <div class="cat-tooltip">
+              <div class="tooltip-title">Recyclable</div>
+              <div>Use this for recyclable materials like plastic bottles, paper, or cans.</div>
+              <div class="tooltip-example">Example: scattered recyclables or improper disposal</div>
+            </div>
+          </div>
+          <div class="cat-option {% if report.category == 'residual' %}selected{% endif %}" data-cat="residual" data-pts="3" onclick="selectCat(this)">
+            <div class="cat-option-check">✓</div>
+            <div class="cat-option-icon"><i class="fas fa-trash"></i></div>
+            <div class="cat-option-name" style="color: var(--cat-res);">Residual</div>
+            <div class="cat-option-pts">3</div>
+            <div class="cat-tooltip">
+              <div class="tooltip-title">Residual</div>
+              <div>Use this for general waste or service issues.</div>
+              <div class="tooltip-example">Example: missed collection, delayed pickup, or mixed garbage</div>
+            </div>
+          </div>
+          <div class="cat-option {% if report.category == 'special' %}selected{% endif %}" data-cat="special" data-pts="15" onclick="selectCat(this)">
+            <div class="cat-option-check">✓</div>
+            <div class="cat-option-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="cat-option-name" style="color: var(--cat-spe);">Special</div>
+            <div class="cat-option-pts">15</div>
+            <div class="cat-tooltip">
+              <div class="tooltip-title">Special Waste</div>
+              <div>Use this for bulky or unusual waste.</div>
+              <div class="tooltip-example">Example: furniture, construction debris, or large items dumped illegally</div>
+            </div>
+          </div>
+          <div class="cat-option {% if report.category == 'hazardous' %}selected{% endif %}" data-cat="hazardous" data-pts="20" onclick="selectCat(this)">
+            <div class="cat-option-check">✓</div>
+            <div class="cat-option-icon"><i class="fas fa-skull-crossbones"></i></div>
+            <div class="cat-option-name" style="color: var(--cat-haz);">Hazard</div>
+            <div class="cat-option-pts">20</div>
+            <div class="cat-tooltip">
+              <div class="tooltip-title">Hazardous</div>
+              <div>Use this for dangerous waste.</div>
+              <div class="tooltip-example">Example: chemicals, medical waste, or toxic substances</div>
+            </div>
+          </div>
+          <div class="cat-option {% if report.category == 'electronic' %}selected{% endif %}" data-cat="electronic" data-pts="25" onclick="selectCat(this)">
+            <div class="cat-option-check">✓</div>
+            <div class="cat-option-icon"><i class="fas fa-battery-quarter"></i></div>
+            <div class="cat-option-name" style="color: var(--cat-elec);">E-Waste</div>
+            <div class="cat-option-pts">25</div>
+            <div class="cat-tooltip">
+              <div class="tooltip-title">E-waste</div>
+              <div>Use this for electronic waste.</div>
+              <div class="tooltip-example">Example: broken phones, batteries, or appliances dumped improperly</div>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" name="category" id="selectedCat" value="{{ report.category }}">
+        <div class="error-message" id="categoryError">
+          <i class="fas fa-exclamation-circle"></i> Select a category
+        </div>
+      </div>
+
+      <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; position: relative; z-index: 10;">
+        <div class="form-group">
+          <label class="form-label">Purok</label>
+          <div class="purok-select-wrap" id="editReportPurokWrap" data-include-blank="true" data-blank-label="— Leave blank —">
+            <input type="text" class="form-control purok-search-input" id="editReportPurok" name="purok"
+              placeholder="Search or select purok…" autocomplete="off"
+              value="{{ report.purok }}"
+              oninput="filterPurokDropdown('editReportPurokWrap')"
+              onfocus="openPurokDropdown('editReportPurokWrap')"
+              onblur="closePurokDropdown('editReportPurokWrap')">
+            <i class="fas fa-chevron-down purok-chevron"></i>
+            <div class="purok-dropdown" id="editReportPurokWrap-dropdown"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location *</label>
+          <input type="text" name="location" class="form-control" id="reportLocation" value="{{ report.location }}" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description (Optional)</label>
+        <textarea name="description" class="form-control" id="reportDesc" rows="3" placeholder="Additional details...">{{ report.description }}</textarea>
+      </div>
+    </div>
+
+    <!-- Google Maps Location Picker -->
+    <div class="glass-card" style="margin-bottom: 14px;">
+      <div class="form-label" style="margin-bottom: 10px;">Pin Location *</div>
+      <div id="map-container"></div>
+      <div id="map-error-message" class="map-error-message">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>Unable to load Google Maps. Please check your internet connection or use the "Use My Location" button.</span>
+      </div>
+      <div class="zone-restriction-info">
+        <i class="fas fa-map-marker-alt"></i>
+        <span>📍 Location is restricted to Zone 1, Digos City only</span>
+      </div>
+      <div class="location-info">
+        <span class="location-coords" id="locationCoords">
+          {% if report.latitude and report.longitude %}
+            📍 {{ report.latitude|floatformat:6 }}, {{ report.longitude|floatformat:6 }}
+          {% else %}
+            📍 No location selected
+          {% endif %}
+        </span>
+        <button type="button" class="get-location-btn" id="getLocationBtn" onclick="getCurrentLocation()">
+          <i class="fas fa-location-dot"></i> Use My Location
+        </button>
+      </div>
+      <div id="locationAccuracy" class="location-accuracy" style="display: none;"></div>
+      <input type="hidden" name="latitude" id="reportLat" value="{{ report.latitude|default:'' }}">
+      <input type="hidden" name="longitude" id="reportLng" value="{{ report.longitude|default:'' }}">
+      <input type="hidden" id="reportAddress" value="{{ report.address|default:'' }}">
+      <div class="error-message" id="locationMapError">
+        <i class="fas fa-exclamation-circle"></i> Please select a location within Zone 1
+      </div>
+    </div>
+
+        <!-- Photo Display & Upload -->
+    <div class="glass-card" style="margin-bottom: 14px;">
+      <div class="form-label" style="margin-bottom: 10px;">Current Photo Evidence</div>
+      
+      {% if report.image %}
+      <div style="margin-bottom: 16px;">
+        <img src="{{ report.image.url }}" alt="Current report image" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: var(--text-muted);">
+          <i class="fas fa-info-circle"></i>
+          <span>Current image will be kept if you don't upload a new one.</span>
+        </div>
+      </div>
+      {% else %}
+      <div style="margin-bottom: 16px; padding: 20px; text-align: center; background: rgba(0,0,0,0.05); border-radius: 12px;">
+        <i class="fas fa-image" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 8px; display: block;"></i>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">No image uploaded for this report.</span>
+      </div>
+      {% endif %}
+      
+      <div class="form-label" style="margin-bottom: 10px;">Upload New Photo (Optional)</div>
+      <div class="img-upload-area" onclick="document.getElementById('imgInput').click()">
+        <div id="uploadPlaceholder">
+          <div class="img-upload-icon"><i class="fas fa-camera"></i></div>
+          <div class="img-upload-text">Tap to change photo</div>
+          <div style="font-size: 0.6rem; color: var(--text-muted);">JPG, PNG up to 5MB</div>
+        </div>
+        <img id="imgPreview" alt="Preview" style="display: none;">
+      </div>
+      <input type="file" id="imgInput" name="image" accept="image/jpeg,image/png,image/jpg" style="display: none;" onchange="previewImage(this)">
+      <div class="error-message" id="imageError">
+        <i class="fas fa-exclamation-circle"></i> Invalid image format
+      </div>
+      <div class="field-counter" style="margin-top: 8px;">
+        <i class="fas fa-info-circle"></i> Leave empty to keep current photo
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 12px; margin-bottom: 10px;">
+      <button type="submit" class="btn btn-primary" id="submitBtn" style="flex: 1; justify-content: center;">
+        <i class="fas fa-save"></i> Save Changes
+      </button>
+      <a href="{% url 'history' %}" class="btn btn-glass" style="flex: 1; justify-content: center;">
+        <i class="fas fa-times"></i> Cancel
+      </a>
+    </div>
+  </form>
+</div>
+
+<script>
+// ==================== ZONE 1 BOUNDARY ====================
+const ZONE_1_BOUNDARY = [
+  { lat: 6.764225845006448, lng: 125.34758232605773 },
+  { lat: 6.764097995129116, lng: 125.34892343053866 },
+  { lat: 6.763906220249684, lng: 125.35194896224762 },
+  { lat: 6.763727878487998, lng: 125.35271045209343 },
+  { lat: 6.763650520294897, lng: 125.35436295040708 },
+  { lat: 6.763706570155491, lng: 125.35966273772254 },
+  { lat: 6.763789024468523, lng: 125.35925529961375 },
+  { lat: 6.763750516173827, lng: 125.35944845212227 },
+  { lat: 6.763746407807963, lng: 125.35729192265369 },
+  { lat: 6.7635120160982565, lng: 125.35996340283572 },
+  { lat: 6.7635013619368305, lng: 125.35997413161552 },
+  { lat: 6.762936690533731, lng: 125.36065004832994 },
+  { lat: 6.762361364284115, lng: 125.36137960916757 },
+  { lat: 6.762023208888064, lng: 125.36406156049974 },
+  { lat: 6.760741923670257, lng: 125.36516688805614 },
+  { lat: 6.754477194673094, lng: 125.36458753097254 },
+  { lat: 6.7538166232888734, lng: 125.36452315795746 },
+  { lat: 6.7537953145195235, lng: 125.36448024261408 },
+  { lat: 6.753859240824747, lng: 125.36510251509324 },
+  { lat: 6.753867231619377, lng: 125.36507032865512 },
+  { lat: 6.750130192254154, lng: 125.36505959975325 },
+  { lat: 6.756245816918306, lng: 125.35587571618939 },
+  { lat: 6.755265617479111, lng: 125.35576842783091 },
+  { lat: 6.756139273597229, lng: 125.34690640942097 },
+  { lat: 6.764225845006448, lng: 125.34758232605773 }
+];
+
+function isPointInZone1(lat, lng) {
+  let inside = false;
+  for (let i = 0, j = ZONE_1_BOUNDARY.length - 1; i < ZONE_1_BOUNDARY.length; j = i++) {
+    const xi = ZONE_1_BOUNDARY[i].lat, yi = ZONE_1_BOUNDARY[i].lng;
+    const xj = ZONE_1_BOUNDARY[j].lat, yj = ZONE_1_BOUNDARY[j].lng;
+    
+    const intersect = ((yi > lng) != (yj > lng)) &&
+      (lat < (xj - xi) * (lng - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+// ==================== GOOGLE MAPS ====================
+let map, marker, geocoder;
+let mapInitialized = false;
+let lastValidPosition = null;
+let currentAccuracy = null;
+
+function handleMapError() {
+  const errorDiv = document.getElementById('map-error-message');
+  if (errorDiv) {
+    errorDiv.classList.add('show');
+  }
+  showToast('Google Maps failed to load. Please refresh the page or use the location button.', 'warning');
+}
+
+let mapLoadTimeout = setTimeout(function() {
+  if (!mapInitialized) {
+    handleMapError();
+  }
+}, 10000);
+
+function waitForGoogleMaps() {
+  if (typeof google !== 'undefined' && google.maps) {
+    clearTimeout(mapLoadTimeout);
+    initMap();
+  } else {
+    setTimeout(waitForGoogleMaps, 500);
+  }
+}
+
+function initMap() {
+  if (mapInitialized) return;
+  
+  // Get existing coordinates or use center
+  const existingLat = parseFloat(document.getElementById('reportLat').value);
+  const existingLng = parseFloat(document.getElementById('reportLng').value);
+  const hasExisting = !isNaN(existingLat) && !isNaN(existingLng) && existingLat && existingLng;
+  
+  const center = hasExisting ? { lat: existingLat, lng: existingLng } : { lat: 6.7587, lng: 125.3560 };
+  
+  try {
+    map = new google.maps.Map(document.getElementById('map-container'), {
+      center: center,
+      zoom: hasExisting ? 18 : 16,
+      mapTypeId: google.maps.MapTypeId.HYBRID,
+      zoomControl: true,
+      mapTypeControl: true,
+      streetViewControl: false,
+      fullscreenControl: true
+    });
+    
+    geocoder = new google.maps.Geocoder();
+    
+    const zone1Polygon = new google.maps.Polygon({
+      paths: ZONE_1_BOUNDARY,
+      strokeColor: '#00ff87',
+      strokeOpacity: 0.8,
+      strokeWeight: 2,
+      fillColor: '#00ff87',
+      fillOpacity: 0.08,
+      map: map,
+      clickable: false
+    });
+    
+    marker = new google.maps.Marker({
+      map: map,
+      draggable: true,
+      animation: google.maps.Animation.DROP,
+      title: 'Drag to adjust location (Zone 1 only)'
+    });
+    
+    // Set existing marker position if available
+    if (hasExisting) {
+      const pos = new google.maps.LatLng(existingLat, existingLng);
+      marker.setPosition(pos);
+      lastValidPosition = pos;
+    }
+    
+    google.maps.event.addListener(map, 'click', function(event) {
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+      
+      if (isPointInZone1(lat, lng)) {
+        setLocation(event.latLng, 'manual');
+        document.getElementById('locationMapError').classList.remove('show');
+      } else {
+        showToast('Please select a location within Zone 1 only.', 'error');
+        document.getElementById('locationMapError').classList.add('show');
+      }
+    });
+    
+    google.maps.event.addListener(marker, 'dragend', function(event) {
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+      
+      if (isPointInZone1(lat, lng)) {
+        setLocation(event.latLng, 'manual');
+        document.getElementById('locationMapError').classList.remove('show');
+      } else {
+        showToast('Please select a location within Zone 1 only.', 'error');
+        document.getElementById('locationMapError').classList.add('show');
+        if (lastValidPosition) {
+          marker.setPosition(lastValidPosition);
+          setLocation(lastValidPosition, 'manual');
+        }
+      }
+    });
+    
+    mapInitialized = true;
+    
+  } catch (error) {
+    console.error('Map initialization error:', error);
+    handleMapError();
+  }
+}
+
+function setLocation(latLng, source = 'manual') {
+  let lat, lng;
+  
+  if (latLng instanceof google.maps.LatLng) {
+    lat = latLng.lat();
+    lng = latLng.lng();
+  } else if (typeof latLng === 'object' && latLng.lat !== undefined) {
+    lat = latLng.lat;
+    lng = latLng.lng;
+    latLng = new google.maps.LatLng(lat, lng);
+  } else {
+    console.error('Invalid latLng object:', latLng);
+    return false;
+  }
+  
+  if (!isPointInZone1(lat, lng)) {
+    showToast('Location must be within Zone 1.', 'error');
+    document.getElementById('locationMapError').classList.add('show');
+    return false;
+  }
+  
+  lastValidPosition = latLng;
+  
+  marker.setPosition(latLng);
+  map.panTo(latLng);
+  map.setZoom(18);
+
+  document.getElementById('reportLat').value = lat.toFixed(7);
+  document.getElementById('reportLng').value = lng.toFixed(7);
+  document.getElementById('locationCoords').innerHTML = `📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  document.getElementById('locationMapError').classList.remove('show');
+  
+  const accuracyDiv = document.getElementById('locationAccuracy');
+  if (source === 'gps' && currentAccuracy) {
+    accuracyDiv.style.display = 'flex';
+    let accuracyClass = 'accuracy-low';
+    let accuracyText = 'Low accuracy';
+    if (currentAccuracy <= 20) {
+      accuracyClass = 'accuracy-high';
+      accuracyText = 'High accuracy (GPS)';
+    } else if (currentAccuracy <= 100) {
+      accuracyClass = 'accuracy-medium';
+      accuracyText = 'Medium accuracy';
+    }
+    accuracyDiv.innerHTML = `<i class="fas fa-satellite-dish"></i> ${accuracyText} ±${currentAccuracy}m`;
+    accuracyDiv.className = `location-accuracy ${accuracyClass}`;
+  } else {
+    accuracyDiv.style.display = 'none';
+  }
+  
+  // Update location text field with address
+  geocoder.geocode({ location: latLng }, function(results, status) {
+    if (status === 'OK' && results[0]) {
+      const address = results[0].formatted_address;
+      document.getElementById('reportAddress').value = address;
+      if (!document.getElementById('reportLocation').value || source !== 'manual') {
+        const parts = address.split(',');
+        const shortAddress = parts.slice(0, 2).join(', ');
+        document.getElementById('reportLocation').value = shortAddress;
+      }
+    }
+  });
+  
+  return true;
+}
+
+function getCurrentLocation() {
+  const btn = document.getElementById('getLocationBtn');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting...';
+  btn.disabled = true;
+  
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        currentAccuracy = position.coords.accuracy;
+        const pos = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        
+        if (isPointInZone1(pos.lat, pos.lng)) {
+          setLocation(pos, 'gps');
+          showToast('Location detected within Zone 1!', 'success');
+          document.getElementById('locationMapError').classList.remove('show');
+        } else {
+          showToast('Your current location is outside Zone 1. Please select a location within Zone 1.', 'error');
+          document.getElementById('locationMapError').classList.add('show');
+        }
+        btn.innerHTML = '<i class="fas fa-location-dot"></i> Use My Location';
+        btn.disabled = false;
+      },
+      function(error) {
+        let errorMsg = 'Unable to get location';
+        if (error.code === 1) errorMsg = 'Please allow location access';
+        showToast(errorMsg, 'error');
+        btn.innerHTML = '<i class="fas fa-location-dot"></i> Use My Location';
+        btn.disabled = false;
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  } else {
+    showToast('Geolocation not supported', 'error');
+    btn.innerHTML = '<i class="fas fa-location-dot"></i> Use My Location';
+    btn.disabled = false;
+  }
+}
+
+// ==================== CATEGORY SELECTION ====================
+function selectCat(el) {
+  document.querySelectorAll('.cat-option').forEach(opt => opt.classList.remove('selected'));
+  el.classList.add('selected');
+  const selectedCat = el.getAttribute('data-cat');
+  document.getElementById('selectedCat').value = selectedCat;
+  document.getElementById('categoryError').classList.remove('show');
+}
+
+// ==================== PUROK DROPDOWN ====================
+const PUROK_LIST = [
+  'acaciahan','alum','aratilis','atis','avocado','bayabas','cattleya',
+  'centennial','chesnut','chico','durian','duranta','gemelina',
+  'golden duranta','ipil-ipil','islam','kalinaw','kasaligan','kawayan',
+  'labana','laminusa','lanzones','madasigon','mahogany','malipayon',
+  'malunggay','manggahan','mangga-jumao-as','mangga-ravina','masipag',
+  'matamis','molave','narra','pagtoo','palmera','panaghiusa','papaya',
+  'riverside','rosal','rosas','sambag','sampaguita','san francisco',
+  'santol','silangan','star apple','talisay','tambis','tugas',
+  'waling-waling','yellowbell'
+];
+
+function cap(s) {
+  return s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function buildPurokDropdown(wrapId) {
+  const wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  const dd = document.getElementById(wrapId + '-dropdown');
+  const includeBlank = wrap.dataset.includeBlank !== 'false';
+  const blankLabel = wrap.dataset.blankLabel || '— Leave blank —';
+  dd.innerHTML = '';
+  
+  if (includeBlank) {
+    const opt = document.createElement('div');
+    opt.className = 'purok-option blank-option';
+    opt.textContent = blankLabel;
+    opt.onmousedown = () => selectPurok(wrapId, '', '', true);
+    dd.appendChild(opt);
+  }
+  
+  PUROK_LIST.forEach(p => {
+    const opt = document.createElement('div');
+    opt.className = 'purok-option';
+    opt.textContent = cap(p);
+    opt.onmousedown = () => selectPurok(wrapId, p, cap(p), false);
+    dd.appendChild(opt);
+  });
+}
+
+function filterPurokDropdown(wrapId) {
+  const wrap = document.getElementById(wrapId);
+  const input = wrap.querySelector('.purok-search-input');
+  const dd = document.getElementById(wrapId + '-dropdown');
+  const q = input.value.toLowerCase().trim();
+  let anyVisible = false;
+  
+  dd.querySelectorAll('.purok-option').forEach(opt => {
+    const match = opt.textContent.toLowerCase().includes(q);
+    opt.style.display = match ? '' : 'none';
+    if (match) anyVisible = true;
+  });
+  
+  let noRes = dd.querySelector('.purok-no-result');
+  if (!anyVisible) {
+    if (!noRes) {
+      noRes = document.createElement('div');
+      noRes.className = 'purok-no-result';
+      dd.appendChild(noRes);
+    }
+    noRes.textContent = 'No purok found for "' + input.value + '"';
+    noRes.style.display = '';
+  } else if (noRes) {
+    noRes.style.display = 'none';
+  }
+}
+
+function openPurokDropdown(wrapId) {
+  const wrap = document.getElementById(wrapId);
+  wrap.classList.add('open');
+  const input = wrap.querySelector('.purok-search-input');
+  const dd = document.getElementById(wrapId + '-dropdown');
+
+  if (dd.parentElement !== document.body) {
+    document.body.appendChild(dd);
+  }
+  dd.style.display = 'block';
+
+  const rect = input.getBoundingClientRect();
+  const scrollY = window.scrollY || window.pageYOffset;
+  const scrollX = window.scrollX || window.pageXOffset;
+  const spaceBelow = window.innerHeight - rect.bottom;
+
+  dd.style.position = 'absolute';
+  dd.style.width = rect.width + 'px';
+  dd.style.left = (rect.left + scrollX) + 'px';
+
+  if (spaceBelow < 180 && rect.top > 200) {
+    dd.style.top = (rect.top + scrollY - 224) + 'px';
+  } else {
+    dd.style.top = (rect.bottom + scrollY + 4) + 'px';
+  }
+
+  filterPurokDropdown(wrapId);
+}
+
+function closePurokDropdown(wrapId) {
+  setTimeout(() => {
+    const wrap = document.getElementById(wrapId);
+    if (wrap) wrap.classList.remove('open');
+    const dd = document.getElementById(wrapId + '-dropdown');
+    if (dd) dd.style.display = 'none';
+  }, 150);
+}
+
+function selectPurok(wrapId, value, displayText, isBlank) {
+  const wrap = document.getElementById(wrapId);
+  const input = wrap.querySelector('.purok-search-input');
+  input.value = isBlank ? '' : displayText;
+  input.dataset.value = value;
+  wrap.classList.remove('open');
+  const dd = document.getElementById(wrapId + '-dropdown');
+  if (dd) dd.style.display = 'none';
+}
+
+// ==================== FORM VALIDATION ====================
+document.getElementById('editReportForm').addEventListener('submit', function(e) {
+  const category = document.getElementById('selectedCat').value;
+  const lat = document.getElementById('reportLat').value;
+  const lng = document.getElementById('reportLng').value;
+  
+  if (!category) {
+    e.preventDefault();
+    document.getElementById('categoryError').classList.add('show');
+    document.getElementById('categoryError').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  }
+  
+  if (!lat || !lng) {
+    e.preventDefault();
+    document.getElementById('locationMapError').classList.add('show');
+    document.getElementById('locationMapError').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    showToast('Please select a location on the map.', 'error');
+    return false;
+  }
+  
+  return true;
+});
+
+// ==================== TITLE COUNTER ====================
+document.getElementById('reportTitle').addEventListener('input', function() {
+  const counter = document.getElementById('titleCounter');
+  counter.textContent = this.value.length + '/100';
+  if (this.value.length > 0 && this.value.length < 5) {
+    counter.classList.add('warning');
+  } else {
+    counter.classList.remove('warning');
+  }
+});
+
+// ==================== INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize dropdowns
+  document.querySelectorAll('.purok-select-wrap').forEach(wrap => {
+    buildPurokDropdown(wrap.id);
+  });
+  
+  // Initialize maps
+  waitForGoogleMaps();
+});
+
+// Toast function (if not defined in base)
+function showToast(message, type = 'info') {
+  const toastContainer = document.querySelector('.toast-container');
+  if (toastContainer) {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<div class="toast-icon"><i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i></div><div class="toast-message">${message}</div>`;
+    toastContainer.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  } else {
+    alert(message);
+  }
+}
+// ==================== IMAGE PREVIEW ====================
+function previewImage(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    const maxSize = 5 * 1024 * 1024;
+    
+    if (!validTypes.includes(file.type)) {
+      document.getElementById('imageError').classList.add('show');
+      input.value = '';
+      return;
+    }
+    
+    if (file.size > maxSize) {
+      document.getElementById('imageError').classList.add('show');
+      input.value = '';
+      return;
+    }
+    
+    document.getElementById('imageError').classList.remove('show');
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = document.getElementById('imgPreview');
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      document.getElementById('uploadPlaceholder').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+}
+</script>
+{% endblock %}

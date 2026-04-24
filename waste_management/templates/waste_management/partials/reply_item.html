@@ -1,0 +1,67 @@
+<div class="reply-item" id="reply-{{ reply.id }}">
+  <div class="reply-avatar" style="background: {{ reply.author.barangay_profile.avatar_color|default:'#22c55e' }}; position: relative; overflow: hidden;">
+    {% if reply.author.barangay_profile.profile_picture %}
+      <img src="{{ reply.author.barangay_profile.profile_picture.url }}" alt="Profile">
+    {% else %}
+      {{ reply.author.username|first|upper }}
+    {% endif %}
+  </div>
+  <div style="flex:1;">
+    <!-- Name and time first -->
+    <div class="reply-header">
+  <div class="reply-author">
+  <a href="{% if reply.author == user %}/profile/{% else %}/profile/{{ reply.author.username }}/{% endif %}" style="color: inherit; text-decoration: none;">
+    {{ reply.author.get_full_name|default:reply.author.username }}
+  </a>
+</div>
+      <span class="reply-time">· {{ reply.created_at|timesince }} ago</span>
+    </div>
+    <!-- Reply text below -->
+    <div class="reply-content" id="reply-content-{{ reply.id }}">{{ reply.content }}</div>
+    <!-- Actions below text -->
+    <div class="reply-actions">
+      <button class="reply-like-btn" onclick="toggleReplyLike({{ reply.id }}, this)">
+        <i class="fas fa-heart"></i> <span class="reply-like-count">{{ reply.likes.count|default:0 }}</span>
+      </button>
+      <button class="reply-reply-btn" onclick="toggleReplyBox('reply', {{ post_id }}, {{ reply.id }})">
+        <i class="fas fa-reply"></i> Reply
+      </button>
+      {% if reply.author == user %}
+        <button class="reply-owner-btn" onclick="editReply({{ reply.id }})">
+          <i class="fas fa-edit"></i> Edit
+        </button>
+        <button class="reply-owner-btn delete" onclick="confirmDeleteReply({{ reply.id }})">
+          <i class="fas fa-trash-alt"></i> Delete
+        </button>
+      {% else %}
+        <button class="reply-owner-btn report" onclick="reportReply({{ reply.id }}, '{{ reply.author.username|escapejs }}')">
+          <i class="fas fa-flag"></i> Report
+        </button>
+      {% endif %}
+    </div>
+    <!-- Edit form -->
+    <div id="edit-reply-{{ reply.id }}" style="display: none;" class="edit-composer">
+      <textarea class="reply-textarea" id="edit-reply-content-{{ reply.id }}" rows="2">{{ reply.content }}</textarea>
+      <div class="reply-actions-buttons">
+        <button class="btn btn-primary" style="font-size:0.7rem; padding:4px 10px;" onclick="saveReplyEdit({{ reply.id }})">Save</button>
+        <button class="btn btn-glass" style="font-size:0.7rem; padding:4px 10px;" onclick="cancelReplyEdit({{ reply.id }})">Cancel</button>
+      </div>
+    </div>
+    <!-- Reply box for nested replies -->
+    <div id="replyBox-reply-{{ reply.id }}" class="reply-box">
+      <textarea class="reply-textarea" id="replyText-reply-{{ reply.id }}" placeholder="Write a reply..."></textarea>
+      <div class="reply-actions-buttons">
+        <button class="btn btn-primary" style="font-size:0.7rem; padding:6px 12px;" onclick="submitReply('reply', {{ post_id }}, {{ reply.id }})">Send</button>
+        <button class="btn btn-glass" style="font-size:0.7rem; padding:6px 12px;" onclick="toggleReplyBox('reply', {{ post_id }}, {{ reply.id }})">Cancel</button>
+      </div>
+    </div>
+    <!-- Nested replies (indented) -->
+    {% if reply.child_replies.all %}
+      <div class="nested-replies">
+        {% for child in reply.child_replies.all %}
+          {% include 'waste_management/partials/reply_item.html' with reply=child post_id=post_id %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>

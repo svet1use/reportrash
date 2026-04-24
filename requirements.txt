@@ -1,0 +1,10 @@
+Django==4.2.7
+mysqlclient==2.2.0
+Pillow==10.1.0
+requests==2.31.0
+numpy==1.24.3
+exifread==3.0.0
+gunicorn==21.2.0
+whitenoise==6.6.0
+dj-database-url==2.1.0
+psycopg2-binary==2.9.9

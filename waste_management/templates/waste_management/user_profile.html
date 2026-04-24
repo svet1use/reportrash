@@ -1,0 +1,314 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}{{ profile_user.username }} — ReporTrash{% endblock %}
+
+{% block extra_styles %}
+.user-profile-header {
+  position: relative;
+  padding: 30px 16px 20px;
+  text-align: center;
+}
+.user-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #030a0e;
+  border: 3px solid rgba(0,255,135,0.3);
+  position: relative;
+  overflow: hidden;
+}
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.user-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.user-username {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 12px;
+}
+.user-stats {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+.user-stat {
+  text-align: center;
+}
+.user-stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+.user-stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+.follow-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #030a0e;
+  padding: 8px 24px;
+  border-radius: 100px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 20px;
+}
+.follow-btn.following {
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+.follow-btn:hover {
+  transform: translateY(-2px);
+}
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 20px;
+}
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.3s;
+  border-bottom: 2px solid transparent;
+}
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.tab-content {
+  display: none;
+  padding: 0 16px;
+}
+.tab-content.active {
+  display: block;
+}
+.report-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.report-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.report-meta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.report-category {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+}
+.post-card-small {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.post-content-preview {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.post-meta {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+}
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap" style="padding: 0;">
+  <div class="user-profile-header">
+    <div class="user-avatar" style="background: {{ profile.avatar_color }}">
+      {% if profile.profile_picture %}
+        <img src="{{ profile.profile_picture.url }}" alt="{{ profile_user.username }}">
+      {% else %}
+        {{ profile_user.username|first|upper }}
+      {% endif %}
+    </div>
+    <div class="user-name">{{ profile_user.get_full_name|default:profile_user.username }}</div>
+    <div class="user-username">@{{ profile_user.username }}</div>
+    <div class="user-barangay">
+      <i class="fas fa-map-marker-alt"></i> {{ profile.barangay_name }}
+    </div>
+    
+    <div class="user-stats">
+      <div class="user-stat">
+        <div class="user-stat-value">{{ total_reports }}</div>
+        <div class="user-stat-label">Reports</div>
+      </div>
+      <div class="user-stat">
+        <div class="user-stat-value">{{ followers_count }}</div>
+        <div class="user-stat-label">Followers</div>
+      </div>
+      <div class="user-stat">
+        <div class="user-stat-value">{{ following_count }}</div>
+        <div class="user-stat-label">Following</div>
+      </div>
+    </div>
+    
+    {% if profile_user != user %}
+      <button class="follow-btn {% if is_following %}following{% endif %}" onclick="toggleFollow('{{ profile_user.username }}')">
+        <i class="fas {% if is_following %}fa-user-minus{% else %}fa-user-plus{% endif %}"></i>
+        <span>{% if is_following %}Unfollow{% else %}Follow{% endif %}</span>
+      </button>
+    {% endif %}
+  </div>
+  
+  <div class="tabs">
+    <div class="tab active" data-tab="reports">Reports</div>
+    <div class="tab" data-tab="posts">Posts</div>
+    <div class="tab" data-tab="replies">Replies</div>
+  </div>
+  
+  <div id="reports-tab" class="tab-content active">
+    {% if reports %}
+      {% for report in reports %}
+      <div class="report-card">
+        <div class="report-title">{{ report.title }}</div>
+        <div class="report-meta">
+          <span>{{ report.reported_at|date:"M d, Y" }}</span>
+          <span class="report-category cat-{{ report.category }}">{{ report.get_category_display }}</span>
+          <span class="status-badge status-{{ report.status }}">{{ report.get_status_display }}</span>
+        </div>
+        <div class="report-location"><i class="fas fa-map-marker-alt"></i> {{ report.location }}</div>
+        {% if report.points_awarded %}
+        <div class="report-points" style="margin-top: 8px; color: var(--accent);">
+          <i class="fas fa-star"></i> +{{ report.points_awarded }} points
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <i class="fas fa-file-alt" style="font-size: 3rem; margin-bottom: 10px;"></i>
+        <p>No reports yet</p>
+      </div>
+    {% endif %}
+  </div>
+  
+  <div id="posts-tab" class="tab-content">
+    {% if recent_posts %}
+      {% for post in recent_posts %}
+      <div class="post-card-small">
+        <div class="post-content-preview">{{ post.content|truncatechars:150 }}</div>
+        <div class="post-meta">
+          <i class="far fa-clock"></i> {{ post.created_at|timesince }} ago
+          <i class="fas fa-heart" style="margin-left: 12px;"></i> {{ post.like_count }}
+          <i class="fas fa-comment" style="margin-left: 12px;"></i> {{ post.replies.count }}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 10px;"></i>
+        <p>No posts yet</p>
+      </div>
+    {% endif %}
+  </div>
+  
+  <div id="replies-tab" class="tab-content">
+    {% if recent_replies %}
+      {% for reply in recent_replies %}
+      <div class="post-card-small">
+        <div class="post-content-preview">Replying to: {{ reply.post.content|truncatechars:80 }}</div>
+        <div class="post-content-preview" style="margin-top: 8px; color: var(--accent);">
+          “{{ reply.content|truncatechars:100 }}”
+        </div>
+        <div class="post-meta">
+          <i class="far fa-clock"></i> {{ reply.created_at|timesince }} ago
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <i class="fas fa-reply" style="font-size: 3rem; margin-bottom: 10px;"></i>
+        <p>No replies yet</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      const tabName = this.dataset.tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById(`${tabName}-tab`).classList.add('active');
+    });
+  });
+  
+  async function toggleFollow(username) {
+    const fd = new FormData();
+    fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+    
+    try {
+      const res = await fetch(`/user/${username}/follow/`, { method: 'POST', body: fd });
+      const data = await res.json();
+      
+      if (data.success) {
+        const btn = document.querySelector('.follow-btn');
+        const icon = btn.querySelector('i');
+        const span = btn.querySelector('span');
+        
+        if (data.is_following) {
+          btn.classList.add('following');
+          icon.className = 'fas fa-user-minus';
+          span.textContent = 'Unfollow';
+        } else {
+          btn.classList.remove('following');
+          icon.className = 'fas fa-user-plus';
+          span.textContent = 'Follow';
+        }
+        
+        // Update follower count
+        const followerStat = document.querySelector('.user-stat:first-child + .user-stat .user-stat-value');
+        if (followerStat) {
+          followerStat.textContent = data.followers_count;
+        }
+        
+        showToast(data.is_following ? 'Followed!' : 'Unfollowed', 'success');
+      }
+    } catch (error) {
+      showToast('Failed to follow/unfollow', 'error');
+    }
+  }
+</script>
+{% endblock %}

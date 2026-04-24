@@ -1,0 +1,1906 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}Manage Reports — ReporTrash Admin{% endblock %}
+
+{% block extra_styles %}
+.page-header {
+  padding: 20px 16px 12px;
+}
+.page-h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+}
+.page-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+
+/* Filter Panel */
+.filter-panel {
+  margin: 0 16px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 16px 20px;
+}
+.filter-panel-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.filter-panel-label {
+  font-size: 0.7rem;
+  font-family: 'DM Mono', monospace;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.filter-chip:hover {
+  border-color: rgba(0,255,135,0.4);
+  color: var(--text-primary);
+  background: rgba(0,255,135,0.05);
+}
+.filter-chip.active {
+  background: rgba(0,255,135,0.12);
+  border-color: rgba(0,255,135,0.4);
+  color: var(--accent);
+  font-weight: 600;
+}
+.filter-chip.cat-bio.active  { background: rgba(34,197,94,0.12);  border-color: rgba(34,197,94,0.4);  color: #22c55e; }
+.filter-chip.cat-rec.active  { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.4); color: #3b82f6; }
+.filter-chip.cat-res.active  { background: rgba(148,163,184,0.12);border-color: rgba(148,163,184,0.4);color: #94a3b8; }
+.filter-chip.cat-spe.active  { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.4); color: #f59e0b; }
+.filter-chip.cat-haz.active  { background: rgba(239,68,68,0.12);  border-color: rgba(239,68,68,0.4);  color: #ef4444; }
+.filter-chip.cat-elec.active { background: rgba(168,85,247,0.12); border-color: rgba(168,85,247,0.4); color: #a855f7; }
+
+.filter-divider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: 12px 0;
+}
+.filter-panel-bottom {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  flex: 1;
+  min-width: 200px;
+  transition: border-color 0.2s;
+  overflow: hidden;
+}
+.search-box:focus-within {
+  border-color: rgba(0,255,135,0.5);
+}
+.search-box i {
+  padding: 0 12px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.search-box input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: 'Space Grotesk', sans-serif;
+  padding: 10px 0;
+  flex: 1;
+  min-width: 0;
+}
+.search-box input::placeholder { color: var(--text-muted); }
+.search-go-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  color: #030a0e;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.search-go-btn:hover { opacity: 0.85; }
+
+.active-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 0 16px 12px;
+}
+.active-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,255,135,0.08);
+  border: 1px solid rgba(0,255,135,0.2);
+  border-radius: 100px;
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  font-family: 'DM Mono', monospace;
+  color: var(--accent);
+}
+.active-tag button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 0 16px 14px;
+  flex-wrap: wrap;
+}
+.bulk-label {
+  font-size: 0.72rem;
+  font-family: 'DM Mono', monospace;
+  color: var(--text-muted);
+}
+.bulk-select {
+  background: #0d1f2d;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 7px 14px;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-family: 'DM Mono', monospace;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.bulk-select option { background: #0d1f2d; color: var(--text-primary); }
+body.light-mode .bulk-select { background: #e8f5e9; color: #030a0e; }
+body.light-mode .bulk-select option { background: #e8f5e9; color: #030a0e; }
+
+/* Reports Table - Fixed border visibility */
+.reports-table {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  margin: 0 16px;
+  overflow-x: auto;
+  overflow-y: visible;
+  position: relative;
+}
+table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  min-width: 800px;
+}
+tbody tr {
+  position: relative;
+}
+th {
+  text-align: left;
+  padding: 16px 12px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+  border-bottom: 1px solid var(--glass-border);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+td {
+  padding: 14px 12px;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* Status badge */
+.status-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.status-pending  { background: rgba(245,158,11,0.15);  color: var(--warning); }
+.status-inprogress{ background: rgba(34,197,94,0.15);   color: var(--success); }
+.status-resolved { background: rgba(0,212,255,0.15); color: var(--accent2); }
+.status-rejected { background: rgba(148,163,184,0.15); color: var(--text-secondary); }
+.status-flagged { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+.archive-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(168,85,247,0.15);
+  color: #a855f7;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+/* Action buttons container - horizontal alignment */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.action-btn {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Space Grotesk', sans-serif;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.action-btn i {
+  font-size: 0.7rem;
+}
+
+/* View button */
+.action-btn.view {
+  border-color: var(--accent2);
+  color: var(--accent2);
+}
+.action-btn.view:hover {
+  background: rgba(0,212,255,0.1);
+  border-color: var(--accent2);
+  color: var(--accent2);
+}
+
+/* Delete button */
+.action-btn.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.action-btn.danger:hover {
+  background: rgba(239,68,68,0.1);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* Flag button */
+.action-btn.warning {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+.action-btn.warning:hover {
+  background: rgba(245,158,11,0.1);
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+/* Unflag button */
+.action-btn.success {
+  border-color: var(--success);
+  color: var(--success);
+}
+.action-btn.success:hover {
+  background: rgba(34,197,94,0.1);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+/* Update select dropdown */
+.update-select {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: 'Space Grotesk', sans-serif;
+  transition: all 0.2s ease;
+}
+.update-select:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.update-select option {
+  background: #0d1f2d;
+  color: #f0fdf4;
+}
+body.light-mode .update-select option {
+  background: #e8f5e9;
+  color: #030a0e;
+}
+
+.notes-btn {
+  background: rgba(0,212,255,0.1);
+  border: 1px solid rgba(0,212,255,0.3);
+  color: var(--accent2);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.notes-btn:hover {
+  background: rgba(0,212,255,0.2);
+  border-color: var(--accent2);
+  transform: translateY(-1px);
+}
+.has-notes {
+  background: rgba(0,255,135,0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.map-summary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 16px;
+  margin: 0 16px 20px;
+}
+.map-summary-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.map-summary-title .map-subtitle {
+  font-size: 0.7rem;
+  font-family: 'DM Mono', monospace;
+  color: var(--accent);
+  background: rgba(0,255,135,0.1);
+  border: 1px solid rgba(0,255,135,0.2);
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-weight: 400;
+}
+#adminMapContainer {
+  width: 100%;
+  height: 320px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0d1f2d;
+}
+.map-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+.legend-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.legend-dot.red    { background: #ef4444; }
+.legend-dot.orange { background: #f59e0b; }
+.legend-dot.blue   { background: #3b82f6; }
+.legend-dot.green  { background: #22c55e; }
+.legend-dot.purple { background: #a855f7; }
+
+#modalMapContainer {
+  width: 100%;
+  height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 12px;
+  background: #0d1f2d;
+}
+
+.notes-modal .modal {
+  max-width: 500px;
+}
+.notes-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  resize: vertical;
+  margin-bottom: 16px;
+}
+.notes-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+body.light-mode .notes-textarea {
+  background: #f5f5f5;
+  border-color: #000000;
+  color: #1a202c;
+}
+.notes-preview {
+  background: rgba(0,255,135,0.05);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 12px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  max-height: 150px;
+  overflow-y: auto;
+}
+.notes-preview strong {
+  color: var(--accent);
+}
+
+/* Flag Modal */
+.flag-modal .modal {
+  max-width: 500px;
+}
+.flag-options {
+  margin: 16px 0;
+}
+.flag-option {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  margin: 6px 0;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.flag-option:hover {
+  background: rgba(0,255,135,0.05);
+  border-color: var(--accent);
+}
+.flag-option.selected {
+  background: rgba(239,68,68,0.1);
+  border-color: var(--danger);
+}
+.flag-option input {
+  margin-right: 12px;
+  accent-color: var(--danger);
+}
+.flag-option-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.flag-note-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.8rem;
+  margin-top: 12px;
+  resize: vertical;
+}
+body.light-mode .flag-note-input {
+  background: #f5f5f5;
+  border-color: #000000;
+  color: #1a202c;
+}
+
+/* Flag tooltip - triggers on hover over the status badge */
+.flag-info-tooltip {
+  position: relative;
+  display: inline-block;
+}
+.flag-trigger {
+  cursor: help;
+}
+.flag-tooltip-content {
+  display: none;
+  position: fixed;
+  background: var(--bg-deep);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  min-width: 260px;
+  max-width: 320px;
+  z-index: 999999;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  pointer-events: none;
+}
+.flag-info-tooltip:hover .flag-tooltip-content {
+  display: block;
+}
+.flag-tooltip-content .tooltip-arrow {
+  position: absolute;
+  top: 100%;
+  left: 20px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid var(--glass-border);
+}
+.flag-tooltip-content .tooltip-arrow::after {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 7px solid var(--bg-deep);
+}
+
+/* Light Mode Overrides */
+body.light-mode {
+  --text-muted: #4a5568;
+  --text-secondary: #2d3748;
+}
+body.light-mode .filter-panel,
+body.light-mode .map-summary-card,
+body.light-mode .reports-table,
+body.light-mode .modal {
+  border: 1.5px solid #000000 !important;
+}
+body.light-mode .filter-panel,
+body.light-mode .map-summary-card,
+body.light-mode .reports-table {
+  background: #ffffff;
+}
+body.light-mode .page-sub {
+  color: #4a5568 !important;
+}
+body.light-mode .filter-panel-label,
+body.light-mode .filter-chip {
+  color: #4a5568;
+}
+body.light-mode .filter-chip {
+  border-color: #000000 !important;
+}
+body.light-mode .filter-chip:hover {
+  color: #059669;
+  background: rgba(5, 150, 105, 0.05);
+  border-color: #000000 !important;
+}
+body.light-mode .filter-chip.active {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: #000000 !important;
+  color: #059669;
+}
+body.light-mode .search-box {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+}
+body.light-mode .search-box input {
+  color: #1a202c;
+}
+body.light-mode .search-box input::placeholder {
+  color: #9ca3af;
+}
+body.light-mode .search-go-btn {
+  background: linear-gradient(135deg, #059669, #0284c7);
+  border: 1px solid #000000;
+  color: #ffffff;
+}
+body.light-mode .filter-divider {
+  background: #000000;
+}
+body.light-mode th {
+  color: #4a5568 !important;
+  border-bottom-color: #000000 !important;
+}
+body.light-mode td {
+  border-bottom-color: #e0e0e0;
+  color: #1a202c;
+}
+body.light-mode tr:hover td {
+  background: #f5f5f5;
+}
+body.light-mode .status-pending {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid #000000;
+  color: #d97706;
+}
+body.light-mode .status-inprogress {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid #000000;
+  color: #16a34a;
+}
+body.light-mode .status-rejected {
+  background: rgba(100, 116, 139, 0.15);
+  border: 1px solid #000000;
+  color: #475569;
+}
+body.light-mode .status-flagged {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid #000000;
+  color: #dc2626;
+}
+body.light-mode .action-btn,
+body.light-mode .update-select,
+body.light-mode .notes-btn {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+  color: #4a5568;
+}
+body.light-mode .action-btn:hover {
+  background: #ffffff;
+  border-color: #000000 !important;
+  color: #059669;
+}
+body.light-mode .action-btn.danger:hover {
+  border-color: #000000 !important;
+  color: #dc2626;
+}
+body.light-mode .action-btn.warning:hover {
+  border-color: #000000 !important;
+  color: #d97706;
+}
+body.light-mode .flag-option {
+  border-color: #000000;
+}
+body.light-mode .flag-option.selected {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: #dc2626;
+}
+body.light-mode .bulk-label {
+  color: #4a5568;
+}
+body.light-mode .bulk-select {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+  color: #1a202c;
+}
+body.light-mode .bulk-select option {
+  background: #ffffff;
+  color: #1a202c;
+}
+body.light-mode .pagination .action-btn {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+}
+body.light-mode .active-tag {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: #000000 !important;
+  color: #059669;
+}
+body.light-mode .modal {
+  background: #ffffff;
+  border-color: #000000 !important;
+}
+body.light-mode .flag-tooltip-content {
+  background: #ffffff;
+  border-color: #000000;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+body.light-mode .flag-tooltip-content .tooltip-arrow {
+  border-top-color: #000000;
+}
+body.light-mode .flag-tooltip-content .tooltip-arrow::after {
+  border-top-color: #ffffff;
+}
+body.light-mode .flag-info-icon {
+  background: rgba(220, 38, 38, 0.1) !important;
+  border: 1px solid #000000;
+}
+
+@media (max-width: 768px) {
+  .page-header { padding: 16px 12px 10px; }
+  .page-h1 { font-size: 1.3rem; letter-spacing: -0.5px; }
+  .filter-panel { margin: 0 12px 12px; padding: 12px 14px; }
+  .filter-chips { gap: 6px; }
+  .filter-chip { padding: 5px 10px; font-size: 0.7rem; }
+  .filter-panel-bottom { gap: 8px; }
+  .search-box { min-width: 0; }
+  .active-filters { padding: 0 12px 10px; }
+  .bulk-bar { padding: 0 12px 10px; justify-content: flex-start; }
+  .filter-panel-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .filter-panel-label {
+    font-size: 0.65rem;
+    opacity: 0.7;
+  }
+  .filter-chips { flex: unset; width: 100%; }
+  .map-summary-card { margin: 0 12px 16px; }
+  #adminMapContainer { height: 240px; }
+  .pagination { gap: 5px; }
+  .reports-table { margin: 0 12px; }
+  .action-buttons { flex-wrap: wrap; }
+  .action-btn, .update-select, .notes-btn { padding: 5px 10px; font-size: 0.7rem; }
+}
+
+@media (max-width: 480px) {
+  .reports-table { margin: 0 8px; }
+  .filter-chip { font-size: 0.65rem; padding: 4px 8px; }
+  #adminMapContainer { height: 200px; }
+  .action-buttons { gap: 4px; }
+  .action-btn, .update-select, .notes-btn { padding: 4px 8px; font-size: 0.65rem; }
+}
+body.light-mode .action-btn.view {
+  border-color: #0284c7;
+  color: #0284c7;
+}
+body.light-mode .action-btn.view:hover {
+  background: rgba(2,132,199,0.1);
+}
+
+body.light-mode .action-btn.danger {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+body.light-mode .action-btn.danger:hover {
+  background: rgba(220,38,38,0.1);
+}
+
+body.light-mode .action-btn.warning {
+  border-color: #d97706;
+  color: #d97706;
+}
+body.light-mode .action-btn.warning:hover {
+  background: rgba(217,119,6,0.1);
+}
+
+body.light-mode .action-btn.success {
+  border-color: #059669;
+  color: #059669;
+}
+body.light-mode .action-btn.success:hover {
+  background: rgba(5,150,105,0.1);
+}
+/* Push Notification Styles */
+.push-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--bg-deep);
+  border-left: 4px solid var(--accent2);
+  border-radius: 12px;
+  padding: 14px 18px;
+  min-width: 320px;
+  max-width: 420px;
+  z-index: 100000;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  animation: slideInRight 0.3s ease forwards;
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  cursor: pointer;
+}
+.push-notification.resolved {
+  border-left-color: var(--accent2);
+}
+.push-notification-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.push-notification-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  background: rgba(0,212,255,0.15);
+}
+.push-notification-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.push-notification-message {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-left: 38px;
+}
+.push-notification-time {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+  margin-left: 38px;
+}
+.push-notification-action {
+  margin-top: 8px;
+  margin-left: 38px;
+  font-size: 0.7rem;
+  color: var(--accent2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.push-notification.fade-out {
+  animation: fadeOut 0.3s ease forwards;
+}
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+  <div class="page-header">
+    <div class="page-h1"><i class="fas fa-clipboard-list"></i> Manage Reports</div>
+    <div class="page-sub">Review and update waste report status</div>
+  </div>
+
+  <div class="filter-panel">
+    <div class="filter-panel-top">
+      <span class="filter-panel-label"><i class="fas fa-circle-dot" style="margin-right:4px;"></i>Status</span>
+      <div class="filter-chips" id="statusChips">
+        <button class="filter-chip {% if not request.GET.status and not request.GET.archive and not request.GET.flagged %}active{% endif %}" onclick="setStatus('')">All</button>
+        <button class="filter-chip {% if request.GET.status == 'pending' %}active{% endif %}" onclick="setStatus('pending')">
+          <span style="width:6px;height:6px;border-radius:50%;background:#f59e0b;display:inline-block;"></span> Pending
+        </button>
+        <button class="filter-chip {% if request.GET.status == 'inprogress' %}active{% endif %}" onclick="setStatus('inprogress')">
+          <span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;"></span> In Progress
+        </button>
+        <button class="filter-chip {% if request.GET.status == 'resolved' %}active{% endif %}" onclick="setStatus('resolved')">
+  <span style="width:6px;height:6px;border-radius:50%;background:#00d4ff;display:inline-block;"></span> Resolved
+</button>
+        <button class="filter-chip {% if request.GET.status == 'rejected' %}active{% endif %}" onclick="setStatus('rejected')">
+          <span style="width:6px;height:6px;border-radius:50%;background:#94a3b8;display:inline-block;"></span> Rejected
+        </button>
+        <button class="filter-chip {% if request.GET.flagged == 'true' %}active{% endif %}" onclick="setFlagged('true')">
+          <span style="width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block;"></span> Flagged
+        </button>
+        <button class="filter-chip {% if request.GET.archive == 'true' %}active{% endif %}" onclick="setArchive('true')">
+          <span style="width:6px;height:6px;border-radius:50%;background:#a855f7;display:inline-block;"></span> Archived
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-panel-top" style="margin-bottom:0;">
+      <span class="filter-panel-label"><i class="fas fa-tag" style="margin-right:4px;"></i>Category</span>
+      <div class="filter-chips">
+        <button class="filter-chip {% if not request.GET.category %}active{% endif %}" onclick="setCategory('')">All</button>
+        <button class="filter-chip cat-bio {% if request.GET.category == 'biodegradable' %}active{% endif %}" onclick="setCategory('biodegradable')">🌿 Bio</button>
+        <button class="filter-chip cat-rec {% if request.GET.category == 'recyclable' %}active{% endif %}" onclick="setCategory('recyclable')">Recycle</button>
+        <button class="filter-chip cat-res {% if request.GET.category == 'residual' %}active{% endif %}" onclick="setCategory('residual')">Residual</button>
+        <button class="filter-chip cat-spe {% if request.GET.category == 'special' %}active{% endif %}" onclick="setCategory('special')">Special</button>
+        <button class="filter-chip cat-haz {% if request.GET.category == 'hazardous' %}active{% endif %}" onclick="setCategory('hazardous')">Hazardous</button>
+        <button class="filter-chip cat-elec {% if request.GET.category == 'electronic' %}active{% endif %}" onclick="setCategory('electronic')">E-Waste</button>
+      </div>
+    </div>
+
+    <div class="filter-divider"></div>
+
+    <div class="filter-panel-bottom">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search by title, reporter, or location..." value="{{ request.GET.search }}">
+        <button class="search-go-btn" onclick="applySearch()">
+          <i class="fas fa-arrow-right"></i> Search
+        </button>
+      </div>
+      {% if request.GET.status or request.GET.category or request.GET.search or request.GET.archive or request.GET.flagged %}
+      <button class="action-btn" onclick="clearAll()" style="white-space:nowrap;border-radius:10px;">
+        <i class="fas fa-times"></i> Clear all
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="bulk-bar">
+    <span class="bulk-label">Bulk action:</span>
+    <select class="bulk-select" id="bulkStatus">
+      <option value="">-- Select status --</option>
+      <option value="pending">Pending</option>
+      <option value="inprogress">In Progress</option>
+      <option value="resolved">Resolved</option>
+      <option value="rejected">Rejected</option>
+    </select>
+    <button class="action-btn" onclick="bulkUpdate()" style="border-radius:10px;">
+      <i class="fas fa-check-double"></i> Apply to selected
+    </button>
+  </div>
+
+  <div class="map-summary-card">
+    <div class="map-summary-title">
+      <i class="fas fa-map-marked-alt"></i> Report Locations Map
+      <span class="map-subtitle">📍 Brgy. Zone 1, Digos City</span>
+    </div>
+    <div id="adminMapContainer"></div>
+    <div class="map-legend">
+      <span><span class="legend-dot red"></span> Biodegradable</span>
+      <span><span class="legend-dot blue"></span> Recyclable</span>
+      <span><span class="legend-dot orange"></span> Special / Hazardous</span>
+      <span><span class="legend-dot purple"></span> E-Waste</span>
+      <span><span class="legend-dot green"></span> Residual</span>
+    </div>
+  </div>
+
+  <div class="reports-table">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 40px;"><input type="checkbox" id="selectAll" onclick="toggleAll()"></th>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Category</th>
+          <th>Reporter</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for report in reports %}
+        <tr>
+          <td style="width: 40px;"><input type="checkbox" class="report-check" value="{{ report.id }}"></td>
+          <td>#{{ report.id }}</td>
+          <td>
+            {{ report.title|truncatechars:40 }}
+            {% if report.is_archived %}
+            <span class="archive-badge">
+              <i class="fas fa-archive"></i> Archived
+            </span>
+            {% endif %}
+          </td>
+          <td>{{ report.get_category_display }}</td>
+          <td>{{ report.reporter.username }}</td>
+          <td>{{ report.reported_at|date:"M d, Y" }}</td>
+         <td class="status-cell" style="position: relative;">
+  {% if report.flags.exists %}
+    {% with report.flags.first as flag %}
+    <div class="flag-info-tooltip">
+      <span class="status-badge status-flagged flag-trigger">
+        Flagged
+      </span>
+      <div class="flag-tooltip-content">
+        <div style="font-size: 0.75rem; line-height: 1.5;">
+          <div style="margin-bottom: 8px;">
+            <strong style="color: var(--danger);"><i class="fas fa-flag"></i> Flag Details</strong>
+          </div>
+          <div><strong>Type:</strong> {{ flag.get_flag_display }}</div>
+          <div><strong>By:</strong> {{ flag.flagged_by.username }}</div>
+          <div><strong>Date:</strong> {{ flag.created_at|date:"M d, Y" }}</div>
+          {% if flag.note %}
+            <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--glass-border);">
+              <strong><i class="fas fa-comment"></i> Note:</strong>
+              <div style="margin-top: 4px; word-break: break-word;">{{ flag.note }}</div>
+            </div>
+          {% endif %}
+        </div>
+        <div class="tooltip-arrow"></div>
+      </div>
+    </div>
+    {% endwith %}
+  {% else %}
+    <span class="status-badge status-{{ report.status }}">
+      {{ report.get_status_display }}
+    </span>
+  {% endif %}
+</td>
+          <td>
+            <button class="notes-btn {% if report.admin_notes %}has-notes{% endif %}" onclick="openNotesModal({{ report.id }}, '{{ report.title|escapejs }}', `{{ report.admin_notes|escapejs }}`)">
+              <i class="fas fa-sticky-note"></i> {% if report.admin_notes %}View Notes{% else %}Add Note{% endif %}
+            </button>
+           </a>
+         <td class="actions-cell">
+  <div class="action-buttons">
+    {% if report.is_archived %}
+      <button class="action-btn success" onclick="restoreReport({{ report.id }})">
+        <i class="fas fa-undo-alt"></i> Restore
+      </button>
+    {% else %}
+      <select class="update-select" onchange="updateStatus({{ report.id }}, this.value)">
+        <option value="">Update</option>
+        <option value="pending">Pending</option>
+        <option value="inprogress">In Progress</option>
+        <option value="resolved">Resolved</option>
+        <option value="rejected">Rejected</option>
+      </select>
+      <button class="action-btn view" onclick="viewReport({{ report.id }})">
+        <i class="fas fa-eye"></i> View
+      </button>
+      <button class="action-btn danger" onclick="adminDeleteReport({{ report.id }})">
+        <i class="fas fa-trash-alt"></i> Delete
+      </button>
+      {% if report.flags.exists %}
+        <button class="action-btn success" onclick="unflagReport({{ report.id }}, '{{ report.title|escapejs }}')" title="Remove Flag">
+          <i class="fas fa-flag-checkered"></i> Unflag
+        </button>
+      {% else %}
+        <button class="action-btn warning" onclick="openFlagModal({{ report.id }}, '{{ report.title|escapejs }}')" title="Flag Report">
+          <i class="fas fa-flag"></i> Flag
+        </button>
+      {% endif %}
+    {% endif %}
+  </div>
+</td>
+        {% empty %}
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 40px;">
+            {% if request.GET.archive == 'true' %}
+              No archived reports found.
+            {% elif request.GET.flagged == 'true' %}
+              No flagged reports found.
+            {% else %}
+              No reports found.
+            {% endif %}
+          </a>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if reports.has_other_pages %}
+  <div class="pagination">
+    {% if reports.has_previous %}
+    <a href="?page={{ reports.previous_page_number }}" class="action-btn">Previous</a>
+    {% endif %}
+    <span style="padding: 8px;">Page {{ reports.number }} of {{ reports.paginator.num_pages }}</span>
+    {% if reports.has_next %}
+    <a href="?page={{ reports.next_page_number }}" class="action-btn">Next</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<div id="pushNotificationContainer"></div>
+<!-- Notes Modal -->
+<div class="modal-overlay" id="notesModal">
+  <div class="modal notes-modal" style="max-width: 500px;">
+    <div class="modal-handle"></div>
+    <h3 style="font-family: 'Syne', sans-serif; font-size: 1.2rem; margin-bottom: 16px;">
+      <i class="fas fa-sticky-note"></i> Admin Notes
+    </h3>
+    <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 12px;">
+      <strong>Report:</strong> <span id="notesReportTitle"></span>
+    </p>
+    <textarea id="notesTextarea" class="notes-textarea" placeholder="Add notes about this report... These notes will be visible to the user in their history page." rows="4"></textarea>
+    <div id="existingNotesPreview" class="notes-preview" style="display: none;">
+      <strong><i class="fas fa-history"></i> Existing Notes:</strong>
+      <p id="existingNotesContent" style="margin-top: 8px; white-space: pre-wrap;"></p>
+    </div>
+    <div style="display: flex; gap: 10px; margin-top: 16px;">
+      <button class="action-btn" onclick="closeNotesModal()" style="flex: 1;">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNotes()" style="flex: 1;">
+        <i class="fas fa-save"></i> Save Notes
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Flag Modal -->
+<div class="modal-overlay" id="flagModal">
+  <div class="modal flag-modal" style="max-width: 500px;">
+    <div class="modal-handle"></div>
+    <h3 style="font-family: 'Syne', sans-serif; font-size: 1.2rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+      <i class="fas fa-flag" style="color: var(--danger);"></i> Flag Report
+    </h3>
+    <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 16px;">
+      <strong>Report:</strong> <span id="flagReportTitle"></span>
+    </p>
+    <div class="flag-options" id="flagOptions">
+      <div class="flag-option" data-flag="duplicate" onclick="selectFlag('duplicate')">
+        <input type="radio" name="flag_type" value="duplicate" id="flag_duplicate">
+        <label for="flag_duplicate" class="flag-option-label">Duplicate Report</label>
+      </div>
+      <div class="flag-option" data-flag="suspicious" onclick="selectFlag('suspicious')">
+        <input type="radio" name="flag_type" value="suspicious" id="flag_suspicious">
+        <label for="flag_suspicious" class="flag-option-label">Suspicious / Unverified</label>
+      </div>
+      <div class="flag-option" data-flag="spam" onclick="selectFlag('spam')">
+        <input type="radio" name="flag_type" value="spam" id="flag_spam">
+        <label for="flag_spam" class="flag-option-label">Spam / Irrelevant</label>
+      </div>
+      <div class="flag-option" data-flag="incomplete" onclick="selectFlag('incomplete')">
+        <input type="radio" name="flag_type" value="incomplete" id="flag_incomplete">
+        <label for="flag_incomplete" class="flag-option-label">Incomplete Information</label>
+      </div>
+      <div class="flag-option" data-flag="invalid_location" onclick="selectFlag('invalid_location')">
+        <input type="radio" name="flag_type" value="invalid_location" id="flag_invalid_location">
+        <label for="flag_invalid_location" class="flag-option-label">Invalid Location</label>
+      </div>
+      <div class="flag-option" data-flag="invalid_image" onclick="selectFlag('invalid_image')">
+        <input type="radio" name="flag_type" value="invalid_image" id="flag_invalid_image">
+        <label for="flag_invalid_image" class="flag-option-label">Blurry / Invalid Image</label>
+      </div>
+      <div class="flag-option" data-flag="wrong_category" onclick="selectFlag('wrong_category')">
+        <input type="radio" name="flag_type" value="wrong_category" id="flag_wrong_category">
+        <label for="flag_wrong_category" class="flag-option-label">Wrong Category</label>
+      </div>
+      <div class="flag-option" data-flag="false_report" onclick="selectFlag('false_report')">
+        <input type="radio" name="flag_type" value="false_report" id="flag_false_report">
+        <label for="flag_false_report" class="flag-option-label">False Report (Confirmed)</label>
+      </div>
+      <div class="flag-option" data-flag="abusive" onclick="selectFlag('abusive')">
+        <input type="radio" name="flag_type" value="abusive" id="flag_abusive">
+        <label for="flag_abusive" class="flag-option-label">Abusive / Inappropriate Content</label>
+      </div>
+    </div>
+    <textarea id="flagNoteInput" class="flag-note-input" placeholder="Optional: Add a note explaining why this report is being flagged..." rows="3"></textarea>
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button class="action-btn" onclick="closeFlagModal()" style="flex: 1;">Cancel</button>
+      <button class="btn btn-primary" onclick="submitFlag()" style="flex: 1; background: linear-gradient(135deg, var(--danger), var(--warning));">
+        <i class="fas fa-flag"></i> Confirm Flag
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Report Detail Modal -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal" style="max-width: 600px;">
+    <div class="modal-handle"></div>
+    <div id="reportDetail"></div>
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button class="btn btn-glass" onclick="closeModal()" style="flex:1;">Close</button>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let currentStatus = '{{ request.GET.status }}';
+  let currentCategory = '{{ request.GET.category }}';
+  let currentNotesReportId = null;
+  let currentFlagReportId = null;
+  let currentFlagReportTitle = '';
+  let selectedFlagType = null;
+
+  function buildParams(overrides = {}) {
+    const p = new URLSearchParams();
+    const status   = 'status'   in overrides ? overrides.status   : currentStatus;
+    const category = 'category' in overrides ? overrides.category : currentCategory;
+    const search   = 'search'   in overrides ? overrides.search   : document.getElementById('searchInput').value.trim();
+    const archive  = 'archive'  in overrides ? overrides.archive  : '{{ request.GET.archive }}';
+    const flagged  = 'flagged'  in overrides ? overrides.flagged  : '{{ request.GET.flagged }}';
+    if (status)   p.set('status', status);
+    if (category) p.set('category', category);
+    if (search)   p.set('search', search);
+    if (archive && archive === 'true') p.set('archive', 'true');
+    if (flagged && flagged === 'true') p.set('flagged', 'true');
+    return p;
+  }
+
+  function setStatus(val) {
+    window.location.search = buildParams({ status: val, flagged: '' }).toString();
+  }
+
+  function setCategory(val) {
+    window.location.search = buildParams({ category: val }).toString();
+  }
+
+  function setArchive(val) {
+    window.location.search = buildParams({ archive: val, flagged: '' }).toString();
+  }
+
+  function setFlagged(val) {
+    window.location.search = buildParams({ flagged: val, archive: '' }).toString();
+  }
+
+  function applySearch() {
+    window.location.search = buildParams().toString();
+  }
+
+  function clearAll() {
+    window.location.search = '';
+  }
+function toggleAll() {
+  const all = document.getElementById('selectAll').checked;
+  document.querySelectorAll('.report-check').forEach(cb => cb.checked = all);
+}
+  document.getElementById('searchInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') applySearch();
+  });
+
+ async function updateStatus(reportId, status) {
+  if (!status) return;
+  
+  // Get report title BEFORE making the request (store it)
+  let reportTitle = '';
+  // Try multiple selectors to find the title
+  const titleElement = document.querySelector(`#report-${reportId} td:nth-child(3)`) || 
+                       document.querySelector(`#report-${reportId} .report-title`) ||
+                       document.querySelector(`#report-${reportId} td:nth-child(3) a`);
+  if (titleElement) {
+    reportTitle = titleElement.textContent.trim();
+  }
+  // If still empty, try to get from the table row directly
+  if (!reportTitle) {
+    const row = document.querySelector(`#report-${reportId}`);
+    if (row) {
+      const thirdCell = row.querySelector('td:nth-child(3)');
+      if (thirdCell) {
+        reportTitle = thirdCell.textContent.trim();
+      }
+    }
+  }
+  
+  console.log('Report Title found:', reportTitle); // Debug log
+  
+  const fd = new FormData();
+  fd.append('status', status);
+  fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+  
+  try {
+    const res = await fetch(`/report/${reportId}/status/`, { method: 'POST', body: fd });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.success) {
+      showToast(`Report #${reportId} → ${status}`, 'success');
+      
+      // If status is resolved, show push notification and redirect to archive
+      if (status === 'resolved') {
+        showPushNotification(reportId, reportTitle);
+        // Redirect to archive page after 1.5 seconds
+        setTimeout(function() {
+          window.location.href = '/dashboard/admin/archive/';
+        }, 1500);
+      } else {
+        // For other statuses, just reload
+        setTimeout(function() {
+          location.reload();
+        }, 900);
+      }
+    } else {
+      showToast(data.error || 'Failed to update', 'error');
+    }
+  } catch (error) {
+    console.error('Update error:', error);
+    showToast('Network error: ' + error.message, 'error');
+  }
+}
+
+// Push notification function for resolved reports
+function showPushNotification(reportId, reportTitle) {
+  const container = document.getElementById('pushNotificationContainer');
+  if (!container) {
+    const newContainer = document.createElement('div');
+    newContainer.id = 'pushNotificationContainer';
+    newContainer.style.position = 'fixed';
+    newContainer.style.top = '20px';
+    newContainer.style.right = '20px';
+    newContainer.style.zIndex = '100000';
+    document.body.appendChild(newContainer);
+  }
+  
+  const notif = document.createElement('div');
+  notif.className = 'push-notification resolved';
+  
+  // Handle empty title
+  const displayTitle = reportTitle && reportTitle.trim() !== '' ? ` "${reportTitle}" ` : ' ';
+  
+  notif.innerHTML = `
+    <div class="push-notification-header">
+      <div class="push-notification-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="push-notification-title">Report Resolved</div>
+    </div>
+    <div class="push-notification-message">
+      Report #${reportId}${displayTitle}has been marked as <strong>Resolved</strong> and moved to Archive.
+    </div>
+    <div class="push-notification-time">
+      <i class="far fa-clock"></i> ${new Date().toLocaleTimeString()}
+    </div>
+    <div class="push-notification-action">
+      <i class="fas fa-archive"></i> Redirecting to Archive...
+    </div>
+  `;
+  
+  const containerDiv = document.getElementById('pushNotificationContainer');
+  containerDiv.appendChild(notif);
+  
+  // Play notification sound
+  try {
+    const audio = new Audio('/static/sounds/notification.mp3');
+    audio.volume = 0.5;
+    audio.play().catch(e => console.log('Audio play failed:', e));
+  } catch(e) {
+    console.log('Sound not available');
+  }
+  
+  // Auto remove after 2 seconds
+  setTimeout(() => {
+    if (notif.remove) notif.remove();
+  }, 2000);
+}
+
+  async function restoreReport(reportId) {
+    if (!confirm('Restore this report? It will be moved back to active reports with Pending status.')) {
+        return;
+    }
+    
+    const fd = new FormData();
+    fd.append('status', 'pending');
+    fd.append('restore', 'true');
+    fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+    
+    try {
+        const res = await fetch(`/report/${reportId}/status/`, { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Report restored successfully!', 'success');
+            // Redirect to active reports page
+            setTimeout(() => {
+                window.location.href = '/dashboard/admin/reports/';
+            }, 1000);
+        } else {
+            showToast(data.error || 'Failed to restore report', 'error');
+        }
+    } catch {
+        showToast('Network error. Please try again.', 'error');
+    }
+}
+
+  async function bulkUpdate() {
+  const status = document.getElementById('bulkStatus').value;
+  if (!status) { showToast('Select a status first', 'error'); return; }
+  const ids = [...document.querySelectorAll('.report-check:checked')].map(cb => cb.value);
+  if (!ids.length) { showToast('Select at least one report', 'error'); return; }
+  
+  // Store titles before update
+  let reportTitles = [];
+  ids.forEach(id => {
+    const titleElement = document.querySelector(`#report-${id} td:nth-child(3)`);
+    if (titleElement) {
+      reportTitles.push({ id: id, title: titleElement.textContent.trim() });
+    }
+  });
+  
+  const fd = new FormData();
+  fd.append('status', status);
+  fd.append('report_ids', JSON.stringify(ids));
+  fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+  try {
+    const res = await fetch('/dashboard/admin/reports/bulk-update/', { method: 'POST', body: fd });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    if (data.success) {
+      showToast(`${ids.length} report(s) updated to "${status}"`, 'success');
+      
+      // If status is resolved, show notification for first one and redirect
+      if (status === 'resolved' && reportTitles.length > 0) {
+        showPushNotification(reportTitles[0].id, reportTitles[0].title);
+        setTimeout(function() {
+          window.location.href = '/dashboard/admin/archive/';
+        }, 1500);
+      } else {
+        setTimeout(function() {
+          location.reload();
+        }, 900);
+      }
+    } else {
+      showToast('Bulk update failed', 'error');
+    }
+  } catch {
+    showToast('Network error. Please try again.', 'error');
+  }
+}
+
+  function openNotesModal(reportId, reportTitle, existingNotes) {
+    currentNotesReportId = reportId;
+    document.getElementById('notesReportTitle').textContent = reportTitle;
+    document.getElementById('notesTextarea').value = existingNotes || '';
+    const previewDiv = document.getElementById('existingNotesPreview');
+    const previewContent = document.getElementById('existingNotesContent');
+    if (existingNotes && existingNotes.trim()) {
+      previewContent.innerHTML = existingNotes;
+      previewDiv.style.display = 'block';
+    } else {
+      previewDiv.style.display = 'none';
+    }
+    document.getElementById('notesModal').classList.add('open');
+  }
+
+  function closeNotesModal() {
+    document.getElementById('notesModal').classList.remove('open');
+    currentNotesReportId = null;
+  }
+
+  async function saveNotes() {
+    const notes = document.getElementById('notesTextarea').value.trim();
+    const fd = new FormData();
+    fd.append('report_id', currentNotesReportId);
+    fd.append('admin_notes', notes);
+    fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+    const btn = document.querySelector('#notesModal .btn-primary');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    btn.disabled = true;
+    try {
+      const res = await fetch('/dashboard/admin/reports/add-note/', {
+        method: 'POST',
+        body: fd,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Notes saved successfully! User will be notified.', 'success');
+        closeNotesModal();
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        showToast(data.error || 'Failed to save notes', 'error');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showToast('Network error. Please try again.', 'error');
+    } finally {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }
+  }
+
+  function selectFlag(flagType) {
+    selectedFlagType = flagType;
+    document.querySelectorAll('.flag-option').forEach(opt => {
+      opt.classList.remove('selected');
+    });
+    document.querySelector(`.flag-option[data-flag="${flagType}"]`).classList.add('selected');
+    document.querySelector(`input[name="flag_type"][value="${flagType}"]`).checked = true;
+  }
+
+  function openFlagModal(reportId, reportTitle) {
+    currentFlagReportId = reportId;
+    currentFlagReportTitle = reportTitle;
+    document.getElementById('flagReportTitle').textContent = reportTitle;
+    selectedFlagType = null;
+    document.querySelectorAll('.flag-option').forEach(opt => opt.classList.remove('selected'));
+    document.querySelectorAll('input[name="flag_type"]').forEach(radio => radio.checked = false);
+    document.getElementById('flagNoteInput').value = '';
+    document.getElementById('flagModal').classList.add('open');
+  }
+
+  function closeFlagModal() {
+    document.getElementById('flagModal').classList.remove('open');
+    currentFlagReportId = null;
+    selectedFlagType = null;
+  }
+
+  async function submitFlag() {
+    if (!selectedFlagType) {
+        showToast('Please select a flag type', 'error');
+        return;
+    }
+    const note = document.getElementById('flagNoteInput').value.trim();
+    const fd = new FormData();
+    fd.append('report_id', currentFlagReportId);
+    fd.append('flag_type', selectedFlagType);
+    fd.append('note', note);
+    fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+    
+    const btn = document.querySelector('#flagModal .btn-primary');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    btn.disabled = true;
+    
+    try {
+        const res = await fetch('/dashboard/admin/reports/flag/', {
+            method: 'POST',
+            body: fd,
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Server response:', errorText);
+            throw new Error(`HTTP ${res.status}: ${errorText.substring(0, 100)}`);
+        }
+        
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Report flagged as ${selectedFlagType}`, 'success');
+            closeFlagModal();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast(data.error || 'Failed to flag report', 'error');
+        }
+    } catch (error) {
+        console.error('Flag error:', error);
+        showToast('Network error: ' + error.message, 'error');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+  }
+
+  async function unflagReport(reportId, reportTitle) {
+    if (!confirm(`Remove flag from "${reportTitle}"?\n\nThis will delete the flag and the user will no longer see it flagged.`)) {
+        return;
+    }
+    
+    const fd = new FormData();
+    fd.append('report_id', reportId);
+    fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+    
+    try {
+        const res = await fetch('/dashboard/admin/reports/unflag/', {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Flag removed successfully', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.error || 'Failed to remove flag', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Network error. Please try again.', 'error');
+    }
+  }
+// Tooltip positioning - ensure it's always visible
+document.querySelectorAll('.flag-info-tooltip').forEach(tooltip => {
+  tooltip.addEventListener('mouseenter', function(e) {
+    const content = this.querySelector('.flag-tooltip-content');
+    if (!content) return;
+    
+    const rect = this.getBoundingClientRect();
+    const contentRect = content.getBoundingClientRect();
+    
+    // Position above the element
+    let top = rect.top - contentRect.height - 10;
+    let left = rect.left;
+    
+    // If not enough space above, position below
+    if (top < 0) {
+      top = rect.bottom + 10;
+      content.style.bottom = 'auto';
+      content.style.top = top + 'px';
+    } else {
+      content.style.bottom = 'auto';
+      content.style.top = top + 'px';
+    }
+    
+    // Adjust if off-screen left
+    if (left + contentRect.width > window.innerWidth) {
+      left = window.innerWidth - contentRect.width - 10;
+    }
+    if (left < 10) {
+      left = 10;
+    }
+    
+    content.style.left = left + 'px';
+  });
+});
+  async function viewReport(reportId) {
+    const modal  = document.getElementById('reportModal');
+    const detail = document.getElementById('reportDetail');
+    detail.innerHTML = '<div style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--accent);"></i></div>';
+    modal.classList.add('open');
+    try {
+      const res  = await fetch(`/api/report/${reportId}/`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const hasCoords = data.latitude && data.longitude;
+      detail.innerHTML = `
+        <h2 style="font-family:'Syne',sans-serif;font-size:1.3rem;margin-bottom:15px;">${data.title}</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">
+          <div><strong>Category:</strong> ${data.category}</div>
+          <div><strong>Status:</strong> <span class="status-badge status-${data.status}">${data.status}</span></div>
+          <div><strong>Reporter:</strong> ${data.reporter}</div>
+          <div><strong>Date:</strong> ${data.date}</div>
+          <div><strong>Location:</strong> ${data.location || 'N/A'}</div>
+          <div><strong>Purok:</strong> ${data.purok || 'N/A'}</div>
+        </div>
+        <div style="margin-bottom:15px;">
+          <strong>Description:</strong>
+          <p style="margin-top:5px;color:var(--text-secondary);">${data.description || 'No description'}</p>
+        </div>
+        ${hasCoords ? `
+          <div style="margin-bottom:12px;">
+            <div style="font-size:0.72rem;color:var(--text-muted);font-family:'DM Mono',monospace;margin-bottom:6px;">
+              <i class="fas fa-map-marker-alt" style="color:var(--accent);"></i> EXACT LOCATION
+            </div>
+            <div id="modalMapContainer"></div>
+            <div style="font-size:0.68rem;color:var(--text-muted);font-family:'DM Mono',monospace;margin-top:4px;">
+              ${parseFloat(data.latitude).toFixed(6)}, ${parseFloat(data.longitude).toFixed(6)}
+            </div>
+          </div>` : `
+          <div style="margin-bottom:12px;padding:10px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;font-size:0.78rem;color:var(--warning);">
+            <i class="fas fa-exclamation-triangle"></i> No GPS coordinates recorded for this report.
+          </div>`}
+        ${data.image ? `
+          <div style="margin-top:14px;">
+            <div style="font-size:0.72rem;color:var(--text-muted);font-family:'DM Mono',monospace;margin-bottom:6px;">
+              <i class="fas fa-camera" style="color:var(--accent);margin-right:4px;"></i> PHOTO EVIDENCE
+            </div>
+            <img src="${data.image}" style="max-width:100%;border-radius:10px;border:1px solid rgba(255,255,255,0.08);">
+          </div>` : `
+          <div style="margin-top:14px;padding:12px 14px;background:rgba(148,163,184,0.06);border:1px solid rgba(255,255,255,0.06);border-radius:10px;font-size:0.78rem;color:var(--text-muted);">
+            <i class="fas fa-image" style="margin-right:6px;"></i> No photo evidence uploaded for this report.
+          </div>`}
+      `;
+      if (hasCoords) {
+        initModalMap(parseFloat(data.latitude), parseFloat(data.longitude), data.title, data.category, data.location);
+      }
+    } catch {
+      detail.innerHTML = '<div style="color:var(--danger);text-align:center;padding:20px;">Failed to load report details.</div>';
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('reportModal').classList.remove('open');
+  }
+  
+  document.getElementById('reportModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+  document.getElementById('notesModal').addEventListener('click', function(e) {
+    if (e.target === this) closeNotesModal();
+  });
+  document.getElementById('flagModal').addEventListener('click', function(e) {
+    if (e.target === this) closeFlagModal();
+  });
+
+  const CAT_COLORS = {
+    biodegradable: '#22c55e',
+    recyclable:    '#3b82f6',
+    residual:      '#94a3b8',
+    special:       '#f59e0b',
+    hazardous:     '#ef4444',
+    electronic:    '#a855f7'
+  };
+
+  let adminMap = null;
+  const ZONE1_CENTER = { lat: 6.7587, lng: 125.3560 };
+
+  function initAdminMap() {
+    adminMap = new google.maps.Map(document.getElementById('adminMapContainer'), {
+      center: ZONE1_CENTER,
+      zoom: 16,
+      mapTypeId: google.maps.MapTypeId.HYBRID,
+      tilt: 0,
+      mapTypeControl: true,
+      mapTypeControlOptions: {
+        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+        position: google.maps.ControlPosition.TOP_RIGHT,
+        mapTypeIds: [google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.ROADMAP]
+      },
+      streetViewControl: false,
+      fullscreenControl: true,
+    });
+
+    new google.maps.Polygon({
+      paths: [
+          { lat: 6.764225845006448, lng: 125.34758232605773 },
+          { lat: 6.764097995129116, lng: 125.34892343053866 },
+          { lat: 6.763906220249684, lng: 125.35194896224762 },
+          { lat: 6.763727878487998, lng: 125.35271045209343 },
+          { lat: 6.763650520294897, lng: 125.35436295040708 },
+          { lat: 6.763706570155491, lng: 125.35966273772254 },
+          { lat: 6.763789024468523, lng: 125.35925529961375 },
+          { lat: 6.763750516173827, lng: 125.35944845212227 },
+          { lat: 6.763746407807963, lng: 125.35729192265369 },
+          { lat: 6.7635120160982565, lng: 125.35996340283572 },
+          { lat: 6.7635013619368305, lng: 125.35997413161552 },
+          { lat: 6.762936690533731, lng: 125.36065004832994 },
+          { lat: 6.762361364284115, lng: 125.36137960916757 },
+          { lat: 6.762023208888064, lng: 125.36406156049974 },
+          { lat: 6.760741923670257, lng: 125.36516688805614 },
+          { lat: 6.754477194673094, lng: 125.36458753097254 },
+          { lat: 6.7538166232888734, lng: 125.36452315795746 },
+          { lat: 6.7537953145195235, lng: 125.36448024261408 },
+          { lat: 6.753859240824747, lng: 125.36510251509324 },
+          { lat: 6.753867231619377, lng: 125.36507032865512 },
+          { lat: 6.750130192254154, lng: 125.36505959975325 },
+          { lat: 6.756245816918306, lng: 125.35587571618939 },
+          { lat: 6.755265617479111, lng: 125.35576842783091 },
+          { lat: 6.756139273597229, lng: 125.34690640942097 },
+          { lat: 6.764225845006448, lng: 125.34758232605773 }
+      ],
+      strokeColor: '#00ff87',
+      strokeOpacity: 0.7,
+      strokeWeight: 2,
+      fillColor: '#00ff87',
+      fillOpacity: 0.06,
+      map: adminMap
+    });
+
+    const reports = {{ reports_map_json|default:"[]"|safe }};
+    reports.forEach(r => {
+      if (!r.lat || !r.lng) return;
+      const color = CAT_COLORS[r.category] || '#94a3b8';
+      const marker = new google.maps.Marker({
+        position: { lat: parseFloat(r.lat), lng: parseFloat(r.lng) },
+        map: adminMap,
+        title: r.title,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: color,
+          fillOpacity: 1,
+          scale: 10,
+          strokeColor: '#ffffff',
+          strokeWeight: 2.5
+        },
+        animation: google.maps.Animation.DROP
+      });
+      const info = new google.maps.InfoWindow({
+        content: `<div style="padding:10px;font-family:sans-serif;max-width:220px;">
+          <strong style="font-size:0.88rem;display:block;margin-bottom:4px;">${r.title}</strong>
+          <span style="font-size:0.75rem;color:#374151;display:block;">${r.category} &nbsp;·&nbsp; <b>${r.status}</b></span>
+          <span style="font-size:0.72rem;color:#6b7280;display:block;margin-top:2px;">👤 ${r.reporter} &nbsp;·&nbsp; ${r.date}</span>
+          <span style="font-size:0.68rem;color:#9ca3af;display:block;margin-top:3px;">📍 ${parseFloat(r.lat).toFixed(6)}, ${parseFloat(r.lng).toFixed(6)}</span>
+        </div>`
+      });
+      marker.addListener('click', () => info.open(adminMap, marker));
+    });
+  }
+
+  let modalMap = null;
+  function initModalMap(lat, lng, title, category, locationText) {
+    setTimeout(() => {
+      const container = document.getElementById('modalMapContainer');
+      if (!container) return;
+      const color = CAT_COLORS[category] || '#94a3b8';
+      modalMap = new google.maps.Map(container, {
+        center: { lat, lng },
+        zoom: 18,
+        mapTypeId: google.maps.MapTypeId.HYBRID,
+        tilt: 0,
+        disableDefaultUI: false,
+        zoomControl: true,
+        mapTypeControl: true,
+        mapTypeControlOptions: {
+          style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+          mapTypeIds: [google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.ROADMAP]
+        },
+        streetViewControl: false,
+        fullscreenControl: true,
+      });
+
+      const marker = new google.maps.Marker({
+        position: { lat, lng },
+        map: modalMap,
+        title: title,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: color,
+          fillOpacity: 1,
+          scale: 13,
+          strokeColor: '#ffffff',
+          strokeWeight: 3
+        },
+        animation: google.maps.Animation.DROP,
+        zIndex: 999
+      });
+
+      const infoContent = `
+        <div style="padding:10px 12px;font-family:sans-serif;min-width:200px;">
+          <strong style="font-size:0.88rem;display:block;margin-bottom:6px;">${title}</strong>
+          <div style="font-size:0.72rem;color:#374151;margin-bottom:3px;">
+            <span style="color:#6b7280;">📍 Coordinates</span><br>
+            <code style="font-size:0.78rem;color:#111827;">${lat.toFixed(6)}, ${lng.toFixed(6)}</code>
+          </div>
+          ${locationText ? `<div style="font-size:0.72rem;color:#6b7280;margin-top:4px;">🏘️ ${locationText}</div>` : ''}
+          <div style="margin-top:6px;">
+            <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank"
+               style="font-size:0.7rem;color:#2563eb;text-decoration:none;">
+              Open in Google Maps ↗
+            </a>
+          </div>
+        </div>`;
+      const infoWindow = new google.maps.InfoWindow({ content: infoContent });
+      infoWindow.open(modalMap, marker);
+      marker.addListener('click', () => infoWindow.open(modalMap, marker));
+    }, 120);
+  }
+  
+  async function adminDeleteReport(reportId) {
+    if (!confirm('Are you sure you want to delete this report? This action will archive the report and cannot be undone.')) {
+      return;
+    }
+    const fd = new FormData();
+    fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+    try {
+      const res = await fetch(`/dashboard/admin/reports/${reportId}/delete/`, {
+        method: 'POST',
+        body: fd,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Report deleted and archived successfully!', 'success');
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        showToast(data.error || 'Failed to delete report', 'error');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showToast('Network error. Please try again.', 'error');
+    }
+  }
+
+  
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBII9Pl-e710PqjEXa0O5h55x1O0UCe5nQ&libraries=places&callback=initAdminMap" async defer></script>
+{% endblock %}

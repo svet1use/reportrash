@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+staticfiles/
+media/
+*.log
+.env
+google_credentials.json
+db.sqlite3
+*.mp3
+static/audio/*.mp3

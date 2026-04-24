@@ -1,0 +1,1268 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}History — ReporTrash{% endblock %}
+
+{% block extra_styles %}
+/* ============================================
+   HISTORY PAGE STYLES
+   ============================================ */
+.page-header {
+  margin-bottom: 20px;
+}
+.page-h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-h1 i {
+  color: var(--accent);
+  font-size: 1.4rem;
+}
+.page-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+
+/* Stats Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 16px 12px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+.stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+  margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.stat-trend {
+  font-size: 0.65rem;
+  margin-top: 6px;
+  color: var(--success);
+}
+
+/* Search and Filter Bar */
+.filter-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.search-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.search-input-wrapper {
+  flex: 1;
+  position: relative;
+}
+.search-input-wrapper i {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.search-input {
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--glass-border);
+  border-radius: 40px;
+  padding: 12px 16px 12px 42px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  outline: none;
+}
+.search-input:focus {
+  border-color: var(--accent);
+}
+.search-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+.search-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  border-radius: 40px;
+  padding: 0 20px;
+  color: #030a0e;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+.filter-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.filter-select {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 40px;
+  padding: 10px 16px;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2300ff87' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  padding-right: 40px;
+}
+.filter-select option {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  padding: 10px;
+}
+body.light-mode .filter-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23059669' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+.filter-select:focus {
+  border-color: var(--accent);
+}
+
+/* Compact Date Row - Horizontal on mobile */
+.date-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.date-input-group {
+  flex: 1;
+  min-width: 0;
+}
+.date-input {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 40px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-family: 'DM Mono', monospace;
+  outline: none;
+}
+.date-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+.date-input:focus {
+  border-color: var(--accent);
+}
+.date-sep {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.apply-btn {
+  background: var(--accent);
+  border: none;
+  border-radius: 40px;
+  padding: 10px 16px;
+  color: #030a0e;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Category and Status Chips */
+.chips-section {
+  margin-bottom: 20px;
+}
+.chips-title {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.chips-container {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chip {
+  padding: 6px 14px;
+  border-radius: 40px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #030a0e;
+  font-weight: 600;
+}
+.chip i {
+  margin-right: 5px;
+  font-size: 0.7rem;
+}
+
+/* Active Filters */
+.active-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 12px 0;
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+}
+.filter-tag {
+  background: rgba(0,255,135,0.1);
+  border: 1px solid rgba(0,255,135,0.2);
+  border-radius: 40px;
+  padding: 5px 12px;
+  font-size: 0.7rem;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.filter-tag a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: bold;
+}
+.clear-all {
+  background: rgba(255,255,255,0.05);
+  border-radius: 40px;
+  padding: 5px 12px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+/* Reports List */
+.reports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.report-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.report-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0,255,135,0.3);
+}
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.report-title {
+  font-size: 1rem;
+  font-weight: 700;
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.report-status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+}
+.status-pending { background: rgba(245,158,11,0.15); color: var(--warning); }
+.status-inprogress { background: rgba(34,197,94,0.15); color: var(--success); }
+.status-resolved { background: rgba(0,212,255,0.15); color: var(--accent2); }
+.status-rejected { background: rgba(148,163,184,0.15); color: var(--text-secondary); }
+
+/* Flag Badge Styles */
+.flag-badge {
+  background: rgba(239,68,68,0.15);
+  color: #dc2626;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.duplicate-badge {
+  background: rgba(239,68,68,0.15);
+  color: #ef4444;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Note Buttons */
+.view-note-btn, .flag-note-btn {
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.view-note-btn {
+  background: rgba(0,212,255,0.1);
+  border: 1px solid rgba(0,212,255,0.3);
+  color: var(--accent2);
+}
+.view-note-btn:hover {
+  background: rgba(0,212,255,0.2);
+  transform: translateY(-1px);
+}
+.flag-note-btn {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: var(--danger);
+}
+.flag-note-btn:hover {
+  background: rgba(239,68,68,0.2);
+  transform: translateY(-1px);
+}
+
+.report-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+.detail-item i {
+  width: 14px;
+  font-size: 0.7rem;
+}
+.report-category {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+.cat-biodegradable { background: rgba(34,197,94,0.15); color: #22c55e; }
+.cat-recyclable { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.cat-residual { background: rgba(148,163,184,0.15); color: #94a3b8; }
+.cat-special { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.cat-hazardous { background: rgba(239,68,68,0.15); color: #ef4444; }
+.cat-electronic { background: rgba(168,85,247,0.15); color: #a855f7; }
+
+.report-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.report-points {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(0,255,135,0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+.report-actions {
+  display: flex;
+  gap: 8px;
+}
+.action-icon {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.action-icon:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.action-icon.delete:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* Note Sections */
+.note-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--glass-border);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+}
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+.empty-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.empty-sub {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.modal {
+  background: var(--bg-card);
+  backdrop-filter: blur(30px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 24px;
+  width: 90%;
+  max-width: 450px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.modal-handle {
+  width: 50px;
+  height: 4px;
+  background: var(--text-muted);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.modal-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+.modal-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.modal-sub {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+.modal-content {
+  background: rgba(0,212,255,0.05);
+  border-radius: 16px;
+  padding: 16px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 16px 0;
+}
+.modal-meta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+  margin-top: 8px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  .stats-grid { gap: 8px; }
+  .stat-card { padding: 12px 8px; }
+  .stat-value { font-size: 1.4rem; }
+  .stat-label { font-size: 0.6rem; }
+  .filter-bar { padding: 12px; }
+  .search-row { flex-direction: column; }
+  .search-btn { padding: 10px; justify-content: center; }
+  .filter-row { flex-direction: column; }
+  .filter-select { width: 100%; }
+  .date-row { gap: 6px; }
+  .date-input { padding: 8px 8px; font-size: 0.7rem; }
+  .date-sep { font-size: 0.7rem; }
+  .apply-btn { padding: 8px 12px; font-size: 0.7rem; }
+  .chips-container { gap: 6px; }
+  .chip { padding: 4px 10px; font-size: 0.65rem; }
+  .report-header { flex-direction: column; }
+  .report-details { gap: 8px; }
+  .detail-item { font-size: 0.7rem; }
+  .report-footer { flex-direction: column; align-items: flex-start; }
+  .report-actions { width: 100%; justify-content: flex-end; }
+  .modal { width: 95%; padding: 20px; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+  .stat-value { font-size: 1.2rem; }
+  .report-title { font-size: 0.9rem; }
+  .action-icon { padding: 5px 10px; font-size: 0.65rem; }
+  .date-row { gap: 4px; }
+  .date-input { padding: 8px 6px; font-size: 0.65rem; }
+  .date-sep { font-size: 0.65rem; }
+  .apply-btn { padding: 8px 10px; font-size: 0.65rem; }
+  .apply-btn i { display: none; }
+}
+
+/* ============================================
+   LIGHT MODE OVERRIDES
+   ============================================ */
+body.light-mode {
+  --bg-card: rgba(0, 0, 0, 0.03);
+  --bg-card-hover: rgba(0, 0, 0, 0.05);
+  --glass-border: #000000;
+  --glass-strong: rgba(0, 0, 0, 0.2);
+  --text-muted: #000000;
+  --text-secondary: #000000;
+}
+
+body.light-mode .stat-card,
+body.light-mode .filter-bar,
+body.light-mode .report-card,
+body.light-mode .empty-state,
+body.light-mode .modal {
+  border-color: #000000 !important;
+  border-width: 1.5px !important;
+  background: #ffffff;
+}
+
+body.light-mode .stat-card:hover,
+body.light-mode .report-card:hover {
+  border-color: #000000 !important;
+  background: #f5f5f5;
+}
+
+body.light-mode .page-sub,
+body.light-mode .stat-label,
+body.light-mode .stat-trend,
+body.light-mode .chips-title,
+body.light-mode .detail-item,
+body.light-mode .filter-tag,
+body.light-mode .empty-sub,
+body.light-mode .date-sep,
+body.light-mode .report-title,
+body.light-mode .report-status,
+body.light-mode .report-points,
+body.light-mode .action-icon,
+body.light-mode .chip:not(.active) {
+  color: #000000 !important;
+}
+
+body.light-mode .search-input::placeholder,
+body.light-mode .date-input::placeholder {
+  color: #888888 !important;
+  opacity: 0.7 !important;
+}
+
+body.light-mode .filter-select {
+  color: #000000 !important;
+  background-color: #ffffff;
+  border-color: #000000;
+}
+
+body.light-mode .filter-select option:first-child {
+  color: #888888 !important;
+  font-style: italic;
+}
+
+body.light-mode .search-input,
+body.light-mode .date-input {
+  background: #ffffff;
+  border-color: #000000;
+  color: #000000;
+}
+
+body.light-mode .search-input:focus,
+body.light-mode .date-input:focus {
+  border-color: #059669;
+}
+
+body.light-mode .filter-select option {
+  background: #ffffff;
+  color: #000000;
+}
+
+body.light-mode .chip:not(.active) {
+  background: #f5f5f5;
+  border-color: #000000;
+  color: #000000;
+}
+
+body.light-mode .chip:not(.active):hover {
+  border-color: #059669;
+  color: #059669;
+}
+
+body.light-mode .filter-tag {
+  background: rgba(0,255,135,0.1);
+  color: #059669;
+}
+
+body.light-mode .active-filters {
+  border-top-color: #000000;
+  border-bottom-color: #000000;
+}
+
+body.light-mode .report-footer {
+  border-top-color: #000000;
+}
+
+body.light-mode .modal {
+  background: #ffffff;
+  color: #000000;
+}
+
+body.light-mode .modal .action-icon {
+  border-color: #000000;
+  color: #000000;
+}
+
+body.light-mode .modal .action-icon:hover {
+  border-color: #059669;
+  color: #059669;
+}
+
+body.light-mode .view-note-btn {
+  background: rgba(2, 132, 199, 0.1) !important;
+  border-color: #000000 !important;
+  color: #0284c7 !important;
+}
+
+body.light-mode .view-note-btn:hover {
+  background: rgba(2, 132, 199, 0.2) !important;
+}
+
+body.light-mode .flag-note-btn {
+  background: rgba(220, 38, 38, 0.1) !important;
+  border-color: #000000 !important;
+  color: #dc2626 !important;
+}
+
+body.light-mode .flag-note-btn:hover {
+  background: rgba(220, 38, 38, 0.2) !important;
+}
+
+body.light-mode .modal-content {
+  background: #f5f5f5 !important;
+  border: 1px solid #000000;
+  color: #1a202c !important;
+}
+
+body.light-mode .stat-value {
+  color: #059669 !important;
+}
+
+body.light-mode .cat-biodegradable { color: #22c55e !important; }
+body.light-mode .cat-recyclable { color: #3b82f6 !important; }
+body.light-mode .cat-residual { color: #6b7280 !important; }
+body.light-mode .cat-special { color: #f59e0b !important; }
+body.light-mode .cat-hazardous { color: #ef4444 !important; }
+body.light-mode .cat-electronic { color: #a855f7 !important; }
+
+body.light-mode .status-pending { color: #d97706 !important; }
+body.light-mode .status-inprogress { color: #059669 !important; }
+body.light-mode .status-resolved { color: #0284c7 !important; }
+
+body.light-mode .duplicate-badge,
+body.light-mode .flag-badge {
+  background: rgba(220, 38, 38, 0.1) !important;
+  border: 1px solid #000000 !important;
+  color: #dc2626 !important;
+}
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-h1">
+      <i class="fas fa-history"></i> My Reports
+    </div>
+    <div class="page-sub">Track and manage your waste reports</div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">{{ reports.count }}</div>
+      <div class="stat-label">Total Reports</div>
+      <div class="stat-trend"><i class="fas fa-arrow-up"></i> +{{ weekly_growth|default:"12" }}%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ total_points }}</div>
+      <div class="stat-label">Points Earned</div>
+      <div class="stat-trend"><i class="fas fa-star"></i> {{ user_level|default:"Eco Warrior" }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">#{{ community_rank|default:"12" }}</div>
+      <div class="stat-label">Community Rank</div>
+      <div class="stat-trend"><i class="fas fa-users"></i> of {{ total_users|default:"150" }}</div>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="search-row">
+      <div class="search-input-wrapper">
+        <i class="fas fa-search"></i>
+        <input type="text" class="search-input" id="searchInput" placeholder="Search by title, location..." value="{{ search_query }}">
+      </div>
+      <button class="search-btn" onclick="searchReports()">
+        <i class="fas fa-arrow-right"></i> Search
+      </button>
+    </div>
+    
+    <div class="filter-row">
+      <select class="filter-select" id="sortSelect" onchange="sortReports()">
+        <option value="">Select sort order...</option>
+        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+        <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+        <option value="points_high" {% if sort_by == 'points_high' %}selected{% endif %}>Highest Points</option>
+        <option value="points_low" {% if sort_by == 'points_low' %}selected{% endif %}>Lowest Points</option>
+      </select>
+    </div>
+    
+    <div class="date-row">
+      <div class="date-input-group">
+        <input type="text" class="date-input" id="startDate" value="{{ start_date }}" placeholder="Start date" onfocus="this.type='date'" onblur="if(!this.value) this.type='text'">
+      </div>
+      <span class="date-sep">→</span>
+      <div class="date-input-group">
+        <input type="text" class="date-input" id="endDate" value="{{ end_date }}" placeholder="End date" onfocus="this.type='date'" onblur="if(!this.value) this.type='text'">
+      </div>
+      <button class="apply-btn" onclick="applyDateFilter()">
+        <i class="fas fa-calendar"></i> Apply
+      </button>
+    </div>
+  </div>
+
+  <!-- Category Chips -->
+  <div class="chips-section">
+    <div class="chips-title"><i class="fas fa-tag"></i> Filter by Category</div>
+    <div class="chips-container">
+      <a href="?{% if status_filter %}status={{ status_filter }}&{% endif %}{% if start_date %}start_date={{ start_date }}&{% endif %}{% if end_date %}end_date={{ end_date }}{% endif %}{% if search_query %}search={{ search_query }}{% endif %}" class="chip {% if not category_filter %}active{% endif %}">All</a>
+      <a href="?category=biodegradable{% if status_filter %}&status={{ status_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="chip {% if category_filter == 'biodegradable' %}active{% endif %}"><i class="fas fa-leaf"></i> Biodegradable</a>
+      <a href="?category=recyclable{% if status_filter %}&status={{ status_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="chip {% if category_filter == 'recyclable' %}active{% endif %}"><i class="fas fa-recycle"></i> Recyclable</a>
+      <a href="?category=residual{% if status_filter %}&status={{ status_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="chip {% if category_filter == 'residual' %}active{% endif %}"><i class="fas fa-trash"></i> Residual</a>
+      <a href="?category=special{% if status_filter %}&status={{ status_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="chip {% if category_filter == 'special' %}active{% endif %}"><i class="fas fa-exclamation-triangle"></i> Special</a>
+      <a href="?category=hazardous{% if status_filter %}&status={{ status_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="chip {% if category_filter == 'hazardous' %}active{% endif %}"><i class="fas fa-skull-crossbones"></i> Hazardous</a>
+      <a href="?category=electronic{% if status_filter %}&status={{ status_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="chip {% if category_filter == 'electronic' %}active{% endif %}"><i class="fas fa-battery-quarter"></i> E-Waste</a>
+    </div>
+  </div>
+
+  <!-- Status Chips -->
+  <div class="chips-section">
+    <div class="chips-title"><i class="fas fa-flag"></i> Filter by Status</div>
+    <div class="chips-container">
+      <a href="?{% if category_filter %}category={{ category_filter }}&{% endif %}{% if start_date %}start_date={{ start_date }}&{% endif %}{% if end_date %}end_date={{ end_date }}{% endif %}{% if search_query %}search={{ search_query }}{% endif %}" class="chip {% if not status_filter %}active{% endif %}">All</a>
+      <a href="?status=pending{% if category_filter %}&category={{ category_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="chip {% if status_filter == 'pending' %}active{% endif %}">Pending</a>
+      <a href="?status=inprogress{% if category_filter %}&category={{ category_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="chip {% if status_filter == 'inprogress' %}active{% endif %}">In Progress</a>
+      <a href="?status=resolved{% if category_filter %}&category={{ category_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="chip {% if status_filter == 'resolved' %}active{% endif %}">Resolved</a>
+      <a href="?status=rejected{% if category_filter %}&category={{ category_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="chip {% if status_filter == 'rejected' %}active{% endif %}">Rejected</a>
+    </div>
+  </div>
+
+  <!-- Active Filters -->
+  {% if category_filter or status_filter or start_date or end_date or search_query %}
+  <div class="active-filters">
+    {% if category_filter %}
+    <span class="filter-tag"><i class="fas fa-tag"></i> {{ category_filter }}<a href="?{% if status_filter %}status={{ status_filter }}&{% endif %}{% if start_date %}start_date={{ start_date }}&{% endif %}{% if end_date %}end_date={{ end_date }}{% endif %}{% if search_query %}search={{ search_query }}{% endif %}">✕</a></span>
+    {% endif %}
+    {% if status_filter %}
+    <span class="filter-tag"><i class="fas fa-flag"></i> {{ status_filter }}<a href="?{% if category_filter %}category={{ category_filter }}&{% endif %}{% if start_date %}start_date={{ start_date }}&{% endif %}{% if end_date %}end_date={{ end_date }}{% endif %}{% if search_query %}search={{ search_query }}{% endif %}">✕</a></span>
+    {% endif %}
+    {% if start_date or end_date %}
+    <span class="filter-tag"><i class="fas fa-calendar"></i> {{ start_date|default:"..." }} → {{ end_date|default:"..." }}<a href="?{% if category_filter %}category={{ category_filter }}&{% endif %}{% if status_filter %}status={{ status_filter }}{% endif %}{% if search_query %}search={{ search_query }}{% endif %}">✕</a></span>
+    {% endif %}
+    {% if search_query %}
+    <span class="filter-tag"><i class="fas fa-search"></i> "{{ search_query }}"<a href="?{% if category_filter %}category={{ category_filter }}&{% endif %}{% if status_filter %}status={{ status_filter }}{% endif %}{% if start_date %}start_date={{ start_date }}&{% endif %}{% if end_date %}end_date={{ end_date }}{% endif %}">✕</a></span>
+    {% endif %}
+    <a href="/history/" class="clear-all"><i class="fas fa-times"></i> Clear all</a>
+  </div>
+  {% endif %}
+
+  <!-- Reports List -->
+  <div class="reports-list" id="reportsList">
+    {% for report in reports %}
+    <div class="report-card" id="report-{{ report.id }}">
+      <div class="report-header">
+        <div class="report-title">
+          {{ report.title }}
+          {% if report.is_duplicate %}
+          <span class="duplicate-badge">
+            <i class="fas fa-copy"></i> Duplicate Report
+          </span>
+          {% endif %}
+          {% if report.is_draft %}
+          <span style="background:rgba(245,158,11,0.15);color:#f59e0b;padding:2px 10px;border-radius:20px;font-size:0.65rem;display:inline-flex;align-items:center;gap:4px;border:1px solid rgba(245,158,11,0.3);">
+            <i class="fas fa-edit"></i> Draft
+          </span>
+          {% endif %}
+          {# FLAG BADGE - Show if report has any flags #}
+          {% if report.flags.exists %}
+            {% with report.flags.first as flag %}
+            <span class="flag-badge">
+              <i class="fas fa-flag"></i> Flagged: {{ flag.get_flag_display }}
+            </span>
+            {% endwith %}
+          {% endif %}
+        </div>
+        <span class="report-status status-{{ report.status }}">{{ report.get_status_display }}</span>
+      </div>
+      
+      <div class="report-details">
+        <span class="detail-item"><i class="fas fa-map-marker-alt"></i> {{ report.location|truncatechars:30 }}</span>
+        {% if report.purok %}
+        <span class="detail-item"><i class="fas fa-users"></i> Purok {{ report.purok }}</span>
+        {% endif %}
+        <span class="detail-item"><i class="far fa-calendar-alt"></i> {{ report.reported_at|date:"M d, Y" }}</span>
+        <span class="report-category cat-{{ report.category }}">
+          <i class="fas {% if report.category == 'biodegradable' %}fa-leaf{% elif report.category == 'recyclable' %}fa-recycle{% elif report.category == 'hazardous' %}fa-skull-crossbones{% elif report.category == 'electronic' %}fa-battery-quarter{% elif report.category == 'special' %}fa-exclamation-triangle{% else %}fa-trash{% endif %}"></i>
+          {{ report.get_category_display }}
+        </span>
+      </div>
+      
+      {% if report.description %}
+      <div class="detail-item" style="margin-top: 8px;">
+        <i class="fas fa-align-left"></i> {{ report.description|truncatechars:80 }}
+      </div>
+      {% endif %}
+      
+      <div class="report-footer">
+        <div class="report-points">
+          <i class="fas fa-star"></i> +{{ report.points_awarded }} points
+        </div>
+        <div class="report-actions">
+          <a href="{% url 'edit_report' report.id %}" class="action-icon"><i class="fas fa-edit"></i> Edit</a>
+          <button class="action-icon delete" onclick="confirmDelete({{ report.id }}, '{{ report.title|escapejs }}')"><i class="fas fa-trash-alt"></i> Delete</button>
+          <button class="action-icon" onclick="viewReport({{ report.id }})"><i class="fas fa-eye"></i> View</button>
+          {% if report.is_draft %}
+          <button class="action-icon" style="background:rgba(0,255,135,0.1);border-color:var(--accent);color:var(--accent);" onclick="submitDraft({{ report.id }}, '{{ report.title|escapejs }}')"><i class="fas fa-paper-plane"></i> Submit</button>
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- Admin Note Button -->
+      {% if report.admin_notes %}
+      <div class="note-section">
+        <button class="view-note-btn" onclick="viewAdminNote({{ report.id }}, `{{ report.admin_notes|escapejs }}`, '{{ report.admin_notes_updated_at|date:"F d, Y g:i A"|default:report.reported_at|date:"F d, Y g:i A" }}')">
+          <i class="fas fa-sticky-note"></i> View Note from Admin
+        </button>
+      </div>
+      {% endif %}
+      
+      <!-- Flag Note Button (only if flag has a note) -->
+      {% if report.flags.exists %}
+        {% with report.flags.first as flag %}
+          {% if flag.note %}
+          <div class="note-section">
+            <button class="flag-note-btn" onclick="viewFlagNote('{{ flag.note|escapejs }}', '{{ flag.created_at|date:"F d, Y g:i A"|escapejs }}')">
+              <i class="fas fa-flag"></i> View Flag Note from Admin
+            </button>
+          </div>
+          {% endif %}
+        {% endwith %}
+      {% endif %}
+    </div>
+    {% empty %}
+    <div class="empty-state">
+      <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+      <div class="empty-title">No reports found</div>
+      <div class="empty-sub">
+        {% if category_filter or status_filter or start_date or end_date or search_query %}
+          No reports match your filters. Try adjusting your search.
+        {% else %}
+          Start by submitting your first waste report!
+        {% endif %}
+      </div>
+      {% if category_filter or status_filter or start_date or end_date or search_query %}
+      <a href="/history/" class="btn btn-primary" style="display: inline-flex;">Clear Filters</a>
+      {% else %}
+      <a href="/report/" class="btn btn-primary" style="display: inline-flex;"><i class="fas fa-plus"></i> New Report</a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Load More -->
+  {% if has_more %}
+  <div style="text-align: center; margin-bottom: 20px;">
+    <button class="action-icon" onclick="loadMore()" style="padding: 10px 24px;">
+      <i class="fas fa-chevron-down"></i> Load More
+    </button>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Report Detail Modal -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="modalContent">
+      <div style="text-align: center; padding: 30px;">
+        <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
+        <div style="margin-top: 10px;">Loading...</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <a href="#" id="modalEditBtn" class="action-icon" style="flex: 1; justify-content: center;">Edit</a>
+      <button class="action-icon" onclick="closeModal()" style="flex: 1; justify-content: center;">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal" style="max-width: 350px;">
+    <div class="modal-handle"></div>
+    <div style="text-align: center;">
+      <div style="font-size: 3rem; color: var(--danger); margin-bottom: 10px;">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <h3 style="margin-bottom: 10px;">Delete Report?</h3>
+      <p style="color: var(--text-muted); margin-bottom: 20px;" id="deleteMessage">This action cannot be undone.</p>
+      <div style="display: flex; gap: 10px;">
+        <button class="action-icon" onclick="closeDeleteModal()" style="flex: 1; justify-content: center;">Cancel</button>
+        <a href="#" id="confirmDeleteBtn" class="action-icon delete" style="flex: 1; justify-content: center;">Delete</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Note Modal -->
+<div class="modal-overlay" id="adminNoteModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-icon" style="background: rgba(0,212,255,0.15);">
+        <i class="fas fa-sticky-note" style="color: var(--accent2);"></i>
+      </div>
+      <div>
+        <div class="modal-title">Note from Admin</div>
+        <div class="modal-sub">Regarding your report</div>
+      </div>
+    </div>
+    <div id="adminNoteContent" class="modal-content"></div>
+    <div id="adminNoteMeta" class="modal-meta"></div>
+    <button class="btn btn-primary" onclick="closeAdminNoteModal()" style="width: 100%; justify-content: center; margin-top: 16px;">
+      <i class="fas fa-check"></i> Got it
+    </button>
+  </div>
+</div>
+
+<!-- Flag Note Modal -->
+<div class="modal-overlay" id="flagNoteModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-icon" style="background: rgba(239,68,68,0.15);">
+        <i class="fas fa-flag" style="color: var(--danger);"></i>
+      </div>
+      <div>
+        <div class="modal-title">Note from Admin</div>
+        <div class="modal-sub">Regarding your report</div>
+      </div>
+    </div>
+    <div id="flagNoteContent" class="modal-content"></div>
+    <div id="flagNoteMeta" class="modal-meta"></div>
+    <button class="btn btn-primary" onclick="closeFlagNoteModal()" style="width: 100%; justify-content: center; margin-top: 16px;">
+      <i class="fas fa-check"></i> Got it
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let currentDeleteId = null;
+  let reportsData = {};
+
+  function searchReports() {
+    const query = document.getElementById('searchInput').value.trim();
+    const params = new URLSearchParams(window.location.search);
+    if (query) params.set('search', query);
+    else params.delete('search');
+    params.delete('page');
+    window.location.search = params.toString();
+  }
+
+  function sortReports() {
+    const sort = document.getElementById('sortSelect').value;
+    const params = new URLSearchParams(window.location.search);
+    if (sort) {
+      params.set('sort', sort);
+    } else {
+      params.delete('sort');
+    }
+    params.delete('page');
+    window.location.search = params.toString();
+  }
+
+  function applyDateFilter() {
+    const start = document.getElementById('startDate').value;
+    const end = document.getElementById('endDate').value;
+    const params = new URLSearchParams(window.location.search);
+    if (start) params.set('start_date', start);
+    else params.delete('start_date');
+    if (end) params.set('end_date', end);
+    else params.delete('end_date');
+    params.delete('page');
+    window.location.search = params.toString();
+  }
+
+  function loadMore() {
+    const params = new URLSearchParams(window.location.search);
+    const page = parseInt(params.get('page') || '1');
+    params.set('page', page + 1);
+    window.location.search = params.toString();
+  }
+
+  function confirmDelete(id, title) {
+    currentDeleteId = id;
+    document.getElementById('deleteMessage').textContent = `Delete "${title}"? This cannot be undone.`;
+    document.getElementById('confirmDeleteBtn').href = `/report/delete/${id}/`;
+    document.getElementById('deleteModal').classList.add('open');
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('open');
+    currentDeleteId = null;
+  }
+
+  function closeModal() {
+    document.getElementById('reportModal').classList.remove('open');
+  }
+
+  async function viewReport(id) {
+    const modal = document.getElementById('reportModal');
+    const content = document.getElementById('modalContent');
+    const editBtn = document.getElementById('modalEditBtn');
+    
+    content.innerHTML = '<div style="text-align: center; padding: 30px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><div>Loading...</div></div>';
+    modal.classList.add('open');
+    
+    try {
+      const res = await fetch(`/api/report/${id}/`);
+      const r = await res.json();
+      
+      content.innerHTML = `
+        <h3 style="font-size: 1.2rem; margin-bottom: 12px;">${r.title}</h3>
+        <div style="display: grid; gap: 10px; margin-bottom: 16px;">
+          <div><strong>Category:</strong> ${r.category}</div>
+          <div><strong>Status:</strong> <span class="report-status status-${r.status}">${r.status}</span></div>
+          <div><strong>Location:</strong> ${r.location}${r.purok ? ' · Purok ' + r.purok : ''}</div>
+          <div><strong>Date:</strong> ${r.date}</div>
+          ${r.description ? `<div><strong>Description:</strong><br>${r.description}</div>` : ''}
+        </div>
+        ${r.image ? `<img src="${r.image}" style="width: 100%; border-radius: 12px; margin-top: 10px;">` : ''}
+      `;
+      editBtn.href = `/report/edit/${r.id}/`;
+    } catch (error) {
+      content.innerHTML = '<div style="text-align: center; color: var(--danger);">Failed to load report</div>';
+    }
+  }
+
+  // Admin Note Modal - shows note content with the correct timestamp
+  function viewAdminNote(reportId, noteContent, createdAt) {
+    const modal = document.getElementById('adminNoteModal');
+    const contentDiv = document.getElementById('adminNoteContent');
+    const metaDiv = document.getElementById('adminNoteMeta');
+    const escapedNote = noteContent.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    contentDiv.innerHTML = escapedNote;
+    metaDiv.innerHTML = `<i class="far fa-calendar-alt"></i> ${createdAt}`;
+    modal.classList.add('open');
+  }
+
+  function closeAdminNoteModal() {
+    document.getElementById('adminNoteModal').classList.remove('open');
+  }
+
+  // Flag Note Modal - shows note content with the correct timestamp from flag
+  function viewFlagNote(noteContent, createdAt) {
+    const modal = document.getElementById('flagNoteModal');
+    const contentDiv = document.getElementById('flagNoteContent');
+    const metaDiv = document.getElementById('flagNoteMeta');
+    const escapedNote = noteContent.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    contentDiv.innerHTML = escapedNote;
+    metaDiv.innerHTML = `<i class="far fa-calendar-alt"></i> ${createdAt}`;
+    modal.classList.add('open');
+  }
+
+  function closeFlagNoteModal() {
+    document.getElementById('flagNoteModal').classList.remove('open');
+  }
+
+  // Close modals when clicking outside
+  document.getElementById('deleteModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+  });
+
+  document.getElementById('reportModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  document.getElementById('adminNoteModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeAdminNoteModal();
+  });
+
+  document.getElementById('flagNoteModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeFlagNoteModal();
+  });
+
+  document.getElementById('searchInput')?.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') searchReports();
+  });
+
+  if (window.location.hash && window.location.hash.startsWith('#report-')) {
+    const reportId = window.location.hash.replace('#report-', '');
+    const target = document.getElementById(`report-${reportId}`);
+    if (target) {
+      setTimeout(() => {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.style.transition = 'box-shadow 0.4s ease, border-color 0.4s ease';
+        target.style.borderColor = 'var(--accent)';
+        target.style.boxShadow = '0 0 0 3px rgba(0,255,135,0.25)';
+        setTimeout(() => {
+          target.style.borderColor = '';
+          target.style.boxShadow = '';
+        }, 2500);
+      }, 300);
+    }
+  }
+
+  async function submitDraft(reportId, reportTitle) {
+    if (!confirm(`Submit draft "${reportTitle}"?\n\nThis will officially submit your report and award points.`)) return;
+    
+    try {
+      const res = await fetch(`/report/draft/${reportId}/submit/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message, 'success');
+        setTimeout(() => location.reload(), 1500);
+      } else {
+        showToast(data.error || 'Failed to submit', 'error');
+      }
+    } catch (e) {
+      showToast('Network error', 'error');
+    }
+  }
+</script>
+{% endblock %}

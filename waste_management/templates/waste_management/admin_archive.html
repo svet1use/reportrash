@@ -1,0 +1,626 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}Archived Reports — ReporTrash Admin{% endblock %}
+
+{% block extra_styles %}
+.page-header {
+  padding: 20px 16px 12px;
+}
+.page-h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+}
+.page-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+
+.back-nav {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--text-muted); text-decoration: none;
+  font-size: 0.80rem; font-family: 'DM Mono', monospace;
+  margin-bottom: 16px; transition: color 0.2s;
+}
+.back-nav:hover { color: var(--accent); }
+
+/* ── Filter Panel ── */
+.filter-panel {
+  margin: 0 16px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 16px 20px;
+}
+.filter-panel-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.filter-panel-label {
+  font-size: 0.7rem;
+  font-family: 'DM Mono', monospace;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.filter-chip:hover {
+  border-color: rgba(0,255,135,0.4);
+  color: var(--text-primary);
+  background: rgba(0,255,135,0.05);
+}
+.filter-chip.active {
+  background: rgba(0,255,135,0.12);
+  border-color: rgba(0,255,135,0.4);
+  color: var(--accent);
+  font-weight: 600;
+}
+.filter-chip.cat-bio.active  { background: rgba(34,197,94,0.12);  border-color: rgba(34,197,94,0.4);  color: #22c55e; }
+.filter-chip.cat-rec.active  { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.4); color: #3b82f6; }
+.filter-chip.cat-res.active  { background: rgba(148,163,184,0.12);border-color: rgba(148,163,184,0.4);color: #94a3b8; }
+.filter-chip.cat-spe.active  { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.4); color: #f59e0b; }
+.filter-chip.cat-haz.active  { background: rgba(239,68,68,0.12);  border-color: rgba(239,68,68,0.4);  color: #ef4444; }
+.filter-chip.cat-elec.active { background: rgba(168,85,247,0.12); border-color: rgba(168,85,247,0.4); color: #a855f7; }
+
+.filter-divider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: 12px 0;
+}
+.filter-panel-bottom {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  flex: 1;
+  min-width: 200px;
+  transition: border-color 0.2s;
+  overflow: hidden;
+}
+.search-box:focus-within {
+  border-color: rgba(0,255,135,0.5);
+}
+.search-box i {
+  padding: 0 12px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.search-box input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: 'Space Grotesk', sans-serif;
+  padding: 10px 0;
+  flex: 1;
+  min-width: 0;
+}
+.search-box input::placeholder { color: var(--text-muted); }
+.search-go-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  color: #030a0e;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.search-go-btn:hover { opacity: 0.85; }
+
+/* Table */
+.reports-table {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 0 20px 20px;
+  margin: 0 16px;
+  overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left;
+  padding: 16px 8px 12px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+  border-bottom: 1px solid var(--glass-border);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+td {
+  padding: 12px 8px;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+}
+.archive-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(168,85,247,0.15);
+  color: #a855f7;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.action-btn {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 0 2px;
+  font-family: 'Space Grotesk', sans-serif;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.action-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0,255,135,0.05);
+}
+.action-btn.success:hover {
+  border-color: var(--success);
+  color: var(--success);
+}
+.action-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+/* Stats Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 0 16px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 16px;
+  text-align: center;
+}
+.stat-card .stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+.stat-card .stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* ============================================
+   LIGHT MODE OVERRIDES
+   ============================================ */
+body.light-mode {
+  --text-muted: #4a5568;
+  --text-secondary: #2d3748;
+}
+
+body.light-mode .filter-panel,
+body.light-mode .reports-table,
+body.light-mode .stat-card {
+  border: 1.5px solid #000000 !important;
+  background: #ffffff;
+}
+
+body.light-mode .filter-chip {
+  border-color: #000000 !important;
+}
+
+body.light-mode .filter-chip.active {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: #000000 !important;
+  color: #059669;
+}
+
+body.light-mode .search-box {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+}
+
+body.light-mode th {
+  color: #4a5568 !important;
+  border-bottom-color: #000000 !important;
+}
+
+body.light-mode td {
+  border-bottom-color: #e0e0e0;
+  color: #1a202c;
+}
+
+body.light-mode .action-btn {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+  color: #4a5568;
+}
+
+body.light-mode .action-btn:hover {
+  background: #ffffff;
+  border-color: #000000 !important;
+  color: #059669;
+}
+
+body.light-mode .stat-card .stat-value {
+  color: #059669;
+}
+
+body.light-mode .stat-card .stat-label {
+  color: #4a5568;
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .filter-panel { margin: 0 12px 12px; padding: 12px 14px; }
+  .filter-chip { padding: 5px 10px; font-size: 0.7rem; }
+  .reports-table { margin: 0 12px; }
+}
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+  <a href="{% url 'admin_reports' %}" class="back-nav">
+    <i class="fas fa-arrow-left"></i> Back to Reports
+  </a>
+
+  <div class="page-header">
+    <div class="page-h1"><i class="fas fa-archive"></i> Archived Reports</div>
+    <div class="page-sub">View and restore resolved reports</div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">{{ total_archived|default:0 }}</div>
+      <div class="stat-label">Total Archived</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ archived_this_month|default:0 }}</div>
+      <div class="stat-label">This Month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ resolved_count|default:0 }}</div>
+      <div class="stat-label">Resolved</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ rejected_count|default:0 }}</div>
+      <div class="stat-label">Rejected</div>
+    </div>
+  </div>
+
+  <!-- Filter Panel -->
+  <div class="filter-panel">
+    <div class="filter-panel-top">
+      <span class="filter-panel-label"><i class="fas fa-tag"></i> Category</span>
+      <div class="filter-chips">
+        <button class="filter-chip {% if not request.GET.category %}active{% endif %}" onclick="setCategory('')">All</button>
+        <button class="filter-chip cat-bio {% if request.GET.category == 'biodegradable' %}active{% endif %}" onclick="setCategory('biodegradable')">🌿 Bio</button>
+        <button class="filter-chip cat-rec {% if request.GET.category == 'recyclable' %}active{% endif %}" onclick="setCategory('recyclable')">♻️ Recycle</button>
+        <button class="filter-chip cat-res {% if request.GET.category == 'residual' %}active{% endif %}" onclick="setCategory('residual')">🗑️ Residual</button>
+        <button class="filter-chip cat-spe {% if request.GET.category == 'special' %}active{% endif %}" onclick="setCategory('special')">⚠️ Special</button>
+        <button class="filter-chip cat-haz {% if request.GET.category == 'hazardous' %}active{% endif %}" onclick="setCategory('hazardous')">☣️ Hazardous</button>
+        <button class="filter-chip cat-elec {% if request.GET.category == 'electronic' %}active{% endif %}" onclick="setCategory('electronic')">💻 E-Waste</button>
+      </div>
+    </div>
+
+    <div class="filter-panel-top">
+      <span class="filter-panel-label"><i class="fas fa-flag"></i> Status</span>
+      <div class="filter-chips">
+        <button class="filter-chip {% if not request.GET.status %}active{% endif %}" onclick="setStatus('')">All</button>
+        <button class="filter-chip {% if request.GET.status == 'resolved' %}active{% endif %}" onclick="setStatus('resolved')">✅ Resolved</button>
+        <button class="filter-chip {% if request.GET.status == 'rejected' %}active{% endif %}" onclick="setStatus('rejected')">❌ Rejected</button>
+      </div>
+    </div>
+
+    <div class="filter-divider"></div>
+
+    <div class="filter-panel-bottom">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search by title, reporter, or location…" value="{{ request.GET.search }}">
+        <button class="search-go-btn" onclick="applySearch()">
+          <i class="fas fa-arrow-right"></i> Search
+        </button>
+      </div>
+      {% if request.GET.status or request.GET.category or request.GET.search %}
+      <button class="action-btn" onclick="clearAll()" style="white-space:nowrap;border-radius:10px;">
+        <i class="fas fa-times"></i> Clear all
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Archived Reports Table -->
+  <div class="reports-table">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Category</th>
+          <th>Reporter</th>
+          <th>Location / Purok</th>
+          <th>Reported</th>
+          <th>Archived</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for report in archived_reports %}
+        <tr>
+          <td style="font-family:'DM Mono',monospace;">#{{ report.id }}</td>
+          <td>
+            <strong>{{ report.title|truncatechars:40 }}</strong>
+            {% if report.description %}
+            <div class="del-meta" style="font-size:0.65rem; color:var(--text-muted);">{{ report.description|truncatechars:60 }}</div>
+            {% endif %}
+          </td>
+          <td>
+            <span class="status-badge status-{{ report.status }}">{{ report.get_status_display }}</span>
+          </td>
+          <td>{{ report.reporter.username }}</td>
+          <td>
+            {{ report.location|truncatechars:30 }}
+            {% if report.purok %}
+            <div style="font-size:0.65rem; color:var(--accent);">{{ report.purok }}</div>
+            {% endif %}
+          </td>
+          <td style="font-size:0.75rem;">{{ report.reported_at|date:"M d, Y" }}</td>
+          <td style="font-size:0.75rem; color:var(--danger);">{{ report.archived_at|date:"M d, Y"|default:"—" }}</td>
+          <td>
+            <span class="archive-badge">
+              <i class="fas fa-archive"></i> Archived
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons" style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <button class="action-btn success" onclick="restoreReport({{ report.id }})">
+                <i class="fas fa-undo-alt"></i> Restore
+              </button>
+              <button class="action-btn" onclick="viewReport({{ report.id }})">
+                <i class="fas fa-eye"></i> View
+              </button>
+              <button class="action-btn danger" onclick="adminDeleteReport({{ report.id }})">
+                <i class="fas fa-trash-alt"></i> Delete
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 40px;">
+            <i class="fas fa-archive" style="font-size: 2rem; opacity: 0.3; display: block; margin-bottom: 10px;"></i>
+            No archived reports found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if archived_reports.has_other_pages %}
+  <div class="pagination">
+    {% if archived_reports.has_previous %}
+    <a href="?page={{ archived_reports.previous_page_number }}" class="action-btn">Previous</a>
+    {% endif %}
+    <span style="padding: 8px;">Page {{ archived_reports.number }} of {{ archived_reports.paginator.num_pages }}</span>
+    {% if archived_reports.has_next %}
+    <a href="?page={{ archived_reports.next_page_number }}" class="action-btn">Next</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- Report Detail Modal -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal" style="max-width: 600px;">
+    <div class="modal-handle"></div>
+    <div id="reportDetail"></div>
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button class="btn btn-glass" onclick="closeModal()" style="flex:1;">Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let currentStatus = '{{ request.GET.status }}';
+  let currentCategory = '{{ request.GET.category }}';
+
+  function buildParams(overrides = {}) {
+    const p = new URLSearchParams();
+    const status = 'status' in overrides ? overrides.status : currentStatus;
+    const category = 'category' in overrides ? overrides.category : currentCategory;
+    const search = 'search' in overrides ? overrides.search : document.getElementById('searchInput').value.trim();
+    if (status) p.set('status', status);
+    if (category) p.set('category', category);
+    if (search) p.set('search', search);
+    return p;
+  }
+
+  function setStatus(val) {
+    window.location.search = buildParams({ status: val }).toString();
+  }
+
+  function setCategory(val) {
+    window.location.search = buildParams({ category: val }).toString();
+  }
+
+  function applySearch() {
+    window.location.search = buildParams().toString();
+  }
+
+  function clearAll() {
+    window.location.search = '';
+  }
+
+  document.getElementById('searchInput')?.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') applySearch();
+  });
+
+  // ── Restore archived report ──
+  async function restoreReport(reportId) {
+    if (!confirm('Restore this report? It will be moved back to active reports with Pending status.')) {
+      return;
+    }
+    
+    const fd = new FormData();
+    fd.append('status', 'pending');
+    fd.append('restore', 'true');
+    fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+    
+    try {
+      const res = await fetch(`/report/${reportId}/status/`, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Report restored successfully!', 'success');
+        setTimeout(() => window.location.href = '/dashboard/admin/reports/', 900);
+      } else {
+        showToast(data.error || 'Failed to restore report', 'error');
+      }
+    } catch {
+      showToast('Network error. Please try again.', 'error');
+    }
+  }
+
+  // ── Admin delete report ──
+  async function adminDeleteReport(reportId) {
+    if (!confirm('Are you sure you want to permanently delete this report? This action cannot be undone.')) {
+      return;
+    }
+    
+    const fd = new FormData();
+    fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+    
+    try {
+      const res = await fetch(`/dashboard/admin/reports/${reportId}/delete/`, {
+        method: 'POST',
+        body: fd,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Report deleted permanently!', 'success');
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        showToast(data.error || 'Failed to delete report', 'error');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showToast('Network error. Please try again.', 'error');
+    }
+  }
+
+  // ── View report modal ──
+  async function viewReport(reportId) {
+    const modal = document.getElementById('reportModal');
+    const detail = document.getElementById('reportDetail');
+    detail.innerHTML = '<div style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--accent);"></i></div>';
+    modal.classList.add('open');
+    try {
+      const res = await fetch(`/api/report/${reportId}/`);
+      const data = await res.json();
+      detail.innerHTML = `
+        <h2 style="font-family:'Syne',sans-serif;font-size:1.3rem;margin-bottom:15px;">${data.title}</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">
+          <div><strong>Category:</strong> ${data.category}</div>
+          <div><strong>Status:</strong> <span class="status-badge status-${data.status}">${data.status}</span></div>
+          <div><strong>Reporter:</strong> ${data.reporter}</div>
+          <div><strong>Date:</strong> ${data.date}</div>
+          <div><strong>Location:</strong> ${data.location || 'N/A'}</div>
+          <div><strong>Purok:</strong> ${data.purok || 'N/A'}</div>
+        </div>
+        <div style="margin-bottom:15px;">
+          <strong>Description:</strong>
+          <p style="margin-top:5px;color:var(--text-secondary);">${data.description || 'No description'}</p>
+        </div>
+        ${data.image ? `
+          <div style="margin-top:14px;">
+            <img src="${data.image}" style="max-width:100%;border-radius:10px;">
+          </div>` : ''}
+      `;
+    } catch {
+      detail.innerHTML = '<div style="color:var(--danger);text-align:center;padding:20px;">Failed to load report details.</div>';
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('reportModal').classList.remove('open');
+  }
+
+  document.getElementById('reportModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
+{% endblock %}

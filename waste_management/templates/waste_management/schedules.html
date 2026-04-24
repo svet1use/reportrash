@@ -1,0 +1,215 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}Schedules — ReporTrash{% endblock %}
+
+{% block extra_styles %}
+
+/* ============================================
+   MOBILE RESPONSIVE - SCHEDULES
+   ============================================ */
+@media (max-width: 768px) {
+  .page-h1 {
+    font-size: 1.3rem;
+  }
+  
+  .days-tabs {
+    padding: 0 12px 12px;
+    gap: 4px;
+  }
+  
+  .day-tab {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+  }
+  
+  .schedule-card {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .sched-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.2rem;
+  }
+  
+  .sched-cat {
+    font-size: 0.85rem;
+  }
+  
+  .sched-time-badge {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+  }
+  
+  .sched-details {
+    font-size: 0.7rem;
+  }
+  
+  .sched-collector {
+    font-size: 0.7rem;
+  }
+  
+  .empty-day {
+    padding: 30px 20px;
+  }
+  
+  .empty-day div:first-child {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .day-tab {
+    padding: 4px 8px;
+    font-size: 0.6rem;
+  }
+  
+  .schedule-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .sched-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+  
+  .sched-cat {
+    font-size: 0.8rem;
+  }
+}
+.page-header { padding: 20px 16px 14px; }
+.page-h1 { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; letter-spacing: -1px; }
+
+.days-tabs {
+  display: flex; gap: 6px; padding: 0 16px 16px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.days-tabs::-webkit-scrollbar { display: none; }
+.day-tab {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: var(--text-muted);
+  font-size: 0.78rem; font-weight: 600;
+  cursor: pointer; transition: all 0.3s;
+  font-family: 'DM Mono', monospace;
+}
+.day-tab.active, .day-tab:hover {
+  background: rgba(0,255,135,0.1);
+  border-color: rgba(0,255,135,0.25);
+  color: var(--accent);
+}
+.day-tab.today {
+  background: linear-gradient(135deg, rgba(0,255,135,0.15), rgba(0,212,255,0.1));
+  border-color: rgba(0,255,135,0.3);
+  color: var(--accent);
+  box-shadow: 0 0 15px rgba(0,255,135,0.15);
+}
+
+.day-panel { display: none; padding: 0 16px; }
+.day-panel.active { display: block; }
+
+.schedule-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 10px;
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.sched-icon {
+  width: 46px; height: 46px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; flex-shrink: 0;
+}
+.sched-info { flex: 1; }
+.sched-cat { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+.sched-time-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(0,212,255,0.1);
+  border: 1px solid rgba(0,212,255,0.2);
+  border-radius: 8px; padding: 3px 10px;
+  font-size: 0.72rem; color: var(--accent2);
+  font-family: 'DM Mono', monospace; margin-bottom: 6px;
+}
+.sched-details { font-size: 0.78rem; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+.sched-collector { font-size: 0.78rem; color: var(--text-secondary); margin-top: 4px; }
+
+.empty-day {
+  text-align: center; padding: 40px 20px;
+  color: var(--text-muted); font-size: 0.875rem;
+}
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap" style="padding: 0;">
+  <div class="page-header">
+    <div class="page-h1">📅 Collection Schedules</div>
+    <div style="font-size: 0.82rem; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-top: 4px;">Your barangay waste collection calendar</div>
+  </div>
+
+  <div class="days-tabs">
+    {% for day in days %}
+    <div class="day-tab {% if day == today %}today{% endif %} {% if forloop.first or day == today %}active{% endif %}"
+      id="tab-{{ day }}"
+      onclick="showDay('{{ day }}')">
+      {{ day|title|slice:':3' }}
+      {% if day == today %} · Today{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  {% for day, scheds in schedule_by_day.items %}
+  <div class="day-panel {% if forloop.first or day == today %}active{% endif %}" id="panel-{{ day }}">
+    {% for sched in scheds %}
+    <div class="schedule-card">
+      <div class="sched-icon" style="background: {% if sched.waste_category == 'biodegradable' %}rgba(34,197,94,0.12){% elif sched.waste_category == 'recyclable' %}rgba(59,130,246,0.12){% elif sched.waste_category == 'hazardous' %}rgba(239,68,68,0.12){% elif sched.waste_category == 'electronic' %}rgba(168,85,247,0.12){% else %}rgba(255,255,255,0.06){% endif %};">
+        {{ sched.get_waste_category_display|first }}
+      </div>
+      <div class="sched-info">
+        <div class="sched-cat">{{ sched.get_waste_category_display }}</div>
+        <div class="sched-time-badge">🕐 {{ sched.time_start|time:"g:i A" }} – {{ sched.time_end|time:"g:i A" }}</div>
+        <div class="sched-details">
+          📍 Purok: {{ sched.purok }}
+          {% if sched.notes %} · {{ sched.notes }}{% endif %}
+        </div>
+        {% if sched.collector_name %}
+        <div class="sched-collector">👤 Collector: {{ sched.collector_name }}</div>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-day">
+      <div style="font-size: 2.5rem; margin-bottom: 10px;">😌</div>
+      <div>No collections scheduled for {{ day|title }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const todayDay = '{{ today }}';
+  let activeDay = todayDay || '{{ days.0 }}';
+
+  function showDay(day) {
+    document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.day-tab').forEach(t => {
+      t.classList.remove('active');
+      if (!t.classList.contains('today')) t.style.color = '';
+    });
+    document.getElementById('panel-' + day)?.classList.add('active');
+    document.getElementById('tab-' + day)?.classList.add('active');
+    activeDay = day;
+  }
+
+  // On load, show today's panel or first
+  if (todayDay) showDay(todayDay);
+</script>
+{% endblock %}

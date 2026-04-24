@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account Pending — ReporTrash</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800;900&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root {
+    --bg: #030a0e;
+    --accent: #00ff87;
+    --accent2: #00d4ff;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text: #f0fdf4;
+    --muted: rgba(240,253,244,0.45);
+    --glass: rgba(255,255,255,0.05);
+    --glass-border: rgba(255,255,255,0.10);
+    --card: rgba(255,255,255,0.04);
+  }
+  body.light-mode {
+    --bg: #f0fdf4;
+    --accent: #059669;
+    --accent2: #0284c7;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --text: #030a0e;
+    --muted: rgba(3,10,14,0.50);
+    --glass: rgba(0,0,0,0.04);
+    --glass-border: rgba(0,0,0,0.12);
+    --card: rgba(0,0,0,0.04);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ── Background mesh ── */
+  .bg-mesh {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 70% 50% at 10% 0%, rgba(0,255,135,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 90% 100%, rgba(0,212,255,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 50% 50%, rgba(245,158,11,0.05) 0%, transparent 70%);
+  }
+  body.light-mode .bg-mesh {
+    background:
+      radial-gradient(ellipse 70% 50% at 10% 0%, rgba(5,150,105,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 90% 100%, rgba(2,132,199,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 50% 50%, rgba(217,119,6,0.04) 0%, transparent 70%);
+  }
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  body.light-mode .grid-bg {
+    background-image:
+      linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+  }
+
+  /* ── Floating orbs ── */
+  .orb {
+    position: fixed; border-radius: 50%;
+    filter: blur(70px); pointer-events: none; z-index: 0;
+    animation: orb-float 10s ease-in-out infinite;
+  }
+  .orb-1 { width:250px; height:250px; background:rgba(245,158,11,0.1); top:5%; left:-5%; animation-delay:0s; }
+  .orb-2 { width:180px; height:180px; background:rgba(0,212,255,0.08); bottom:10%; right:-5%; animation-delay:-4s; }
+  @keyframes orb-float {
+    0%,100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-24px) scale(1.04); }
+  }
+
+  /* ── Theme toggle ── */
+  .theme-toggle {
+    position: fixed; top: 18px; right: 18px; z-index: 100;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--muted); font-size: 0.9rem;
+    transition: all 0.3s;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ── Main card ── */
+  .container {
+    position: relative; z-index: 10;
+    width: 100%; max-width: 520px;
+    padding: 24px 16px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    padding: 40px 36px;
+    backdrop-filter: blur(20px);
+    text-align: center;
+    animation: card-in 0.7s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes card-in {
+    from { opacity:0; transform: translateY(40px) scale(0.95); }
+    to   { opacity:1; transform: translateY(0) scale(1); }
+  }
+
+  /* ── Status icon ── */
+  .status-icon-wrap {
+    width: 90px; height: 90px; border-radius: 50%;
+    margin: 0 auto 24px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .status-icon-wrap.pending {
+    background: rgba(245,158,11,0.12);
+    border: 2px solid rgba(245,158,11,0.3);
+    animation: pulse-warn 2.5s ease-in-out infinite;
+  }
+  .status-icon-wrap.rejected {
+    background: rgba(239,68,68,0.12);
+    border: 2px solid rgba(239,68,68,0.3);
+  }
+  @keyframes pulse-warn {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.3); }
+    50%      { box-shadow: 0 0 0 14px rgba(245,158,11,0); }
+  }
+  .status-icon-wrap i { font-size: 2.4rem; }
+  .status-icon-wrap.pending i { color: var(--warning); }
+  .status-icon-wrap.rejected i { color: var(--danger); }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.7rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 10px;
+  }
+  .card-sub {
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.7;
+    margin-bottom: 28px;
+  }
+
+  /* ── Info row ── */
+  .info-row {
+    background: rgba(245,158,11,0.07);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    text-align: left;
+    margin-bottom: 24px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .info-row i { color: var(--warning); font-size: 1.1rem; margin-top: 2px; flex-shrink: 0; }
+
+  /* Rejection reason */
+  .rejection-box {
+    background: rgba(239,68,68,0.07);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    text-align: left;
+    margin-bottom: 24px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .rejection-box i { color: var(--danger); font-size: 1.1rem; margin-top: 2px; flex-shrink: 0; }
+
+  /* ── Steps ── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .step.done { border-color: rgba(0,255,135,0.2); }
+  .step.done .step-num { background: rgba(0,255,135,0.15); color: var(--accent); border-color: rgba(0,255,135,0.3); }
+  .step.active { border-color: rgba(245,158,11,0.25); background: rgba(245,158,11,0.05); }
+  .step.active .step-num { background: rgba(245,158,11,0.15); color: var(--warning); border-color: rgba(245,158,11,0.3); }
+  .step-num {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+    font-family: 'DM Mono', monospace;
+  }
+  body.light-mode .step.done .step-num { color: #059669; }
+  body.light-mode .step.active .step-num { color: #d97706; }
+
+  /* ── Buttons ── */
+  .btn-accent {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #030a0e;
+    padding: 13px 28px; border-radius: 100px;
+    font-weight: 700; font-size: 0.92rem;
+    border: none; cursor: pointer; text-decoration: none;
+    transition: all 0.3s; width: 100%; justify-content: center;
+    margin-bottom: 10px;
+  }
+  .btn-accent:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,255,135,0.25); }
+  .btn-glass {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    color: var(--muted);
+    padding: 13px 28px; border-radius: 100px;
+    font-weight: 600; font-size: 0.88rem;
+    cursor: pointer; text-decoration: none;
+    transition: all 0.3s; width: 100%; justify-content: center;
+  }
+  .btn-glass:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Footer meta ── */
+  .footer-meta {
+    margin-top: 20px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+  .footer-meta a { color: var(--accent); text-decoration: none; }
+
+  /* ── Mobile ── */
+  @media (max-width: 500px) {
+    .card { padding: 28px 20px; }
+    .card-title { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+  <div class="bg-mesh"></div>
+  <div class="grid-bg"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+    <i class="fas fa-moon" id="theme-icon"></i>
+  </button>
+
+  <div class="container">
+
+    <!-- ══ PENDING STATE ══ -->
+    {% if status == 'pending' %}
+    <div class="card">
+      <div class="status-icon-wrap pending">
+        <i class="fas fa-hourglass-half"></i>
+      </div>
+      <h1 class="card-title">Account Under Review</h1>
+      <p class="card-sub">
+        Hi <strong>{{ user.first_name|default:user.username }}</strong>! Your account has been created successfully. 
+        The barangay admin needs to verify that you are a resident of <strong>Barangay Zone 1</strong> before you can access the system.
+      </p>
+
+      <div class="info-row">
+        <i class="fas fa-info-circle"></i>
+        <span>You will be notified once the admin reviews your registration. This usually takes <strong>1–2 business days</strong>. Please check back or wait for a notification.</span>
+      </div>
+
+      <div class="steps">
+        <div class="step done">
+          <div class="step-num"><i class="fas fa-check" style="font-size:0.65rem;"></i></div>
+          <span>Account registered successfully</span>
+        </div>
+        <div class="step active">
+          <div class="step-num">2</div>
+          <span>Awaiting admin verification — <em>in progress…</em></span>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <span>Account approved — access granted</span>
+        </div>
+      </div>
+
+      <a href="{% url 'logout' %}" class="btn-glass">
+        <i class="fas fa-sign-out-alt"></i> Sign Out
+      </a>
+
+      <div class="footer-meta">
+        Registered as <strong>{{ user.username }}</strong> · Barangay Zone 1
+        <br>Need help? Contact your barangay admin.
+      </div>
+    </div>
+
+    <!-- ══ REJECTED STATE ══ -->
+    {% elif status == 'rejected' %}
+    <div class="card">
+      <div class="status-icon-wrap rejected">
+        <i class="fas fa-times-circle"></i>
+      </div>
+      <h1 class="card-title">Registration Declined</h1>
+      <p class="card-sub">
+        Unfortunately, your account could not be verified as a resident of <strong>Barangay Zone 1</strong>.
+      </p>
+
+      {% if rejection_reason %}
+      <div class="rejection-box">
+        <i class="fas fa-comment-slash"></i>
+        <span><strong>Reason:</strong> {{ rejection_reason }}</span>
+      </div>
+      {% endif %}
+
+      <div class="info-row">
+        <i class="fas fa-info-circle"></i>
+        <span>If you believe this is a mistake, please visit the barangay hall or contact your admin directly to resolve the issue.</span>
+      </div>
+
+      <a href="{% url 'logout' %}" class="btn-accent">
+        <i class="fas fa-sign-out-alt"></i> Back to Login
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+
+<script>
+  // ── Theme ──
+  const savedTheme = localStorage.getItem('theme') || 'dark';
+  if (savedTheme === 'light') {
+    document.body.classList.add('light-mode');
+    document.getElementById('theme-icon').className = 'fas fa-sun';
+  }
+  function toggleTheme() {
+    const isLight = document.body.classList.toggle('light-mode');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    document.getElementById('theme-icon').className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+  }
+
+  // ── Auto-refresh every 30s to check approval status ──
+  setTimeout(() => window.location.reload(), 30000);
+</script>
+</body>
+</html>

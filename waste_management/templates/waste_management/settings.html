@@ -1,0 +1,1140 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}Settings — ReporTrash{% endblock %}
+
+{% block extra_styles %}
+.settings-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.settings-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.settings-header h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.settings-header p {
+  color: var(--text-muted);
+}
+
+/* Settings Tabs Navigation */
+.settings-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
+  background: rgba(13,31,45,0.85);
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 20px;
+  padding: 8px;
+  flex-wrap: wrap;
+}
+.settings-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background: transparent;
+  border: none;
+  border-radius: 14px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s var(--transition-bounce);
+  font-family: 'Space Grotesk', sans-serif;
+}
+.settings-tab i {
+  font-size: 1.1rem;
+}
+.settings-tab:hover {
+  background: var(--bg-card-hover);
+  color: var(--accent);
+}
+.settings-tab.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: var(--bg-deep);
+  box-shadow: 0 4px 15px rgba(0,255,135,0.3);
+}
+.settings-tab.active i {
+  color: var(--bg-deep);
+}
+
+/* Settings Sections */
+.settings-section {
+  display: none;
+  animation: fadeIn 0.4s var(--transition-smooth);
+}
+.settings-section.active {
+  display: block;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section-card {
+  background: rgba(13,31,45,0.85);
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 24px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.section-header {
+  padding: 20px 24px;
+  background: rgba(0,255,135,0.05);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.section-header i {
+  font-size: 1.5rem;
+  color: var(--accent);
+}
+.section-header h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+}
+.section-content {
+  padding: 24px;
+}
+.setting-item {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.setting-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.setting-label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.setting-label i {
+  width: 20px;
+  color: var(--accent);
+}
+.setting-description {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--glass);
+  transition: 0.3s;
+  border-radius: 34px;
+}
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+input:checked + .toggle-slider {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+}
+input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+.color-option {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.2s;
+}
+.color-option.selected {
+  border-color: white;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px currentColor;
+}
+.color-option:hover {
+  transform: scale(1.05);
+}
+.avatar-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+}
+.danger-zone {
+  background: rgba(239,68,68,0.05);
+  border: 1px solid rgba(239,68,68,0.2);
+}
+.danger-zone .section-header {
+  background: rgba(239,68,68,0.1);
+}
+.danger-zone .section-header i {
+  color: var(--danger);
+}
+.danger-btn {
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: var(--danger);
+}
+.danger-btn:hover {
+  background: var(--danger);
+  color: white;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: rgba(13,31,45,0.85);
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+}
+.stat-card i {
+  font-size: 2rem;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.stat-card .stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: 'Syne', sans-serif;
+}
+.stat-card .stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+@media (max-width: 768px) {
+  .settings-container { padding: 12px; }
+  .settings-tab { padding: 10px 12px; font-size: 0.75rem; }
+  .settings-tab span { display: none; }
+  .settings-tab i { font-size: 1.2rem; }
+  .section-header { padding: 16px 20px; }
+  .section-content { padding: 20px; }
+  .section-header h2 { font-size: 1.1rem; }
+}
+
+/* ============================================
+   LIGHT MODE OVERRIDES FOR SETTINGS PAGE
+   Black Borders & Visible Text
+   ============================================ */
+
+/* Settings tabs container */
+body.light-mode .settings-tabs {
+  background: #ffffff;
+  border: 1.5px solid #000000 !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+}
+
+/* Settings tabs */
+body.light-mode .settings-tab {
+  color: #4a5568;
+}
+
+body.light-mode .settings-tab:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #059669;
+}
+
+body.light-mode .settings-tab.active {
+  background: linear-gradient(135deg, #059669, #0284c7);
+  color: #ffffff;
+}
+
+/* Section cards - BLACK borders */
+body.light-mode .section-card {
+  background: #ffffff;
+  border: 1.5px solid #000000 !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+}
+
+body.light-mode .section-header {
+  background: rgba(5, 150, 105, 0.06);
+  border-bottom-color: #000000;
+}
+
+body.light-mode .section-header h2 {
+  color: #1a202c;
+}
+
+body.light-mode .section-header i {
+  color: #059669;
+}
+
+/* Setting items */
+body.light-mode .setting-item {
+  border-bottom-color: #e0e0e0;
+}
+
+body.light-mode .setting-label {
+  color: #1a202c;
+}
+
+body.light-mode .setting-description {
+  color: #4a5568;
+}
+
+/* Form controls - BLACK borders */
+body.light-mode .form-control {
+  background: #f5f5f5;
+  border: 1.5px solid #000000 !important;
+  color: #1a202c;
+}
+
+body.light-mode .form-control:focus {
+  border-color: #059669 !important;
+  outline: none;
+}
+
+body.light-mode .form-control::placeholder {
+  color: #9ca3af;
+}
+
+/* Toggle switch */
+body.light-mode .toggle-slider {
+  background-color: #d0d0d0;
+  border: 1px solid #000000;
+}
+
+body.light-mode input:checked + .toggle-slider {
+  background: linear-gradient(135deg, #059669, #0284c7);
+}
+
+/* Stats cards */
+body.light-mode .stat-card {
+  background: #f8fffe;
+  border: 1.5px solid #000000 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .stat-card .stat-value {
+  color: #1a202c;
+}
+
+body.light-mode .stat-card .stat-label {
+  color: #4a5568;
+}
+
+body.light-mode .stat-card i {
+  color: #059669;
+}
+
+/* Danger zone */
+body.light-mode .danger-zone {
+  background: rgba(220, 38, 38, 0.04);
+  border: 1.5px solid #000000 !important;
+}
+
+body.light-mode .danger-zone .section-header {
+  background: rgba(220, 38, 38, 0.07);
+  border-bottom-color: #000000;
+}
+
+body.light-mode .danger-zone .section-header i {
+  color: #dc2626;
+}
+
+/* Danger button */
+body.light-mode .danger-btn {
+  background: rgba(220, 38, 38, 0.15);
+  border: 1.5px solid #000000 !important;
+  color: #dc2626;
+}
+
+body.light-mode .danger-btn:hover {
+  background: #dc2626;
+  border-color: #000000 !important;
+  color: #ffffff;
+}
+
+/* Primary button */
+body.light-mode .btn-primary {
+  background: linear-gradient(135deg, #059669, #0284c7);
+  border: 1.5px solid #000000 !important;
+  color: #ffffff;
+}
+
+body.light-mode .btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* Glass button */
+body.light-mode .btn-glass {
+  background: #f5f5f5;
+  border: 1.5px solid #000000 !important;
+  color: #4a5568;
+}
+
+body.light-mode .btn-glass:hover {
+  background: #e5e5e5;
+  border-color: #000000 !important;
+  color: #059669;
+}
+
+/* Dropdown */
+body.light-mode .purok-dropdown {
+  background: #ffffff;
+  border: 1.5px solid #000000 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+body.light-mode .purok-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+body.light-mode .purok-option {
+  color: #1a202c;
+}
+
+body.light-mode .purok-option:hover {
+  background: rgba(5, 150, 105, 0.08);
+  color: #059669;
+}
+
+body.light-mode .purok-option.blank-option {
+  color: #9ca3af;
+  border-bottom-color: #e0e0e0;
+}
+
+body.light-mode .purok-chevron {
+  color: #4a5568;
+}
+
+/* Avatar preview */
+body.light-mode .avatar-preview {
+  border: 1.5px solid #000000;
+}
+
+/* Color options */
+body.light-mode .color-option {
+  border: 2px solid #000000;
+}
+
+body.light-mode .color-option.selected {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px #000000, 0 0 0 4px #059669;
+}
+
+/* Toast messages */
+body.light-mode .toast-message {
+  border: 1.5px solid #000000;
+}
+
+/* Settings header */
+body.light-mode .settings-header p {
+  color: #4a5568;
+}
+
+/* Settings header gradient text */
+body.light-mode .settings-header h1 {
+  -webkit-text-fill-color: #059669;
+  background: linear-gradient(135deg, #059669, #0284c7);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* All text becomes visible */
+body.light-mode .settings-header p,
+body.light-mode .stat-card .stat-label,
+body.light-mode .setting-description,
+body.light-mode .purok-chevron,
+body.light-mode .purok-option.blank-option {
+  color: #4a5568 !important;
+}
+
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+  <div class="settings-header">
+    <h1><i class="fas fa-sliders-h"></i> Settings</h1>
+    <p>Manage your account preferences and privacy</p>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="toast-message" style="background: {% if message.tags == 'success' %}var(--success){% else %}var(--danger){% endif %}; color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Settings Navigation Tabs -->
+  <div class="settings-tabs">
+    <button class="settings-tab {% if active_tab == 'profile' or not active_tab %}active{% endif %}" data-tab="profile">
+      <i class="fas fa-user-circle"></i>
+      <span>Profile</span>
+    </button>
+    <button class="settings-tab {% if active_tab == 'notifications' %}active{% endif %}" data-tab="notifications">
+      <i class="fas fa-bell"></i>
+      <span>Notifications</span>
+    </button>
+    <button class="settings-tab {% if active_tab == 'privacy' %}active{% endif %}" data-tab="privacy">
+      <i class="fas fa-lock"></i>
+      <span>Privacy</span>
+    </button>
+    <button class="settings-tab {% if active_tab == 'security' %}active{% endif %}" data-tab="security">
+      <i class="fas fa-key"></i>
+      <span>Security</span>
+    </button>
+    <button class="settings-tab {% if active_tab == 'data' %}active{% endif %}" data-tab="data">
+      <i class="fas fa-database"></i>
+      <span>Data</span>
+    </button>
+    <button class="settings-tab {% if active_tab == 'danger' %}active{% endif %}" data-tab="danger">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span>Danger</span>
+    </button>
+  </div>
+
+  <!-- Profile Settings Tab -->
+  <div id="profile-tab" class="settings-section {% if active_tab == 'profile' or not active_tab %}active{% endif %}">
+    <div class="section-card">
+      <div class="section-header">
+        <i class="fas fa-user-circle"></i>
+        <h2>Profile Information</h2>
+      </div>
+      <div class="section-content">
+        <form method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_profile">
+          <input type="hidden" name="tab" value="profile">
+          
+          <div class="setting-item">
+            <div class="setting-label">
+              <i class="fas fa-user-tag"></i>
+              <span>Username</span>
+            </div>
+            <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+            <div class="setting-description">Your unique username for login and profile URL</div>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-label">
+              <i class="fas fa-id-card"></i>
+              <span>Display Name</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}" placeholder="First Name">
+              <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}" placeholder="Last Name">
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-label">
+              <i class="fas fa-envelope"></i>
+              <span>Email Address</span>
+            </div>
+            <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+            <div class="setting-description">Your email address is used for notifications and password recovery</div>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-label">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>Location Details</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+              <div class="purok-select-wrap" id="settingsBgyWrap" data-include-blank="false">
+                <input type="text" class="form-control purok-search-input" name="barangay_name" id="settingsBarangay"
+                  placeholder="Select barangay…" autocomplete="off"
+                  value="{{ profile.barangay_name }}"
+                  oninput="filterBgyDropdown('settingsBgyWrap')"
+                  onfocus="openBgyDropdown('settingsBgyWrap')"
+                  onblur="closeBgyDropdown('settingsBgyWrap')">
+                <i class="fas fa-chevron-down purok-chevron"></i>
+                <div class="purok-dropdown" id="settingsBgyWrap-dropdown"></div>
+              </div>
+              <div class="purok-select-wrap" id="settingsPurokWrap" data-include-blank="true" data-blank-label="— Leave blank —">
+                <input type="text" class="form-control purok-search-input" name="purok" id="settingsPurok"
+                  placeholder="Search or select purok…" autocomplete="off"
+                  value="{{ profile.purok }}"
+                  oninput="filterPurokDropdown('settingsPurokWrap')"
+                  onfocus="openPurokDropdown('settingsPurokWrap')"
+                  onblur="closePurokDropdown('settingsPurokWrap')">
+                <i class="fas fa-chevron-down purok-chevron"></i>
+                <div class="purok-dropdown" id="settingsPurokWrap-dropdown"></div>
+              </div>
+            </div>
+            <input type="text" name="address" class="form-control" value="{{ profile.address }}" placeholder="Full Address">
+            <input type="tel" name="contact_number" class="form-control" value="{{ profile.contact_number }}" placeholder="Contact Number" style="margin-top: 12px;">
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-label">
+              <i class="fas fa-palette"></i>
+              <span>Avatar Color</span>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+              <div class="color-option {% if profile.avatar_color == '#22c55e' %}selected{% endif %}" style="background: #22c55e" onclick="selectColor('#22c55e', this)"></div>
+              <div class="color-option {% if profile.avatar_color == '#3b82f6' %}selected{% endif %}" style="background: #3b82f6" onclick="selectColor('#3b82f6', this)"></div>
+              <div class="color-option {% if profile.avatar_color == '#f59e0b' %}selected{% endif %}" style="background: #f59e0b" onclick="selectColor('#f59e0b', this)"></div>
+              <div class="color-option {% if profile.avatar_color == '#ef4444' %}selected{% endif %}" style="background: #ef4444" onclick="selectColor('#ef4444', this)"></div>
+              <div class="color-option {% if profile.avatar_color == '#a855f7' %}selected{% endif %}" style="background: #a855f7" onclick="selectColor('#a855f7', this)"></div>
+              <div class="color-option {% if profile.avatar_color == '#00d4ff' %}selected{% endif %}" style="background: #00d4ff" onclick="selectColor('#00d4ff', this)"></div>
+              <div class="color-option {% if profile.avatar_color == '#ff6b35' %}selected{% endif %}" style="background: #ff6b35" onclick="selectColor('#ff6b35', this)"></div>
+            </div>
+            <input type="hidden" name="avatar_color" id="selectedColor" value="{{ profile.avatar_color }}">
+            
+            <div class="setting-label" style="margin-top: 16px;">
+              <i class="fas fa-camera"></i>
+              <span>Profile Picture</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+              <div class="avatar-preview" style="background: {{ profile.avatar_color }}">
+                {% if profile.profile_picture %}
+                  <img src="{{ profile.profile_picture.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                  {{ user.username|first|upper }}
+                {% endif %}
+              </div>
+              <div>
+                <label class="btn btn-glass" style="cursor: pointer;">
+                  <i class="fas fa-upload"></i> Upload Photo
+                  <input type="file" name="profile_picture" accept="image/*" style="display: none;" onchange="previewPicture(this)">
+                </label>
+                <button type="button" class="btn btn-glass" onclick="removePicture()" style="margin-left: 8px;">
+                  <i class="fas fa-trash"></i> Remove
+                </button>
+              </div>
+            </div>
+            <input type="hidden" name="remove_avatar" id="removeAvatar" value="false">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">
+            <i class="fas fa-save"></i> Save Profile Changes
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<!-- Notifications Tab -->
+<div id="notifications-tab" class="settings-section {% if active_tab == 'notifications' %}active{% endif %}">
+  <div class="section-card">
+    <div class="section-header">
+      <i class="fas fa-bell"></i>
+      <h2>Notification Preferences</h2>
+    </div>
+    <div class="section-content">
+      <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_notifications">
+        <input type="hidden" name="tab" value="notifications">
+        
+        <div class="setting-item">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div class="setting-label">Email Notifications</div>
+              <div class="setting-description">Receive updates about your reports and community activity via email</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" name="email_notif" value="on" {% if notification_settings.email %}checked{% endif %}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div class="setting-label">Report Status Updates</div>
+              <div class="setting-description">Get notified when your waste reports are collected or processed</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" name="report_notif" value="on" {% if notification_settings.report_updates %}checked{% endif %}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div class="setting-label">Community Activity</div>
+              <div class="setting-description">Get notified about replies and likes on your community posts</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" name="community_notif" value="on" {% if notification_settings.community_activity %}checked{% endif %}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div class="setting-label">Announcements</div>
+              <div class="setting-description">Receive important announcements from barangay administration</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" name="announce_notif" value="on" {% if notification_settings.announcements %}checked{% endif %}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          <i class="fas fa-save"></i> Save Notification Settings
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+  <!-- Privacy Tab -->
+  <div id="privacy-tab" class="settings-section {% if active_tab == 'privacy' %}active{% endif %}">
+    <div class="section-card">
+      <div class="section-header">
+        <i class="fas fa-lock"></i>
+        <h2>Privacy & Security</h2>
+      </div>
+      <div class="section-content">
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_privacy">
+          <input type="hidden" name="tab" value="privacy">
+          
+          <div class="setting-item">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div class="setting-label">Public Profile</div>
+                <div class="setting-description">Allow other users to view your profile and activity</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="is_profile_public" value="on" {% if profile.is_profile_public %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div class="setting-label">Show Email</div>
+                <div class="setting-description">Display your email address on your public profile</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="show_email" value="on" {% if profile.show_email %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div class="setting-label">Show Location</div>
+                <div class="setting-description">Display your barangay and purok on your profile</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="show_location" value="on" {% if profile.show_location %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div class="setting-label">Allow Messages</div>
+                <div class="setting-description">Allow other users to send you direct messages</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="allow_messages" value="on" {% if profile.allow_messages %}checked{% endif %}>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">
+            <i class="fas fa-save"></i> Save Privacy Settings
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Security Tab -->
+  <div id="security-tab" class="settings-section {% if active_tab == 'security' %}active{% endif %}">
+    <div class="section-card">
+      <div class="section-header">
+        <i class="fas fa-key"></i>
+        <h2>Change Password</h2>
+      </div>
+      <div class="section-content">
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="change_password">
+          <input type="hidden" name="tab" value="security">
+          
+          <div class="setting-item">
+            <div class="setting-label">
+              <i class="fas fa-lock"></i>
+              <span>Current Password</span>
+            </div>
+            <input type="password" name="current_password" class="form-control" required>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-label">
+              <i class="fas fa-key"></i>
+              <span>New Password</span>
+            </div>
+            <input type="password" name="new_password" class="form-control" required>
+            <div class="setting-description">Password must be at least 8 characters</div>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-label">
+              <i class="fas fa-check-circle"></i>
+              <span>Confirm New Password</span>
+            </div>
+            <input type="password" name="confirm_password" class="form-control" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">
+            <i class="fas fa-sync-alt"></i> Change Password
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Tab -->
+  <div id="data-tab" class="settings-section {% if active_tab == 'data' %}active{% endif %}">
+    <div class="section-card">
+      <div class="section-header">
+        <i class="fas fa-database"></i>
+        <h2>Your Activity Summary</h2>
+      </div>
+      <div class="section-content">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <i class="fas fa-file-alt"></i>
+            <div class="stat-value">{{ total_reports|default:0 }}</div>
+            <div class="stat-label">Total Reports</div>
+          </div>
+          <div class="stat-card">
+            <i class="fas fa-star"></i>
+            <div class="stat-value">{{ profile.points|default:0 }}</div>
+            <div class="stat-label">Points Earned</div>
+          </div>
+          <div class="stat-card">
+            <i class="fas fa-comments"></i>
+            <div class="stat-value">{{ recent_posts|length|default:0 }}</div>
+            <div class="stat-label">Community Posts</div>
+          </div>
+          <div class="stat-card">
+            <i class="fas fa-calendar"></i>
+            <div class="stat-value">{{ profile.created_at|date:"M Y"|default:"New" }}</div>
+            <div class="stat-label">Member Since</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header">
+        <i class="fas fa-download"></i>
+        <h2>Data Export</h2>
+      </div>
+      <div class="section-content">
+        <div class="setting-item">
+          <div class="setting-label">
+            <i class="fas fa-file-export"></i>
+            <span>Export My Data</span>
+          </div>
+          <div class="setting-description">Download a copy of all your data including reports, posts, and activity</div>
+          <form method="POST" style="margin-top: 12px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="export_data">
+            <input type="hidden" name="tab" value="data">
+            <button type="submit" class="btn btn-glass">
+              <i class="fas fa-download"></i> Request Data Export
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Danger Zone Tab -->
+  <div id="danger-tab" class="settings-section {% if active_tab == 'danger' %}active{% endif %}">
+    <div class="section-card danger-zone">
+      <div class="section-header">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h2>Delete Account</h2>
+      </div>
+      <div class="section-content">
+        <div class="setting-item">
+          <div class="setting-label">
+            <i class="fas fa-trash-alt"></i>
+            <span>Permanently Delete Account</span>
+          </div>
+          <div class="setting-description">This action cannot be undone. All your data, reports, posts, and activity will be permanently removed.</div>
+          <form method="POST" onsubmit="return confirmDelete()">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_account">
+            <input type="hidden" name="tab" value="danger">
+            <div style="margin-top: 16px;">
+              <input type="text" name="confirmation" class="form-control" placeholder='Type "DELETE" to confirm' style="margin-bottom: 12px;">
+              <button type="submit" class="btn danger-btn">
+                <i class="fas fa-trash-alt"></i> Delete My Account
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Tab navigation - preserve active tab on page load
+document.querySelectorAll('.settings-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    const tabName = this.getAttribute('data-tab');
+    // Update URL hash without reloading
+    window.location.hash = tabName;
+    // Switch active tab
+    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+  });
+});
+
+// Check URL hash on page load to restore tab
+window.addEventListener('DOMContentLoaded', function() {
+  const hash = window.location.hash.substring(1);
+  if (hash) {
+    const targetTab = document.querySelector(`.settings-tab[data-tab="${hash}"]`);
+    if (targetTab) {
+      targetTab.click();
+    }
+  }
+});
+
+let selectedColorValue = '{{ profile.avatar_color }}';
+
+function selectColor(color, element) {
+  selectedColorValue = color;
+  document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+  element.classList.add('selected');
+  document.getElementById('selectedColor').value = color;
+}
+
+function previewPicture(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = document.querySelector('.avatar-preview');
+      preview.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+      preview.style.background = 'transparent';
+    };
+    reader.readAsDataURL(input.files[0]);
+    document.getElementById('removeAvatar').value = 'false';
+  }
+}
+
+function removePicture() {
+  const initial = '{{ user.username|first|upper }}';
+  const preview = document.querySelector('.avatar-preview');
+  preview.innerHTML = initial;
+  preview.style.background = selectedColorValue;
+  document.getElementById('removeAvatar').value = 'true';
+}
+
+function confirmDelete() {
+  const confirmation = document.querySelector('input[name="confirmation"]').value;
+  if (confirmation !== 'DELETE') {
+    alert('Please type "DELETE" to confirm account deletion.');
+    return false;
+  }
+  return confirm('Are you absolutely sure? This will permanently delete your account and all your data.');
+}
+
+// Auto-hide toast messages
+setTimeout(() => {
+  document.querySelectorAll('.toast-message').forEach(msg => {
+    setTimeout(() => msg.style.display = 'none', 3000);
+  });
+}, 3000);
+
+  console.log('Notification Settings from Django:', {{ notification_settings|safe }});
+
+</script>
+
+<style>
+.purok-select-wrap { position: relative; }
+.purok-chevron { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.75rem; pointer-events: none; transition: transform 0.2s; }
+.purok-select-wrap.open .purok-chevron { transform: translateY(-50%) rotate(180deg); }
+.purok-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #0d1f2d; border: 1px solid rgba(0,255,135,0.15); border-radius: 14px; max-height: 220px; overflow-y: auto; z-index: 999; box-shadow: 0 8px 30px rgba(0,0,0,0.3); scrollbar-width: thin; }
+.purok-dropdown::-webkit-scrollbar { width: 4px; }
+.purok-dropdown::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.purok-select-wrap.open .purok-dropdown { display: block; }
+.purok-option { padding: 10px 14px; font-size: 0.85rem; cursor: pointer; transition: background 0.15s; color: var(--text-secondary); text-transform: capitalize; }
+.purok-option:hover { background: rgba(0,255,135,0.08); color: var(--accent); }
+.purok-option.blank-option { color: var(--text-muted); font-style: italic; border-bottom: 1px solid var(--glass-border); font-size: 0.8rem; }
+.purok-no-result { padding: 10px 14px; font-size: 0.82rem; color: var(--text-muted); font-style: italic; }
+
+/* ===== FULL LIGHT MODE OVERRIDES ===== */
+body.light-mode .settings-tabs {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.18);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+}
+body.light-mode .settings-tab {
+  color: rgba(3,10,14,0.55);
+}
+body.light-mode .settings-tab:hover {
+  background: rgba(0,0,0,0.06);
+  color: #059669;
+}
+body.light-mode .settings-tab.active {
+  color: #fff;
+}
+body.light-mode .section-card {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.18);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+body.light-mode .section-header {
+  background: rgba(5,150,105,0.06);
+  border-bottom-color: rgba(0,0,0,0.10);
+}
+body.light-mode .section-header h2 {
+  color: #030a0e;
+}
+body.light-mode .setting-item {
+  border-bottom-color: rgba(0,0,0,0.08);
+}
+body.light-mode .setting-label {
+  color: #030a0e;
+}
+body.light-mode .setting-description {
+  color: rgba(3,10,14,0.50);
+}
+body.light-mode .stat-card {
+  background: #f8fffe;
+  border-color: rgba(0,0,0,0.18);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+body.light-mode .stat-card .stat-value {
+  color: #030a0e;
+}
+body.light-mode .stat-card .stat-label {
+  color: rgba(3,10,14,0.50);
+}
+body.light-mode .toggle-slider {
+  background-color: rgba(0,0,0,0.15);
+}
+body.light-mode .danger-zone {
+  background: rgba(239,68,68,0.04);
+  border-color: rgba(239,68,68,0.25);
+}
+body.light-mode .danger-zone .section-header {
+  background: rgba(239,68,68,0.07);
+}
+body.light-mode .purok-dropdown {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.15);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+body.light-mode .purok-dropdown::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); }
+body.light-mode .purok-option { color: rgba(3,10,14,0.75); }
+body.light-mode .purok-option:hover { background: rgba(5,150,105,0.08); color: #059669; }
+body.light-mode .purok-option.blank-option { color: rgba(3,10,14,0.40); border-bottom-color: rgba(0,0,0,0.08); }
+</style>
+
+<script>
+const PUROK_LIST = ['acaciahan','alum','aratilis','atis','avocado','bayabas','cattleya','centennial','chesnut','chico','durian','duranta','gemelina','golden duranta','ipil-ipil','islam','kalinaw','kasaligan','kawayan','labana','laminusa','lanzones','madasigon','mahogany','malipayon','malunggay','manggahan','mangga-jumao-as','mangga-ravina','masipag','matamis','molave','narra','pagtoo','palmera','panaghiusa','papaya','riverside','rosal','rosas','sambag','sampaguita','san francisco','santol','silangan','star apple','talisay','tambis','tugas','waling-waling','yellowbell'];
+const BGY_LIST = ['Barangay Zone 1'];
+function cap(s){return s.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');}
+
+function buildPurokDropdown(wrapId){
+  const wrap=document.getElementById(wrapId);if(!wrap)return;
+  const dd=document.getElementById(wrapId+'-dropdown');
+  const includeBlank=wrap.dataset.includeBlank!=='false';
+  const blankLabel=wrap.dataset.blankLabel||'— Leave blank —';
+  dd.innerHTML='';
+  if(includeBlank){const o=document.createElement('div');o.className='purok-option blank-option';o.textContent=blankLabel;o.onmousedown=()=>selectPurok(wrapId,'','',true);dd.appendChild(o);}
+  PUROK_LIST.forEach(p=>{const o=document.createElement('div');o.className='purok-option';o.textContent=cap(p);o.onmousedown=()=>selectPurok(wrapId,p,cap(p),false);dd.appendChild(o);});
+}
+function filterPurokDropdown(wrapId){
+  const wrap=document.getElementById(wrapId);const input=wrap.querySelector('.purok-search-input');const dd=document.getElementById(wrapId+'-dropdown');const q=input.value.toLowerCase().trim();let any=false;
+  dd.querySelectorAll('.purok-option').forEach(o=>{const m=o.textContent.toLowerCase().includes(q);o.style.display=m?'':'none';if(m)any=true;});
+  let nr=dd.querySelector('.purok-no-result');
+  if(!any){if(!nr){nr=document.createElement('div');nr.className='purok-no-result';dd.appendChild(nr);}nr.textContent='No match for "'+input.value+'"';nr.style.display='';}else if(nr)nr.style.display='none';
+}
+function openPurokDropdown(wrapId){document.getElementById(wrapId).classList.add('open');filterPurokDropdown(wrapId);}
+function closePurokDropdown(wrapId){setTimeout(()=>{const w=document.getElementById(wrapId);if(w)w.classList.remove('open');},150);}
+function selectPurok(wrapId,value,display,isBlank){const wrap=document.getElementById(wrapId);const input=wrap.querySelector('.purok-search-input');input.value=isBlank?'':display;input.dataset.value=value;wrap.classList.remove('open');}
+
+function buildBgyDropdown(wrapId){
+  const wrap=document.getElementById(wrapId);if(!wrap)return;
+  const dd=document.getElementById(wrapId+'-dropdown');dd.innerHTML='';
+  BGY_LIST.forEach(b=>{const o=document.createElement('div');o.className='purok-option';o.textContent=b;o.onmousedown=()=>selectBgy(wrapId,b);dd.appendChild(o);});
+}
+function filterBgyDropdown(wrapId){
+  const wrap=document.getElementById(wrapId);const input=wrap.querySelector('.purok-search-input');const dd=document.getElementById(wrapId+'-dropdown');const q=input.value.toLowerCase().trim();let any=false;
+  dd.querySelectorAll('.purok-option').forEach(o=>{const m=o.textContent.toLowerCase().includes(q);o.style.display=m?'':'none';if(m)any=true;});
+  let nr=dd.querySelector('.purok-no-result');
+  if(!any){if(!nr){nr=document.createElement('div');nr.className='purok-no-result';dd.appendChild(nr);}nr.textContent='No match';nr.style.display='';}else if(nr)nr.style.display='none';
+}
+function openBgyDropdown(wrapId){document.getElementById(wrapId).classList.add('open');filterBgyDropdown(wrapId);}
+function closeBgyDropdown(wrapId){setTimeout(()=>{const w=document.getElementById(wrapId);if(w)w.classList.remove('open');},150);}
+function selectBgy(wrapId,value){const wrap=document.getElementById(wrapId);const input=wrap.querySelector('.purok-search-input');input.value=value;wrap.classList.remove('open');}
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('.purok-select-wrap').forEach(w=>{
+    if(w.id.toLowerCase().includes('bgy')||w.id.toLowerCase().includes('barangay')||w.id.toLowerCase().includes('brgy')){buildBgyDropdown(w.id);}
+    else{buildPurokDropdown(w.id);}
+  });
+});
+</script>
+{% endblock %}

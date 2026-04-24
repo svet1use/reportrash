@@ -1,0 +1,1523 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}{% if is_own_profile %}My Profile{% else %}{{ display_user.username }}{% endif %} — ReporTrash{% endblock %}
+
+{% block extra_styles %}
+/* Profile Styles */
+.profile-header {
+  position: relative;
+  padding: 30px 16px 20px;
+  text-align: center;
+  overflow: hidden;
+}
+.profile-avatar-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 16px;
+  z-index: 1;
+}
+.profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 3rem;
+  font-weight: 800;
+  color: #030a0e;
+  margin: 0 auto;
+  border: 4px solid rgba(255,255,255,0.15);
+  box-shadow: 0 0 40px rgba(0,255,135,0.3);
+  transition: all 0.3s ease;
+  object-fit: cover;
+  position: relative;
+  overflow: hidden;
+}
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.profile-edit-badge {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  color: #030a0e;
+  transition: all 0.3s;
+  z-index: 2;
+}
+.profile-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+}
+.profile-username {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 8px;
+}
+.profile-location {
+  font-size: 0.75rem;
+  color: var(--accent);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.profile-barangay, .profile-purok {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0,255,135,0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+.level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(0,255,135,0.15), rgba(0,212,255,0.1));
+  border: 1px solid rgba(0,255,135,0.3);
+  border-radius: 100px;
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: 'DM Mono', monospace;
+}
+.profile-stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding: 0 16px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+.stat-item {
+  text-align: center;
+}
+.stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.3s;
+  border-bottom: 2px solid transparent;
+  font-size: 0.85rem;
+}
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.tab-content {
+  display: none;
+  padding: 0 16px;
+}
+.tab-content.active {
+  display: block;
+}
+.report-card {
+  background: #0d1f2d;
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.report-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.report-meta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.report-category {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+}
+.cat-biodegradable { background: rgba(34,197,94,0.15); color: #22c55e; }
+.cat-recyclable { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.cat-residual { background: rgba(148,163,184,0.15); color: #94a3b8; }
+.cat-hazardous { background: rgba(239,68,68,0.15); color: #ef4444; }
+.cat-electronic { background: rgba(168,85,247,0.15); color: #a855f7; }
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+}
+.status-pending { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.status-collected { background: rgba(34,197,94,0.15); color: #22c55e; }
+.status-processed { background: rgba(0,212,255,0.15); color: #00d4ff; }
+.report-location {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+.report-points {
+  font-size: 0.7rem;
+}
+.report-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+.report-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+.report-action-btn:hover {
+  color: var(--accent);
+  background: rgba(0,255,135,0.05);
+}
+.post-card-small {
+  background: #0d1f2d;
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.post-content-preview {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+.post-meta {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.post-actions-small {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+.post-like-btn, .post-reply-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 20px;
+}
+.post-like-btn:hover, .post-reply-btn:hover {
+  color: var(--accent);
+  background: rgba(0,255,135,0.05);
+}
+.post-like-btn.liked {
+  color: #ef4444;
+}
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.85rem;
+  margin: 16px;
+  font-family: 'DM Mono', monospace;
+}
+.logout-section {
+  padding: 0 16px 100px;
+}
+.logout-btn {
+  background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.05));
+  border: 1px solid rgba(239,68,68,0.2);
+  color: var(--danger);
+  width: 100%;
+  padding: 14px;
+  border-radius: 100px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.logout-btn:hover {
+  background: linear-gradient(135deg, var(--danger), #dc2626);
+  color: white;
+}
+.waste-breakdown {
+  padding: 0 16px;
+  margin-bottom: 20px;
+}
+.breakdown-card {
+  background: linear-gradient(145deg, var(--bg-card), rgba(0,212,255,0.02));
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 24px;
+  padding: 20px;
+}
+.cat-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+.cat-row-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  width: 85px;
+  flex-shrink: 0;
+  font-family: 'DM Mono', monospace;
+}
+.cat-row-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.cat-row-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1.2s;
+}
+.cat-row-val {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+  min-width: 45px;
+  text-align: right;
+}
+.leaderboard-section {
+  padding: 0 16px;
+  margin-bottom: 20px;
+}
+.leaderboard-card {
+  background: linear-gradient(145deg, var(--bg-card), rgba(199,125,255,0.02));
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 24px;
+  padding: 20px;
+}
+.leaderboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.leaderboard-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.leaderboard-title i {
+  color: #ffd700;
+}
+.leaderboard-count {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  transition: all 0.3s;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+.leaderboard-item:hover {
+  background: rgba(255,255,255,0.03);
+  transform: translateX(5px);
+}
+.leaderboard-item.lb-you {
+  background: linear-gradient(90deg, rgba(0,255,135,0.1), transparent);
+  border-left: 3px solid var(--accent);
+}
+.lb-rank {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.lb-rank-1 { background: linear-gradient(135deg, #ffd700, #ffb800); color: #030a0e; }
+.lb-rank-2 { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); color: #030a0e; }
+.lb-rank-3 { background: linear-gradient(135deg, #cd7f32, #b8722e); color: #030a0e; }
+.lb-rank-other { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+.lb-info { flex: 1; }
+.lb-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
+.lb-barangay { font-size: 0.7rem; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+.lb-pts {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--accent);
+  background: rgba(0,255,135,0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.edit-section {
+  padding: 0 16px;
+  margin-bottom: 20px;
+  display: none;
+}
+.edit-card {
+  background: linear-gradient(145deg, var(--bg-card), rgba(0,255,135,0.02));
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 24px;
+  padding: 20px;
+}
+.edit-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.avatar-edit-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.avatar-edit-preview {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin-bottom: 15px;
+  border: 3px solid var(--accent);
+  overflow: hidden;
+}
+.avatar-edit-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.avatar-edit-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.avatar-edit-btn {
+  background: #0d1f2d;
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 100px;
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.avatar-edit-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.avatar-edit-btn input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.color-picker-edit {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.color-swatch-edit {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+.color-swatch-edit.selected {
+  border-color: white;
+  transform: scale(1.2);
+}
+.form-group {
+  margin-bottom: 12px;
+}
+.form-label {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-family: 'DM Mono', monospace;
+}
+.form-control {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+}
+.form-control:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+@media (max-width: 768px) {
+  .profile-avatar { width: 90px; height: 90px; font-size: 2rem; }
+  .profile-name { font-size: 1.3rem; }
+  .profile-stats { gap: 20px; }
+  .stat-value { font-size: 1.1rem; }
+  .tab { padding: 8px 12px; font-size: 0.75rem; }
+}
+
+/* ===== LIGHT MODE OVERRIDES ===== */
+body.light-mode .report-card,
+body.light-mode .post-card-small {
+  background: rgba(255,255,255,0.85);
+  border-color: rgba(0,0,0,0.55);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+body.light-mode .avatar-edit-btn {
+  background: rgba(255,255,255,0.85);
+  border-color: rgba(0,0,0,0.30);
+  color: rgba(3,10,14,0.75);
+}
+body.light-mode .avatar-edit-btn:hover {
+  background: #fff;
+  border-color: rgba(5,150,105,0.6);
+}
+/* Light Mode Text Visibility Fixes for Profile Page */
+body.light-mode {
+  --text-muted: #4a5568;  /* Darker gray - much more visible */
+  --text-secondary: #2d3748;
+}
+
+body.light-mode .profile-username,
+body.light-mode .stat-label,
+body.light-mode .report-meta,
+body.light-mode .report-location,
+body.light-mode .report-points,
+body.light-mode .post-meta,
+body.light-mode .lb-barangay,
+body.light-mode .leaderboard-count,
+body.light-mode .form-label,
+body.light-mode .empty-state p,
+body.light-mode .cat-row-val,
+body.light-mode .post-content-preview,
+body.light-mode .back-link {
+  color: #4a5568 !important;
+}
+
+body.light-mode .profile-location span {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+body.light-mode .level-badge {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.15), rgba(0, 212, 255, 0.1));
+  border-color: rgba(5, 150, 105, 0.3);
+  color: #059669;
+}
+
+body.light-mode .breakdown-card,
+body.light-mode .leaderboard-card,
+body.light-mode .edit-card {
+  background: #ffffff;
+  border-color: #e0e0e0;
+}
+
+body.light-mode .cat-row-bar {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .leaderboard-item:hover {
+  background: rgba(5, 150, 105, 0.05);
+}
+
+body.light-mode .leaderboard-item.lb-you {
+  background: linear-gradient(90deg, rgba(5, 150, 105, 0.1), transparent);
+  border-left-color: #059669;
+}
+
+body.light-mode .form-control {
+  background: #f5f5f5;
+  border-color: #d0d0d0;
+  color: #1a202c;
+}
+
+body.light-mode .form-control:focus {
+  border-color: #059669;
+}
+
+body.light-mode .report-action-btn {
+  color: #4a5568;
+}
+
+body.light-mode .report-action-btn:hover {
+  color: #059669;
+  background: rgba(5, 150, 105, 0.05);
+}
+
+body.light-mode .post-like-btn,
+body.light-mode .post-reply-btn {
+  color: #4a5568;
+}
+
+body.light-mode .post-like-btn:hover,
+body.light-mode .post-reply-btn:hover {
+  color: #059669;
+  background: rgba(5, 150, 105, 0.05);
+}
+
+body.light-mode .post-like-btn.liked {
+  color: #dc2626;
+}
+
+body.light-mode .tab {
+  color: #4a5568;
+}
+
+body.light-mode .tab.active {
+  color: #059669;
+  border-bottom-color: #059669;
+}
+
+body.light-mode .logout-btn {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+}
+
+body.light-mode .logout-btn:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: white;
+}
+
+body.light-mode .back-link {
+  color: #059669;
+}
+
+body.light-mode .color-swatch-edit.selected {
+  border-color: #1a202c;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #059669;
+}
+
+body.light-mode .avatar-edit-btn {
+  background: #f5f5f5;
+  border-color: #d0d0d0;
+  color: #4a5568;
+}
+
+body.light-mode .avatar-edit-btn:hover {
+  background: #ffffff;
+  border-color: #059669;
+  color: #059669;
+}
+
+body.light-mode .profile-avatar {
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 40px rgba(5, 150, 105, 0.2);
+}
+
+body.light-mode .report-card,
+body.light-mode .post-card-small {
+  background: #ffffff;
+  border-color: #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode .report-card:hover,
+body.light-mode .post-card-small:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .lb-rank-other {
+  background: rgba(0, 0, 0, 0.05);
+  color: #4a5568;
+}
+
+body.light-mode .lb-pts {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+body.light-mode .profile-edit-badge {
+  background: #059669;
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+body.light-mode .profile-edit-badge:hover {
+  background: #047857;
+}
+
+/* ============================================
+   LIGHT MODE OVERRIDES FOR PROFILE PAGE
+   Black Borders & Visible Text
+   ============================================ */
+
+/* All containers get BLACK borders */
+body.light-mode .report-card,
+body.light-mode .post-card-small,
+body.light-mode .breakdown-card,
+body.light-mode .leaderboard-card,
+body.light-mode .edit-card,
+body.light-mode .purok-dropdown,
+body.light-mode .level-badge {
+  border-color: #000000 !important;
+  border-width: 1.5px !important;
+}
+
+body.light-mode .report-card,
+body.light-mode .post-card-small {
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .breakdown-card,
+body.light-mode .leaderboard-card,
+body.light-mode .edit-card {
+  background: #ffffff;
+  border-color: #000000 !important;
+}
+
+body.light-mode .level-badge {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.15), rgba(0, 212, 255, 0.1));
+  border-color: #000000 !important;
+  color: #059669;
+}
+
+/* Input fields with black borders */
+body.light-mode .form-control,
+body.light-mode .purok-search-input {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+  color: #1a202c;
+}
+
+body.light-mode .form-control:focus,
+body.light-mode .purok-search-input:focus {
+  border-color: #000000 !important;
+  outline: none;
+}
+
+/* Placeholder text - visible but subtle */
+body.light-mode .form-control::placeholder,
+body.light-mode .purok-search-input::placeholder {
+  color: #9ca3af !important;
+  opacity: 0.8 !important;
+}
+
+/* Dropdown */
+body.light-mode .purok-dropdown {
+  background: #ffffff;
+  border-color: #000000 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode .purok-option {
+  color: #1a202c;
+}
+
+body.light-mode .purok-option:hover,
+body.light-mode .purok-option.highlighted {
+  background: rgba(5, 150, 105, 0.08);
+  color: #059669;
+}
+
+body.light-mode .purok-option.blank-option {
+  color: #9ca3af;
+  border-bottom-color: #e0e0e0;
+}
+
+/* Avatar edit buttons */
+body.light-mode .avatar-edit-btn {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+  color: #4a5568;
+}
+
+body.light-mode .avatar-edit-btn:hover {
+  background: #ffffff;
+  border-color: #000000 !important;
+  color: #059669;
+}
+
+/* Color swatches */
+body.light-mode .color-swatch-edit.selected {
+  border-color: #000000;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #059669;
+}
+
+/* All text becomes BLACK for visibility */
+body.light-mode .profile-username,
+body.light-mode .stat-label,
+body.light-mode .report-meta,
+body.light-mode .report-location,
+body.light-mode .report-points,
+body.light-mode .post-meta,
+body.light-mode .lb-barangay,
+body.light-mode .leaderboard-count,
+body.light-mode .form-label,
+body.light-mode .empty-state p,
+body.light-mode .cat-row-val,
+body.light-mode .post-content-preview,
+body.light-mode .back-link,
+body.light-mode .tab,
+body.light-mode .report-action-btn,
+body.light-mode .post-reply-btn,
+body.light-mode .post-like-btn {
+  color: #4a5568 !important;
+}
+
+/* Post author name stays darker */
+body.light-mode .post-author a {
+  color: #1a202c !important;
+}
+
+/* Tab active state */
+body.light-mode .tab.active {
+  color: #059669;
+  border-bottom-color: #059669;
+}
+
+/* Leaderboard items */
+body.light-mode .leaderboard-item:hover {
+  background: rgba(5, 150, 105, 0.05);
+}
+
+body.light-mode .leaderboard-item.lb-you {
+  background: linear-gradient(90deg, rgba(5, 150, 105, 0.1), transparent);
+  border-left-color: #059669;
+}
+
+body.light-mode .lb-rank-other {
+  background: rgba(0, 0, 0, 0.05);
+  color: #4a5568;
+}
+
+body.light-mode .lb-pts {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+/* Profile location badges */
+body.light-mode .profile-barangay,
+body.light-mode .profile-purok {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+/* Profile avatar */
+body.light-mode .profile-avatar {
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 40px rgba(5, 150, 105, 0.2);
+}
+
+body.light-mode .profile-edit-badge {
+  background: #059669;
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+body.light-mode .profile-edit-badge:hover {
+  background: #047857;
+}
+
+/* Logout button */
+body.light-mode .logout-btn {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+  border-color: #000000 !important;
+  color: #dc2626;
+}
+
+body.light-mode .logout-btn:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  border-color: #000000 !important;
+  color: white;
+}
+
+/* Back link */
+body.light-mode .back-link {
+  color: #059669;
+}
+
+/* Category bars */
+body.light-mode .cat-row-bar {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* Report actions */
+body.light-mode .report-action-btn:hover {
+  color: #059669;
+  background: rgba(5, 150, 105, 0.05);
+}
+
+/* Post actions */
+body.light-mode .post-like-btn:hover,
+body.light-mode .post-reply-btn:hover {
+  color: #059669;
+  background: rgba(5, 150, 105, 0.05);
+}
+
+body.light-mode .post-like-btn.liked {
+  color: #dc2626;
+}
+
+/* Tabs container border */
+body.light-mode .tabs {
+  border-bottom-color: #000000;
+}
+
+/* Keep colored text as is */
+body.light-mode .cat-biodegradable { color: #22c55e !important; }
+body.light-mode .cat-recyclable { color: #3b82f6 !important; }
+body.light-mode .cat-residual { color: #6b7280 !important; }
+body.light-mode .cat-hazardous { color: #ef4444 !important; }
+body.light-mode .cat-electronic { color: #a855f7 !important; }
+body.light-mode .status-pending { color: #d97706 !important; }
+body.light-mode .status-collected { color: #059669 !important; }
+body.light-mode .status-processed { color: #0284c7 !important; }
+
+/* Empty state */
+body.light-mode .empty-state i {
+  opacity: 0.3;
+  color: #4a5568;
+}
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap" style="padding: 0;">
+  {% if not is_own_profile %}
+  <a href="/community/" class="back-link">
+    <i class="fas fa-arrow-left"></i> Back to Community
+  </a>
+  {% endif %}
+  
+  <div class="profile-header">
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar" id="avatarDisplay" style="background: {{ profile.avatar_color }}">
+        {% if profile.profile_picture %}
+          <img src="{{ profile.profile_picture.url }}" alt="Profile" class="profile-avatar-img" id="avatarImage">
+        {% else %}
+          <span class="profile-avatar-initial" id="avatarInitial">{{ display_user.username|first|upper }}</span>
+        {% endif %}
+      </div>
+      {% if is_own_profile %}
+      <div class="profile-edit-badge" onclick="toggleEdit()">
+        <i class="fas fa-pencil-alt"></i>
+      </div>
+      {% endif %}
+    </div>
+    <div class="profile-name">{{ display_user.get_full_name|default:display_user.username }}</div>
+    <div class="profile-username">
+      <i class="fas fa-at" style="color: var(--accent);"></i> {{ display_user.username }}
+    </div>
+    
+    <div class="profile-location">
+      <span class="profile-barangay">
+        <i class="fas fa-map-marker-alt"></i> {{ profile.barangay_name }}
+      </span>
+      {% if profile.purok %}
+      <span class="profile-purok">
+        <i class="fas fa-users"></i> {{ profile.purok }}
+      </span>
+      {% endif %}
+    </div>
+    
+    <!-- Stats Row - Just Reports -->
+    <div class="profile-stats">
+      <div class="stat-item">
+        <div class="stat-value">{{ total_reports }}</div>
+        <div class="stat-label">Total Reports</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ collected }}</div>
+        <div class="stat-label">Collected</div>
+      </div>
+    </div>
+
+    <!-- Level Badge -->
+    <div class="level-badge">
+      <i class="fas fa-star"></i> {{ profile.level }} · {{ profile.points }} pts
+    </div>
+  </div>
+
+  <!-- Edit Section (Only for own profile) -->
+  {% if is_own_profile %}
+  <div class="edit-section" id="editSection">
+    <div class="edit-card">
+      <div class="edit-title">
+        <i class="fas fa-user-edit"></i> Edit Profile
+      </div>
+      
+      <div class="avatar-edit-section">
+        <div class="avatar-edit-preview">
+          <img id="avatarPreview" src="{% if profile.profile_picture %}{{ profile.profile_picture.url }}{% else %}https://via.placeholder.com/100?text={{ user.username|first|upper }}{% endif %}" alt="Preview">
+        </div>
+        <div class="avatar-edit-buttons">
+          <label class="avatar-edit-btn">
+            <i class="fas fa-camera"></i> Upload Photo
+            <input type="file" id="avatarUpload" accept="image/jpeg,image/png,image/jpg" onchange="previewAvatar(this)">
+          </label>
+          <button class="avatar-edit-btn" onclick="clearAvatar()">
+            <i class="fas fa-trash"></i> Remove
+          </button>
+        </div>
+        <div class="color-picker-edit" id="colorPicker">
+          <div class="color-swatch-edit {% if profile.avatar_color == '#22c55e' %}selected{% endif %}" style="background:#22c55e" onclick="selectColor('#22c55e', this)"></div>
+          <div class="color-swatch-edit {% if profile.avatar_color == '#3b82f6' %}selected{% endif %}" style="background:#3b82f6" onclick="selectColor('#3b82f6', this)"></div>
+          <div class="color-swatch-edit {% if profile.avatar_color == '#f59e0b' %}selected{% endif %}" style="background:#f59e0b" onclick="selectColor('#f59e0b', this)"></div>
+          <div class="color-swatch-edit {% if profile.avatar_color == '#ef4444' %}selected{% endif %}" style="background:#ef4444" onclick="selectColor('#ef4444', this)"></div>
+          <div class="color-swatch-edit {% if profile.avatar_color == '#a855f7' %}selected{% endif %}" style="background:#a855f7" onclick="selectColor('#a855f7', this)"></div>
+          <div class="color-swatch-edit {% if profile.avatar_color == '#00d4ff' %}selected{% endif %}" style="background:#00d4ff" onclick="selectColor('#00d4ff', this)"></div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          <input type="text" class="form-control" id="editFirst" value="{{ user.first_name }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          <input type="text" class="form-control" id="editLast" value="{{ user.last_name }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" id="editEmail" value="{{ user.email }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Barangay</label>
+        <div class="purok-select-wrap" id="profileBgyWrap" data-include-blank="false">
+          <input type="text" class="form-control purok-search-input" id="editBarangay"
+            placeholder="Select barangay…" autocomplete="off"
+            value="{{ profile.barangay_name }}"
+            oninput="filterBgyDropdown('profileBgyWrap')"
+            onfocus="openBgyDropdown('profileBgyWrap')"
+            onblur="closeBgyDropdown('profileBgyWrap')">
+          <i class="fas fa-chevron-down purok-chevron"></i>
+          <div class="purok-dropdown" id="profileBgyWrap-dropdown"></div>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label">Purok</label>
+          <div class="purok-select-wrap" id="profilePurokWrap" data-include-blank="true" data-blank-label="— Leave blank —">
+            <input type="text" class="form-control purok-search-input" id="editPurok"
+              placeholder="Search or select purok…" autocomplete="off"
+              value="{{ profile.purok }}"
+              oninput="filterPurokDropdown('profilePurokWrap')"
+              onfocus="openPurokDropdown('profilePurokWrap')"
+              onblur="closePurokDropdown('profilePurokWrap')">
+            <i class="fas fa-chevron-down purok-chevron"></i>
+            <div class="purok-dropdown" id="profilePurokWrap-dropdown"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact No.</label>
+          <input type="text" class="form-control" id="editContact" value="{{ profile.contact_number }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        <input type="text" class="form-control" id="editAddress" value="{{ profile.address }}">
+      </div>
+      <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="saveProfile()">
+    <i class="fas fa-save"></i> Save Changes
+</button>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" data-tab="reports">Reports</div>
+    <div class="tab" data-tab="posts">Posts</div>
+    <div class="tab" data-tab="replies">Replies</div>
+    {% if is_own_profile and by_category %}
+    <div class="tab" data-tab="stats">Stats</div>
+    {% endif %}
+    {% if is_own_profile %}
+    <div class="tab" data-tab="leaderboard">Leaderboard</div>
+    {% endif %}
+  </div>
+
+  <!-- Reports Tab -->
+  <div id="reports-tab" class="tab-content active">
+    {% if reports %}
+      {% for report in reports %}
+      <div class="report-card">
+        <div class="report-title">{{ report.title }}</div>
+        <div class="report-meta">
+          <span><i class="far fa-calendar-alt"></i> {{ report.reported_at|date:"M d, Y" }}</span>
+          <span class="report-category cat-{{ report.category }}">{{ report.get_category_display }}</span>
+          <span class="status-badge status-{{ report.status }}">{{ report.get_status_display }}</span>
+        </div>
+        <div class="report-location"><i class="fas fa-map-marker-alt"></i> {{ report.location }}</div>
+        {% if report.points_awarded %}
+        <div class="report-points">
+          <i class="fas fa-star" style="color: var(--accent);"></i> +{{ report.points_awarded }} points
+        </div>
+        {% endif %}
+        <div class="report-actions">
+          <button class="report-action-btn" onclick="window.location.href='/report/{{ report.id }}/'">
+            <i class="fas fa-eye"></i> View
+          </button>
+          {% if is_own_profile %}
+          <button class="report-action-btn" onclick="window.location.href='/report/edit/{{ report.id }}/'">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <i class="fas fa-file-alt"></i>
+        <p>No reports yet</p>
+        {% if is_own_profile %}
+        <a href="/report/" class="btn btn-primary" style="margin-top: 16px; display: inline-flex;">Submit your first report</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Posts Tab -->
+  <div id="posts-tab" class="tab-content">
+    {% if recent_posts %}
+      {% for post in recent_posts %}
+      <div class="post-card-small">
+        <div class="post-content-preview">{{ post.content|truncatechars:150 }}</div>
+        <div class="post-meta">
+          <span><i class="far fa-clock"></i> {{ post.created_at|timesince }} ago</span>
+          <span><i class="fas fa-heart"></i> {{ post.like_count }}</span>
+          <span><i class="fas fa-comment"></i> {{ post.replies.count }}</span>
+        </div>
+        <div class="post-actions-small">
+          <button class="post-reply-btn" onclick="window.location.href='/community/#post-{{ post.id }}'">
+            <i class="fas fa-reply"></i> Reply
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <i class="fas fa-comments"></i>
+        <p>No posts yet</p>
+        {% if is_own_profile %}
+        <a href="/community/" class="btn btn-primary" style="margin-top: 16px; display: inline-flex;">Create your first post</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Replies Tab -->
+  <div id="replies-tab" class="tab-content">
+    {% if recent_replies %}
+      {% for reply in recent_replies %}
+      <div class="post-card-small">
+        <div class="post-content-preview" style="color: var(--accent); font-size: 0.7rem;">
+          Replying to: {{ reply.post.content|truncatechars:60 }}
+        </div>
+        <div class="post-content-preview" style="margin-top: 8px;">
+          "{{ reply.content|truncatechars:120 }}"
+        </div>
+        <div class="post-meta">
+          <span><i class="far fa-clock"></i> {{ reply.created_at|timesince }} ago</span>
+        </div>
+        <div class="post-actions-small">
+          <button class="post-reply-btn" onclick="window.location.href='/community/#reply-{{ reply.id }}'">
+            <i class="fas fa-reply"></i> Reply
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <i class="fas fa-reply"></i>
+        <p>No replies yet</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Stats Tab (Only for own profile) -->
+  {% if is_own_profile and by_category %}
+  <div id="stats-tab" class="tab-content">
+    <div class="waste-breakdown">
+      <div class="breakdown-card">
+        <div class="cat-breakdown">
+          {% for item in by_category %}
+          <div class="cat-row">
+            <div class="cat-row-label">
+              <i class="fas {% if item.category == 'biodegradable' %}fa-leaf{% elif item.category == 'recyclable' %}fa-recycle{% elif item.category == 'hazardous' %}fa-skull-crossbones{% elif item.category == 'electronic' %}fa-battery-quarter{% elif item.category == 'special' %}fa-exclamation-triangle{% else %}fa-trash{% endif %}"></i>
+              {{ item.category|title }}
+            </div>
+            <div class="cat-row-bar">
+              <div class="cat-row-fill" style="width: {% widthratio item.count total_reports 100 %}%; background: var(--accent);"></div>
+            </div>
+            <div class="cat-row-val">{{ item.count }} reports</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Leaderboard Tab (Only for own profile) -->
+  {% if is_own_profile %}
+  <div id="leaderboard-tab" class="tab-content">
+    <div class="leaderboard-section">
+      <div class="leaderboard-card">
+        <div class="leaderboard-header">
+          <span class="leaderboard-title"><i class="fas fa-crown" style="color: #ffd700;"></i> Top Eco Warriors</span>
+          <span class="leaderboard-count">{{ leaderboard|length }} members</span>
+        </div>
+        {% for entry in leaderboard %}
+        <div class="leaderboard-item {% if entry.user == user %}lb-you{% endif %}" onclick="window.location.href='/profile/{{ entry.user.username }}/'">
+          <div class="lb-rank {% if forloop.counter == 1 %}lb-rank-1{% elif forloop.counter == 2 %}lb-rank-2{% elif forloop.counter == 3 %}lb-rank-3{% else %}lb-rank-other{% endif %}">
+            {% if forloop.counter == 1 %}<i class="fas fa-medal"></i>{% elif forloop.counter == 2 %}<i class="fas fa-medal" style="color: #c0c0c0;"></i>{% elif forloop.counter == 3 %}<i class="fas fa-medal" style="color: #cd7f32;"></i>{% else %}{{ forloop.counter }}{% endif %}
+          </div>
+          <div class="lb-info">
+            <div class="lb-name">{{ entry.user.get_full_name|default:entry.user.username }}{% if entry.user == user %} <span style="font-size: 0.65rem; color: var(--accent);">(you)</span>{% endif %}</div>
+            <div class="lb-barangay"><i class="fas fa-map-marker-alt"></i> {{ entry.barangay_name }} · {{ entry.level }}</div>
+          </div>
+          <div class="lb-pts">{{ entry.points }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Logout Section (Only for own profile) -->
+  {% if is_own_profile %}
+  <div class="logout-section">
+    <button class="logout-btn" id="logoutBtn">
+      <i class="fas fa-sign-out-alt"></i> Sign Out
+    </button>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showToast(message, type = 'success') {
+    let toast = document.getElementById('customToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'customToast';
+        toast.style.position = 'fixed';
+        toast.style.bottom = '20px';
+        toast.style.left = '50%';
+        toast.style.transform = 'translateX(-50%)';
+        toast.style.backgroundColor = type === 'success' ? '#22c55e' : '#ef4444';
+        toast.style.color = 'white';
+        toast.style.padding = '12px 24px';
+        toast.style.borderRadius = '100px';
+        toast.style.fontSize = '0.875rem';
+        toast.style.zIndex = '9999';
+        document.body.appendChild(toast);
+    }
+    toast.style.backgroundColor = type === 'success' ? '#22c55e' : '#ef4444';
+    toast.textContent = message;
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+}
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        const tabName = this.dataset.tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById(`${tabName}-tab`).classList.add('active');
+    });
+});
+
+// Progress bars animation
+setTimeout(() => {
+    document.querySelectorAll('.cat-row-fill').forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => { bar.style.width = width; }, 100);
+    });
+}, 300);
+
+// Edit profile functions (only for own profile)
+{% if is_own_profile %}
+let editMode = false;
+let selectedColor = '{{ profile.avatar_color }}';
+let selectedAvatarFile = null;
+let removeAvatar = false;
+
+function toggleEdit() {
+    editMode = !editMode;
+    const editSection = document.getElementById('editSection');
+    editSection.style.display = editMode ? 'block' : 'none';
+    if (editMode) {
+        editSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function selectColor(color, el) {
+    selectedColor = color;
+    document.querySelectorAll('.color-swatch-edit').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('avatarDisplay').style.background = color;
+}
+
+function previewAvatar(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+            showToast('Please select a valid image file (JPG, PNG)', 'error');
+            input.value = '';
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            showToast('Image size must be less than 2MB', 'error');
+            input.value = '';
+            return;
+        }
+        selectedAvatarFile = file;
+        removeAvatar = false;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('avatarPreview').src = e.target.result;
+            const avatarDisplay = document.getElementById('avatarDisplay');
+            avatarDisplay.innerHTML = `<img src="${e.target.result}" class="profile-avatar-img">`;
+            avatarDisplay.style.background = selectedColor;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function clearAvatar() {
+    selectedAvatarFile = null;
+    removeAvatar = true;
+    const initial = '{{ user.username|first|upper }}';
+    document.getElementById('avatarPreview').src = `https://via.placeholder.com/100?text=${initial}`;
+    document.getElementById('avatarDisplay').innerHTML = `<span class="profile-avatar-initial">${initial}</span>`;
+    document.getElementById('avatarDisplay').style.background = selectedColor;
+}
+
+async function saveProfile() {
+    const fd = new FormData();
+    fd.append('first_name', document.getElementById('editFirst').value);
+    fd.append('last_name', document.getElementById('editLast').value);
+    fd.append('email', document.getElementById('editEmail').value);
+    fd.append('barangay_name', document.getElementById('editBarangay').value);
+    fd.append('purok', document.getElementById('editPurok').value);
+    fd.append('contact_number', document.getElementById('editContact').value);
+    fd.append('address', document.getElementById('editAddress').value);
+    fd.append('avatar_color', selectedColor);
+    if (selectedAvatarFile) fd.append('profile_picture', selectedAvatarFile);
+    if (removeAvatar) fd.append('remove_avatar', 'true');
+    fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+    
+    // Get the button that was clicked
+    const btn = document.querySelector('.btn-primary');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    btn.disabled = true;
+    
+    try {
+        const res = await fetch('/profile/update/', { 
+            method: 'POST', 
+            body: fd,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        const data = await res.json();
+        console.log('Response:', data); // Debug log
+        
+        if (data.success) {
+            showToast('Profile updated successfully!', 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(data.error || 'Update failed. Please try again.', 'error');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Save error:', error);
+        showToast('Network error: ' + error.message, 'error');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+{% endif %}
+
+// Logout
+document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (confirm('Are you sure you want to sign out?')) {
+        window.location.href = '/logout/';
+    }
+});
+</script>
+
+<style>
+.purok-select-wrap { position: relative; }
+.purok-chevron { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.75rem; pointer-events: none; transition: transform 0.2s; }
+.purok-select-wrap.open .purok-chevron { transform: translateY(-50%) rotate(180deg); }
+.purok-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #0d1f2d; border: 1px solid rgba(0,255,135,0.15); border-radius: 14px; max-height: 220px; overflow-y: auto; z-index: 999; box-shadow: 0 8px 30px rgba(0,0,0,0.3); scrollbar-width: thin; }
+.purok-dropdown::-webkit-scrollbar { width: 4px; }
+.purok-dropdown::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.purok-select-wrap.open .purok-dropdown { display: block; }
+/* Light mode fixes for purok dropdown */
+body.light-mode .purok-dropdown {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.22);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.14);
+}
+body.light-mode .purok-option { color: rgba(3,10,14,0.75); }
+body.light-mode .purok-option:hover,
+body.light-mode .purok-option.highlighted { background: rgba(5,150,105,0.08); color: #059669; }
+body.light-mode .purok-option.blank-option { color: rgba(3,10,14,0.40); border-bottom-color: rgba(0,0,0,0.10); }
+
+.purok-option { padding: 10px 14px; font-size: 0.85rem; cursor: pointer; transition: background 0.15s; color: var(--text-secondary); text-transform: capitalize; }
+.purok-option:hover { background: rgba(0,255,135,0.08); color: var(--accent); }
+.purok-option.blank-option { color: var(--text-muted); font-style: italic; border-bottom: 1px solid var(--glass-border); font-size: 0.8rem; }
+.purok-no-result { padding: 10px 14px; font-size: 0.82rem; color: var(--text-muted); font-style: italic; }
+</style>
+
+<script>
+const PUROK_LIST = ['acaciahan','alum','aratilis','atis','avocado','bayabas','cattleya','centennial','chesnut','chico','durian','duranta','gemelina','golden duranta','ipil-ipil','islam','kalinaw','kasaligan','kawayan','labana','laminusa','lanzones','madasigon','mahogany','malipayon','malunggay','manggahan','mangga-jumao-as','mangga-ravina','masipag','matamis','molave','narra','pagtoo','palmera','panaghiusa','papaya','riverside','rosal','rosas','sambag','sampaguita','san francisco','santol','silangan','star apple','talisay','tambis','tugas','waling-waling','yellowbell'];
+const BGY_LIST = ['Barangay Zone 1'];
+function cap(s){return s.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');}
+
+function buildPurokDropdown(wrapId){
+  const wrap=document.getElementById(wrapId);if(!wrap)return;
+  const dd=document.getElementById(wrapId+'-dropdown');
+  const includeBlank=wrap.dataset.includeBlank!=='false';
+  const blankLabel=wrap.dataset.blankLabel||'— Leave blank —';
+  dd.innerHTML='';
+  if(includeBlank){const o=document.createElement('div');o.className='purok-option blank-option';o.textContent=blankLabel;o.onmousedown=()=>selectPurok(wrapId,'','',true);dd.appendChild(o);}
+  PUROK_LIST.forEach(p=>{const o=document.createElement('div');o.className='purok-option';o.textContent=cap(p);o.onmousedown=()=>selectPurok(wrapId,p,cap(p),false);dd.appendChild(o);});
+}
+function filterPurokDropdown(wrapId){
+  const wrap=document.getElementById(wrapId);const input=wrap.querySelector('.purok-search-input');const dd=document.getElementById(wrapId+'-dropdown');const q=input.value.toLowerCase().trim();let any=false;
+  dd.querySelectorAll('.purok-option').forEach(o=>{const m=o.textContent.toLowerCase().includes(q);o.style.display=m?'':'none';if(m)any=true;});
+  let nr=dd.querySelector('.purok-no-result');
+  if(!any){if(!nr){nr=document.createElement('div');nr.className='purok-no-result';dd.appendChild(nr);}nr.textContent='No match for "'+input.value+'"';nr.style.display='';}else if(nr)nr.style.display='none';
+}
+function openPurokDropdown(wrapId){document.getElementById(wrapId).classList.add('open');filterPurokDropdown(wrapId);}
+function closePurokDropdown(wrapId){setTimeout(()=>{const w=document.getElementById(wrapId);if(w)w.classList.remove('open');},150);}
+function selectPurok(wrapId,value,display,isBlank){const wrap=document.getElementById(wrapId);const input=wrap.querySelector('.purok-search-input');input.value=isBlank?'':display;input.dataset.value=value;wrap.classList.remove('open');}
+
+function buildBgyDropdown(wrapId){
+  const wrap=document.getElementById(wrapId);if(!wrap)return;
+  const dd=document.getElementById(wrapId+'-dropdown');dd.innerHTML='';
+  BGY_LIST.forEach(b=>{const o=document.createElement('div');o.className='purok-option';o.textContent=b;o.onmousedown=()=>selectBgy(wrapId,b);dd.appendChild(o);});
+}
+function filterBgyDropdown(wrapId){
+  const wrap=document.getElementById(wrapId);const input=wrap.querySelector('.purok-search-input');const dd=document.getElementById(wrapId+'-dropdown');const q=input.value.toLowerCase().trim();let any=false;
+  dd.querySelectorAll('.purok-option').forEach(o=>{const m=o.textContent.toLowerCase().includes(q);o.style.display=m?'':'none';if(m)any=true;});
+  let nr=dd.querySelector('.purok-no-result');
+  if(!any){if(!nr){nr=document.createElement('div');nr.className='purok-no-result';dd.appendChild(nr);}nr.textContent='No match';nr.style.display='';}else if(nr)nr.style.display='none';
+}
+function openBgyDropdown(wrapId){document.getElementById(wrapId).classList.add('open');filterBgyDropdown(wrapId);}
+function closeBgyDropdown(wrapId){setTimeout(()=>{const w=document.getElementById(wrapId);if(w)w.classList.remove('open');},150);}
+function selectBgy(wrapId,value){const wrap=document.getElementById(wrapId);const input=wrap.querySelector('.purok-search-input');input.value=value;wrap.classList.remove('open');}
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('.purok-select-wrap').forEach(w=>{
+    if(w.id.toLowerCase().includes('bgy')||w.id.toLowerCase().includes('barangay')||w.id.toLowerCase().includes('brgy')){buildBgyDropdown(w.id);}
+    else{buildPurokDropdown(w.id);}
+  });
+});
+</script>
+{% endblock %}

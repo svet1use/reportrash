@@ -1,0 +1,181 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}Report Details — ReporTrash{% endblock %}
+
+{% block extra_styles %}
+.report-detail {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.report-header {
+  margin-bottom: 24px;
+}
+.report-header h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.report-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.category-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.status-pending { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.status-collected { background: rgba(34,197,94,0.15); color: #22c55e; }
+.cat-biodegradable { background: rgba(34,197,94,0.15); color: #22c55e; }
+.cat-recyclable { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.cat-residual { background: rgba(148,163,184,0.15); color: #94a3b8; }
+.cat-hazardous { background: rgba(239,68,68,0.15); color: #ef4444; }
+.report-image {
+  margin: 20px 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.report-image img {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+}
+.report-info {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 20px;
+  margin: 20px 0;
+}
+.info-row {
+  display: flex;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+.info-row:last-child {
+  border-bottom: none;
+}
+.info-label {
+  width: 120px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.info-value {
+  flex: 1;
+  color: var(--text-primary);
+}
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  color: var(--accent);
+  text-decoration: none;
+}
+@media (max-width: 768px) {
+  .report-detail { padding: 12px; }
+  .report-header h1 { font-size: 1.4rem; }
+  .info-row { flex-direction: column; gap: 5px; }
+  .info-label { width: auto; }
+}
+{% endblock %}
+
+{% block content %}
+<div class="report-detail">
+  <a href="javascript:history.back()" class="back-btn">
+    <i class="fas fa-arrow-left"></i> Back
+  </a>
+  
+  <div class="report-header">
+    <h1>{{ report.title }}</h1>
+  </div>
+  
+  <div class="report-meta">
+    <span class="meta-item">
+      <i class="far fa-calendar-alt"></i> {{ report.reported_at|date:"F d, Y g:i A" }}
+    </span>
+    <span class="category-badge cat-{{ report.category }}">
+      <i class="fas {% if report.category == 'biodegradable' %}fa-leaf{% elif report.category == 'recyclable' %}fa-recycle{% elif report.category == 'hazardous' %}fa-skull-crossbones{% else %}fa-trash{% endif %}"></i>
+      {{ report.get_category_display }}
+    </span>
+    <span class="status-badge status-{{ report.status }}">
+      {{ report.get_status_display }}
+    </span>
+    {% if report.points_awarded %}
+    <span class="meta-item">
+      <i class="fas fa-star" style="color: var(--accent);"></i> +{{ report.points_awarded }} points
+    </span>
+    {% endif %}
+  </div>
+  
+  {% if report.image %}
+  <div class="report-image">
+    <img src="{{ report.image.url }}" alt="{{ report.title }}">
+  </div>
+  {% endif %}
+  
+  <div class="report-info">
+    <div class="info-row">
+      <div class="info-label">Location:</div>
+      <div class="info-value">
+        <i class="fas fa-map-marker-alt"></i> {{ report.location }}
+        {% if report.purok %} (Purok {{ report.purok }}){% endif %}
+      </div>
+    </div>
+    
+    {% if report.address %}
+    <div class="info-row">
+      <div class="info-label">Address:</div>
+      <div class="info-value">{{ report.address }}</div>
+    </div>
+    {% endif %}
+    
+    {% if report.description %}
+    <div class="info-row">
+      <div class="info-label">Description:</div>
+      <div class="info-value">{{ report.description|linebreaksbr }}</div>
+    </div>
+    {% endif %}
+    
+    {% if report.notes %}
+    <div class="info-row">
+      <div class="info-label">Notes:</div>
+      <div class="info-value">{{ report.notes }}</div>
+    </div>
+    {% endif %}
+    
+    {% if report.collected_at %}
+    <div class="info-row">
+      <div class="info-label">Collected on:</div>
+      <div class="info-value">{{ report.collected_at|date:"F d, Y g:i A" }}</div>
+    </div>
+    {% endif %}
+  </div>
+  
+  <div style="display: flex; gap: 12px; margin-top: 20px;">
+    <a href="{% url 'history' %}" class="btn btn-glass">Back to History</a>
+    {% if report.reporter == user %}
+    <a href="{% url 'edit_report' report.id %}" class="btn btn-primary">Edit Report</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1243 @@
+{% extends 'waste_management/base.html' %}
+{% block title %}Manage Announcements — ReporTrash Admin{% endblock %}
+
+{% block extra_styles %}
+.page-header { padding: 20px 16px 12px; }
+.page-h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem; font-weight: 800;
+  letter-spacing: -1px; margin-bottom: 4px;
+}
+.page-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
+.announcement-form {
+  background: #0d1f2d;
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 20px;
+  padding: 20px;
+  margin: 0 16px 20px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  font-family: 'DM Mono', monospace;
+}
+.form-control {
+  width: 100%;
+  background: #0d1f2d;
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  transition: all 0.3s;
+  appearance: none; -webkit-appearance: none;
+}
+.form-control option { background: #0d1f2d; color: var(--text-primary); }
+body.light-mode .form-control { background: #e8f5e9; color: #030a0e; }
+body.light-mode .form-control option { background: #e8f5e9; color: #030a0e; }
+.form-control:focus { outline: none; border-color: var(--accent); }
+
+/* ── Rich Text Editor ── */
+.rich-editor-wrap {
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0d1f2d;
+  transition: border-color 0.3s;
+}
+.rich-editor-wrap:focus-within { border-color: var(--accent); }
+body.light-mode .rich-editor-wrap { background: #e8f5e9; border-color: rgba(0,0,0,0.12); }
+
+.rich-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.03);
+}
+body.light-mode .rich-toolbar { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.08); }
+
+.toolbar-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  line-height: 1;
+  font-family: Georgia, serif;
+}
+.toolbar-btn:hover, .toolbar-btn.active {
+  background: rgba(0,212,255,0.12);
+  border-color: var(--accent2);
+  color: var(--accent2);
+}
+.toolbar-divider { width: 1px; height: 18px; background: var(--glass-border); margin: 0 4px; }
+
+.emoji-trigger-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1rem;
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.emoji-trigger-btn:hover { background: rgba(0,212,255,0.12); border-color: var(--accent2); }
+
+.rich-content-area {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px 16px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  outline: none;
+  box-sizing: border-box;
+  word-break: break-word;
+}
+.rich-content-area:empty:before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+body.light-mode .rich-content-area { color: #030a0e; }
+
+/* ── Shared Emoji Picker ── */
+#sharedEmojiPicker {
+  position: fixed;
+  z-index: 9999;
+  background: #0d1f2d;
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 16px;
+  width: 320px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: 360px;
+}
+#sharedEmojiPicker.open { display: flex; }
+body.light-mode #sharedEmojiPicker {
+  background: #fff;
+  border-color: rgba(0,0,0,0.12);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+}
+
+.ep-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.03);
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.ep-tabs::-webkit-scrollbar { display: none; }
+.ep-tab {
+  flex: 0 0 auto;
+  padding: 8px 10px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  opacity: 0.55;
+}
+.ep-tab:hover { opacity: 1; }
+.ep-tab.active { border-color: var(--accent2); opacity: 1; }
+
+.ep-body {
+  overflow-y: auto;
+  padding: 8px 10px 10px;
+  flex: 1;
+  scrollbar-width: thin;
+}
+.ep-body::-webkit-scrollbar { width: 4px; }
+.ep-body::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+
+.ep-section { display: none; }
+.ep-section.active { display: block; }
+
+.ep-cat-label {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 6px 2px 4px;
+}
+.ep-grid { display: flex; flex-wrap: wrap; gap: 1px; }
+.ep-emoji {
+  font-size: 1.3rem;
+  padding: 4px 5px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.12s;
+  line-height: 1;
+  user-select: none;
+}
+.ep-emoji:hover { background: rgba(0,212,255,0.13); transform: scale(1.25); }
+
+/* ── Cards ── */
+.announcement-card {
+  background: #0d1f2d;
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 16px;
+  padding: 16px;
+  margin: 0 16px 12px;
+  transition: all 0.3s;
+}
+.announcement-card:hover { background: var(--bg-card-hover); transform: translateX(4px); }
+.announcement-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.announcement-title { font-weight: 700; font-size: 1rem; }
+.announcement-meta { font-size: 0.7rem; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+.announcement-content { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 12px; line-height: 1.5; }
+.announcement-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; }
+.priority-badge { padding: 2px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: 600; }
+.priority-urgent { background: rgba(239,68,68,0.15);  color: var(--danger); }
+.priority-high   { background: rgba(245,158,11,0.15); color: var(--warning); }
+.priority-medium { background: rgba(0,212,255,0.15);  color: var(--accent2); }
+.priority-low    { background: rgba(148,163,184,0.15); color: var(--text-secondary); }
+.purok-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: rgba(0,255,135,0.12);
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.action-btn {
+  background: transparent;
+  border: 1px solid rgba(0,255,135,0.15);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.action-btn:hover        { border-color: var(--accent); color: var(--accent); }
+.action-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+.edit-form {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 12px;
+  display: none;
+}
+.emoji-pick-btn:hover, .emoji-pick-btn.selected {
+  border-color: var(--accent) !important;
+  background: rgba(0,255,135,0.1) !important;
+  transform: scale(1.15);
+}
+body.light-mode .emoji-pick-btn { background: rgba(0,0,0,0.04) !important; border-color: rgba(0,0,0,0.1) !important; }
+body.light-mode .announcement-form,
+body.light-mode .announcement-card { background: #ffffff; border-color: rgba(0,0,0,0.1); }
+body.light-mode .announcement-content,
+body.light-mode .announcement-title { color: #030a0e; }
+body.light-mode .action-btn { color: #030a0e; border-color: rgba(0,0,0,0.15); }
+body.light-mode .edit-form { background: rgba(0,0,0,0.03); }
+
+/* ============================================
+   LIGHT MODE OVERRIDES FOR MANAGE ANNOUNCEMENTS PAGE
+   Black Borders & Visible Text
+   ============================================ */
+
+body.light-mode {
+  --text-muted: #4a5568;
+  --text-secondary: #2d3748;
+}
+
+/* All containers get BLACK borders */
+body.light-mode .announcement-form,
+body.light-mode .announcement-card,
+body.light-mode .rich-editor-wrap,
+body.light-mode .purok-dropdown,
+body.light-mode .modal,
+body.light-mode .emoji-pick-btn {
+  border: 1.5px solid #000000 !important;
+}
+
+/* Header and sub text */
+body.light-mode .page-sub {
+  color: #4a5568 !important;
+}
+
+/* Form styles */
+body.light-mode .announcement-form {
+  background: #ffffff;
+  border-color: #000000 !important;
+}
+
+body.light-mode .form-label {
+  color: #4a5568;
+}
+
+body.light-mode .form-control {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+  color: #1a202c;
+}
+
+body.light-mode .form-control:focus {
+  border-color: #059669 !important;
+  outline: none;
+}
+
+body.light-mode .form-control::placeholder {
+  color: #9ca3af;
+}
+
+/* Select dropdown options */
+body.light-mode select.form-control option {
+  background: #ffffff;
+  color: #1a202c;
+}
+
+/* Rich text editor */
+body.light-mode .rich-editor-wrap {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+}
+
+body.light-mode .rich-editor-wrap:focus-within {
+  border-color: #059669 !important;
+}
+
+body.light-mode .rich-toolbar {
+  background: #e8e8e8;
+  border-bottom-color: #000000;
+}
+
+body.light-mode .toolbar-btn {
+  color: #4a5568;
+  border-color: transparent;
+}
+
+body.light-mode .toolbar-btn:hover,
+body.light-mode .toolbar-btn.active {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: #000000;
+  color: #059669;
+}
+
+body.light-mode .toolbar-divider {
+  background: #000000;
+}
+
+body.light-mode .emoji-trigger-btn {
+  color: #4a5568;
+  border-color: transparent;
+}
+
+body.light-mode .emoji-trigger-btn:hover {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: #000000;
+  color: #059669;
+}
+
+body.light-mode .rich-content-area {
+  color: #1a202c;
+}
+
+body.light-mode .rich-content-area[data-placeholder]:empty:before {
+  color: #9ca3af;
+}
+
+/* Emoji picker buttons */
+body.light-mode .emoji-pick-btn {
+  background: #f5f5f5 !important;
+  border-color: #000000 !important;
+}
+
+body.light-mode .emoji-pick-btn:hover,
+body.light-mode .emoji-pick-btn.selected {
+  background: rgba(5, 150, 105, 0.1) !important;
+  border-color: #000000 !important;
+  transform: scale(1.05);
+}
+
+/* Announcement cards */
+body.light-mode .announcement-card {
+  background: #ffffff;
+  border-color: #000000 !important;
+}
+
+body.light-mode .announcement-card:hover {
+  background: #fafafa;
+}
+
+body.light-mode .announcement-title {
+  color: #1a202c;
+}
+
+body.light-mode .announcement-content {
+  color: #4a5568;
+}
+
+body.light-mode .announcement-meta {
+  color: #4a5568;
+}
+
+/* Priority badges in light mode */
+body.light-mode .priority-urgent {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid #000000;
+  color: #dc2626;
+}
+
+body.light-mode .priority-high {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid #000000;
+  color: #d97706;
+}
+
+body.light-mode .priority-medium {
+  background: rgba(0, 212, 255, 0.15);
+  border: 1px solid #000000;
+  color: #0891b2;
+}
+
+body.light-mode .priority-low {
+  background: rgba(100, 116, 139, 0.15);
+  border: 1px solid #000000;
+  color: #475569;
+}
+
+/* Purok badge */
+body.light-mode .purok-badge {
+  background: rgba(5, 150, 105, 0.1);
+  border: 1px solid #000000;
+  color: #059669;
+}
+
+/* Action buttons */
+body.light-mode .action-btn {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+  color: #4a5568;
+}
+
+body.light-mode .action-btn:hover {
+  background: #ffffff;
+  border-color: #000000 !important;
+  color: #059669;
+}
+
+body.light-mode .action-btn.danger:hover {
+  border-color: #000000 !important;
+  color: #dc2626;
+}
+
+/* Edit form */
+body.light-mode .edit-form {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid #000000;
+  border-radius: 12px;
+}
+
+/* Empty state */
+body.light-mode div[style*="text-align:center"][style*="padding:40px"] {
+  background: #ffffff;
+  border: 1.5px solid #000000 !important;
+  border-radius: 16px;
+}
+
+body.light-mode div[style*="text-align:center"] div[style*="color:var(--text-muted)"] {
+  color: #4a5568 !important;
+}
+
+/* Checkbox styling */
+body.light-mode input[type="checkbox"] {
+  accent-color: #059669;
+}
+
+/* Selected emoji preview */
+body.light-mode #emojiPreview {
+  color: #1a202c;
+}
+
+/* Purok dropdown */
+body.light-mode .purok-dropdown {
+  background: #ffffff;
+  border-color: #000000 !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode .purok-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode .purok-option {
+  color: #1a202c;
+}
+
+body.light-mode .purok-option:hover {
+  background: rgba(5, 150, 105, 0.08);
+  color: #059669;
+}
+
+body.light-mode .purok-option.blank-option {
+  color: #9ca3af;
+  border-bottom-color: #000000;
+}
+
+body.light-mode .purok-no-result {
+  color: #9ca3af;
+}
+
+/* Primary button */
+body.light-mode .btn-primary {
+  background: linear-gradient(135deg, #059669, #0284c7);
+  border: 1.5px solid #000000 !important;
+  color: #ffffff;
+}
+
+body.light-mode .btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* Rich content area focus */
+body.light-mode .rich-editor-wrap:focus-within {
+  border-color: #059669 !important;
+}
+
+/* Keep any text properly visible */
+body.light-mode .text-muted,
+body.light-mode .text-secondary {
+  color: #4a5568 !important;
+}
+/* ===================================================
+   MOBILE RESPONSIVE — admin_announcements.html
+=================================================== */
+@media (max-width: 768px) {
+  .page-header       { padding: 16px 12px 10px; }
+  .page-h1           { font-size: 1.3rem; }
+
+  /* Form: single-column layout */
+  .announcement-form { margin: 0 12px 16px; padding: 14px; }
+  .form-row          { grid-template-columns: 1fr; gap: 0; }
+
+  /* Rich toolbar: allow wrap so buttons don't overflow */
+  .rich-toolbar      { flex-wrap: wrap; padding: 6px 8px; gap: 3px; }
+
+  /* ── Announcement cards ── */
+  .announcement-card { margin: 0 12px 10px; padding: 14px; }
+
+  /* Header: stack title above date on narrow screens */
+  .announcement-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .announcement-title { font-size: 0.95rem; }
+
+  /* Footer: stack badges above buttons */
+  .announcement-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  /* Buttons row: side by side, full row */
+  .announcement-footer > div:last-child {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  .announcement-footer > div:last-child .action-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .announcement-form { margin: 0 8px 14px; padding: 12px; }
+  .announcement-card { margin: 0 8px 10px; }
+
+  /* Toolbar buttons: slightly smaller touch targets */
+  .toolbar-btn       { width: 26px; height: 26px; font-size: 0.78rem; }
+  .emoji-trigger-btn { width: 26px; height: 26px; }
+}
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+  <div class="page-header">
+    <div class="page-h1"><i class="fas fa-bullhorn"></i> Manage Announcements</div>
+    <div class="page-sub">Create and send announcements to residents</div>
+  </div>
+
+  <div class="announcement-form">
+    <h3 style="font-family:'Syne',sans-serif;margin-bottom:16px;">Create New Announcement</h3>
+    <form id="announcementForm" onsubmit="createAnnouncement(event)">
+      {% csrf_token %}
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input type="text" class="form-control" id="title" required maxlength="200">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <select class="form-control" id="priority" required>
+            <option value="" disabled selected>Select priority</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Content</label>
+        <div class="rich-editor-wrap">
+          <div class="rich-toolbar" id="mainToolbar">
+            <button type="button" class="toolbar-btn" title="Bold"      onclick="fmt('bold','mainToolbar')"><b>B</b></button>
+            <button type="button" class="toolbar-btn" title="Italic"    onclick="fmt('italic','mainToolbar')"><i>I</i></button>
+            <button type="button" class="toolbar-btn" title="Underline" onclick="fmt('underline','mainToolbar')" style="text-decoration:underline;">U</button>
+            <div class="toolbar-divider"></div>
+            <button type="button" class="emoji-trigger-btn" title="Add emoji" onclick="openEmojiPicker(this,'contentEditor')"><i class="far fa-smile"></i></button>
+          </div>
+          <div class="rich-content-area"
+               id="contentEditor"
+               contenteditable="true"
+               data-placeholder="Write your announcement here…"
+               oninput="syncContent('contentEditor','content')"
+               onkeyup="updateToolbarState('mainToolbar')"
+               onmouseup="updateToolbarState('mainToolbar')"></div>
+        </div>
+        <textarea id="content" name="content" style="display:none;" required maxlength="1000"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Target Purok (optional)</label>
+          <div class="purok-select-wrap" id="targetPurokWrap" data-include-blank="true" data-blank-label="— All Puroks (Barangay-wide announcement) —">
+            <input type="text" class="form-control purok-search-input" id="targetPurok"
+              placeholder="Search or select purok… (leave blank for all)"
+              autocomplete="off"
+              oninput="filterPurokDropdown('targetPurokWrap')"
+              onfocus="openPurokDropdown('targetPurokWrap')"
+              onblur="closePurokDropdown('targetPurokWrap')">
+            <i class="fas fa-chevron-down purok-chevron"></i>
+            <div class="purok-dropdown" id="targetPurokWrap-dropdown"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emoji</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+            {% for e in emojis %}
+            <button type="button" class="emoji-pick-btn" onclick="pickEmoji('{{ e }}')"
+              style="font-size:1.4rem;background:var(--bg-card);border:1px solid var(--glass-border);border-radius:10px;padding:6px 10px;cursor:pointer;transition:all 0.2s;line-height:1;">
+              {{ e }}
+            </button>
+            {% endfor %}
+          </div>
+          <input type="hidden" id="emoji" value="📢">
+          <div style="margin-top:8px;font-size:0.75rem;color:var(--text-muted);">
+            Selected: <span id="emojiPreview" style="font-size:1.2rem;">📢</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;">
+        <label style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="sendNotification" checked>
+          <span style="font-size:0.85rem;">Send push notification to residents</span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+        <i class="fas fa-paper-plane"></i> Post Announcement
+      </button>
+    </form>
+  </div>
+
+  <div style="padding:0 16px;">
+    <h3 style="font-family:'Syne',sans-serif;margin-bottom:12px;">Recent Announcements</h3>
+    {% for announcement in announcements %}
+    <div class="announcement-card" id="announcement-{{ announcement.id }}">
+      <div class="announcement-header">
+        <div class="announcement-title">{{ announcement.title }}</div>
+        <div class="announcement-meta">{{ announcement.created_at|date:"M d, Y" }}</div>
+      </div>
+      <div class="announcement-content" id="content-{{ announcement.id }}">{{ announcement.content }}</div>
+
+      <div class="edit-form" id="edit-form-{{ announcement.id }}">
+        <input type="text" class="form-control" id="edit-title-{{ announcement.id }}" value="{{ announcement.title }}" style="margin-bottom:10px;">
+        <div class="rich-editor-wrap" style="margin-bottom:10px;">
+          <div class="rich-toolbar" id="editToolbar-{{ announcement.id }}">
+            <button type="button" class="toolbar-btn" onclick="fmt('bold','editToolbar-{{ announcement.id }}')"><b>B</b></button>
+            <button type="button" class="toolbar-btn" onclick="fmt('italic','editToolbar-{{ announcement.id }}')"><i>I</i></button>
+            <button type="button" class="toolbar-btn" onclick="fmt('underline','editToolbar-{{ announcement.id }}')" style="text-decoration:underline;">U</button>
+            <div class="toolbar-divider"></div>
+            <button type="button" class="emoji-trigger-btn" onclick="openEmojiPicker(this,'edit-content-editor-{{ announcement.id }}')"><i class="far fa-smile"></i></button>
+          </div>
+          <div class="rich-content-area"
+               id="edit-content-editor-{{ announcement.id }}"
+               contenteditable="true"
+               data-placeholder="Edit content…"
+               oninput="syncContent('edit-content-editor-{{ announcement.id }}','edit-content-{{ announcement.id }}')"
+               onkeyup="updateToolbarState('editToolbar-{{ announcement.id }}')"
+               onmouseup="updateToolbarState('editToolbar-{{ announcement.id }}')">{{ announcement.content }}</div>
+        </div>
+        <textarea id="edit-content-{{ announcement.id }}" style="display:none;">{{ announcement.content }}</textarea>
+        <select class="form-control" id="edit-priority-{{ announcement.id }}" style="margin-bottom:10px;">
+          <option value="low"    {% if announcement.priority == 'low'    %}selected{% endif %}>Low</option>
+          <option value="medium" {% if announcement.priority == 'medium' %}selected{% endif %}>Medium</option>
+          <option value="high"   {% if announcement.priority == 'high'   %}selected{% endif %}>High</option>
+          <option value="urgent" {% if announcement.priority == 'urgent' %}selected{% endif %}>Urgent</option>
+        </select>
+        <div style="display:flex;gap:8px;">
+          <button class="action-btn" onclick="saveEdit({{ announcement.id }})"><i class="fas fa-save"></i> Save</button>
+          <button class="action-btn" onclick="cancelEdit({{ announcement.id }})"><i class="fas fa-times"></i> Cancel</button>
+        </div>
+      </div>
+
+      <div class="announcement-footer">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="priority-badge priority-{{ announcement.priority }}">{{ announcement.priority|title }}</span>
+          {% if announcement.target_barangay %}
+          <span class="purok-badge"><i class="fas fa-map-marker-alt" style="font-size:0.6rem;"></i> {{ announcement.target_barangay|title }}</span>
+          {% else %}
+          <span class="purok-badge"><i class="fas fa-globe" style="font-size:0.6rem;"></i> All Puroks</span>
+          {% endif %}
+          <span style="color:var(--text-muted);">
+            {% if announcement.send_notification %}
+            <i class="fas fa-bell" style="color:var(--accent);"></i> Notification sent
+            {% endif %}
+          </span>
+        </div>
+        <div>
+          <button class="action-btn" onclick="showEditForm({{ announcement.id }})"><i class="fas fa-edit"></i> Edit</button>
+          <button class="action-btn danger" onclick="deleteAnnouncement({{ announcement.id }})"><i class="fas fa-trash"></i> Delete</button>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div style="text-align:center;padding:40px;background:var(--bg-card);border-radius:16px;">
+      <div style="font-size:3rem;margin-bottom:10px;"><i class="fas fa-bullhorn"></i></div>
+      <div style="color:var(--text-muted);">No announcements yet. Create your first announcement!</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ══ Shared Emoji Picker — single instance, repositioned on open ══ -->
+<div id="sharedEmojiPicker">
+  <div class="ep-tabs" id="epTabs">
+    <div class="ep-tab active" data-sec="smileys" title="Smileys & Emotion">😀</div>
+    <div class="ep-tab" data-sec="people"  title="People & Body">🧑</div>
+    <div class="ep-tab" data-sec="hearts"  title="Hearts & Love">❤️</div>
+    <div class="ep-tab" data-sec="hands"   title="Hands & Gestures">👍</div>
+    <div class="ep-tab" data-sec="animals" title="Animals & Nature">🐶</div>
+    <div class="ep-tab" data-sec="food"    title="Food & Drink">🍕</div>
+    <div class="ep-tab" data-sec="travel"  title="Travel & Places">✈️</div>
+    <div class="ep-tab" data-sec="nature"  title="Nature & Weather">🌿</div>
+    <div class="ep-tab" data-sec="objects" title="Objects">💡</div>
+    <div class="ep-tab" data-sec="symbols" title="Symbols">🔴</div>
+    <div class="ep-tab" data-sec="alerts"  title="Alerts & Announcements">📢</div>
+  </div>
+  <div class="ep-body">
+
+    <!-- ① Smileys & Emotion -->
+    <div class="ep-section active" id="sec-smileys">
+      <div class="ep-grid">
+        <span class="ep-emoji">😀</span><span class="ep-emoji">😃</span><span class="ep-emoji">😄</span><span class="ep-emoji">😁</span><span class="ep-emoji">😆</span><span class="ep-emoji">😅</span>
+        <span class="ep-emoji">🤣</span><span class="ep-emoji">😂</span><span class="ep-emoji">🙂</span><span class="ep-emoji">😉</span><span class="ep-emoji">😊</span><span class="ep-emoji">😇</span>
+        <span class="ep-emoji">🥰</span><span class="ep-emoji">😍</span><span class="ep-emoji">🤩</span><span class="ep-emoji">😘</span><span class="ep-emoji">😗</span><span class="ep-emoji">😙</span>
+        <span class="ep-emoji">🥲</span><span class="ep-emoji">😚</span><span class="ep-emoji">😋</span><span class="ep-emoji">😛</span><span class="ep-emoji">😜</span><span class="ep-emoji">🤪</span>
+        <span class="ep-emoji">😝</span><span class="ep-emoji">🤑</span><span class="ep-emoji">🤗</span><span class="ep-emoji">🤭</span><span class="ep-emoji">🫢</span><span class="ep-emoji">🫣</span>
+        <span class="ep-emoji">🤫</span><span class="ep-emoji">🤔</span><span class="ep-emoji">🫠</span><span class="ep-emoji">🤐</span><span class="ep-emoji">🤨</span><span class="ep-emoji">😐</span>
+        <span class="ep-emoji">😑</span><span class="ep-emoji">😶</span><span class="ep-emoji">😏</span><span class="ep-emoji">😒</span><span class="ep-emoji">🙄</span><span class="ep-emoji">😬</span>
+        <span class="ep-emoji">😮</span><span class="ep-emoji">😲</span><span class="ep-emoji">🥱</span><span class="ep-emoji">😴</span><span class="ep-emoji">🤤</span><span class="ep-emoji">😪</span>
+        <span class="ep-emoji">😵</span><span class="ep-emoji">🤯</span><span class="ep-emoji">🥳</span><span class="ep-emoji">🥸</span><span class="ep-emoji">😎</span><span class="ep-emoji">🤓</span>
+        <span class="ep-emoji">🧐</span><span class="ep-emoji">😕</span><span class="ep-emoji">🫤</span><span class="ep-emoji">😟</span><span class="ep-emoji">🙁</span><span class="ep-emoji">😯</span>
+        <span class="ep-emoji">😦</span><span class="ep-emoji">😧</span><span class="ep-emoji">😨</span><span class="ep-emoji">😰</span><span class="ep-emoji">😥</span><span class="ep-emoji">😢</span>
+        <span class="ep-emoji">😭</span><span class="ep-emoji">😱</span><span class="ep-emoji">😖</span><span class="ep-emoji">😣</span><span class="ep-emoji">😞</span><span class="ep-emoji">😓</span>
+        <span class="ep-emoji">😩</span><span class="ep-emoji">😫</span><span class="ep-emoji">🥺</span><span class="ep-emoji">😤</span><span class="ep-emoji">😠</span><span class="ep-emoji">😡</span>
+        <span class="ep-emoji">🤬</span><span class="ep-emoji">🤮</span><span class="ep-emoji">🤢</span><span class="ep-emoji">🤧</span><span class="ep-emoji">🥵</span><span class="ep-emoji">🥶</span>
+        <span class="ep-emoji">😷</span><span class="ep-emoji">🤒</span><span class="ep-emoji">🤕</span><span class="ep-emoji">🤠</span><span class="ep-emoji">🥴</span><span class="ep-emoji">😈</span>
+        <span class="ep-emoji">👿</span><span class="ep-emoji">💀</span><span class="ep-emoji">👻</span><span class="ep-emoji">🤡</span><span class="ep-emoji">💩</span><span class="ep-emoji">🫨</span>
+      </div>
+    </div>
+
+    <!-- ② People & Body -->
+    <div class="ep-section" id="sec-people">
+      <div class="ep-grid">
+        <span class="ep-emoji">👶</span><span class="ep-emoji">🧒</span><span class="ep-emoji">👦</span><span class="ep-emoji">👧</span><span class="ep-emoji">🧑</span><span class="ep-emoji">👱</span>
+        <span class="ep-emoji">👨</span><span class="ep-emoji">👩</span><span class="ep-emoji">🧓</span><span class="ep-emoji">👴</span><span class="ep-emoji">👵</span><span class="ep-emoji">🧕</span>
+        <span class="ep-emoji">👮</span><span class="ep-emoji">👷</span><span class="ep-emoji">💂</span><span class="ep-emoji">🕵️</span><span class="ep-emoji">👨‍⚕️</span><span class="ep-emoji">👩‍⚕️</span>
+        <span class="ep-emoji">👨‍🍳</span><span class="ep-emoji">👩‍🍳</span><span class="ep-emoji">👨‍🏫</span><span class="ep-emoji">👩‍🏫</span><span class="ep-emoji">👨‍🌾</span><span class="ep-emoji">👩‍🌾</span>
+        <span class="ep-emoji">👨‍🚒</span><span class="ep-emoji">👩‍🚒</span><span class="ep-emoji">👨‍✈️</span><span class="ep-emoji">👩‍✈️</span><span class="ep-emoji">🧑‍💼</span><span class="ep-emoji">🧑‍🔧</span>
+        <span class="ep-emoji">🧑‍🔬</span><span class="ep-emoji">🧑‍🎤</span><span class="ep-emoji">🧑‍🎨</span><span class="ep-emoji">🧑‍💻</span><span class="ep-emoji">🧑‍🚀</span><span class="ep-emoji">🦸</span>
+        <span class="ep-emoji">🦹</span><span class="ep-emoji">🧙</span><span class="ep-emoji">🧝</span><span class="ep-emoji">🧛</span><span class="ep-emoji">🧟</span><span class="ep-emoji">🧞</span>
+        <span class="ep-emoji">🧜</span><span class="ep-emoji">🧚</span><span class="ep-emoji">🤴</span><span class="ep-emoji">👸</span><span class="ep-emoji">🤵</span><span class="ep-emoji">👰</span>
+        <span class="ep-emoji">🤰</span><span class="ep-emoji">🤱</span><span class="ep-emoji">👼</span><span class="ep-emoji">🎅</span><span class="ep-emoji">🤶</span><span class="ep-emoji">🫂</span>
+        <span class="ep-emoji">👥</span><span class="ep-emoji">👤</span><span class="ep-emoji">🧠</span><span class="ep-emoji">👁️</span><span class="ep-emoji">🦷</span><span class="ep-emoji">🦴</span>
+      </div>
+    </div>
+
+    <!-- ③ Hearts & Love -->
+    <div class="ep-section" id="sec-hearts">
+      <div class="ep-grid">
+        <span class="ep-emoji">❤️</span><span class="ep-emoji">🧡</span><span class="ep-emoji">💛</span><span class="ep-emoji">💚</span><span class="ep-emoji">💙</span><span class="ep-emoji">💜</span>
+        <span class="ep-emoji">🖤</span><span class="ep-emoji">🤍</span><span class="ep-emoji">🤎</span><span class="ep-emoji">❤️‍🔥</span><span class="ep-emoji">❤️‍🩹</span><span class="ep-emoji">💔</span>
+        <span class="ep-emoji">💕</span><span class="ep-emoji">💞</span><span class="ep-emoji">💓</span><span class="ep-emoji">💗</span><span class="ep-emoji">💖</span><span class="ep-emoji">💘</span>
+        <span class="ep-emoji">💝</span><span class="ep-emoji">💟</span><span class="ep-emoji">♥️</span><span class="ep-emoji">🫀</span><span class="ep-emoji">😻</span><span class="ep-emoji">💌</span>
+        <span class="ep-emoji">💋</span><span class="ep-emoji">🥰</span><span class="ep-emoji">😍</span><span class="ep-emoji">🌹</span><span class="ep-emoji">💐</span><span class="ep-emoji">🎁</span>
+      </div>
+    </div>
+
+    <!-- ④ Hands & Gestures -->
+    <div class="ep-section" id="sec-hands">
+      <div class="ep-grid">
+        <span class="ep-emoji">👍</span><span class="ep-emoji">👎</span><span class="ep-emoji">👌</span><span class="ep-emoji">🤌</span><span class="ep-emoji">🤏</span><span class="ep-emoji">✌️</span>
+        <span class="ep-emoji">🤞</span><span class="ep-emoji">🫰</span><span class="ep-emoji">🤟</span><span class="ep-emoji">🤘</span><span class="ep-emoji">🤙</span><span class="ep-emoji">👈</span>
+        <span class="ep-emoji">👉</span><span class="ep-emoji">👆</span><span class="ep-emoji">👇</span><span class="ep-emoji">☝️</span><span class="ep-emoji">🫵</span><span class="ep-emoji">👋</span>
+        <span class="ep-emoji">🤚</span><span class="ep-emoji">🖐️</span><span class="ep-emoji">✋</span><span class="ep-emoji">🖖</span><span class="ep-emoji">🫱</span><span class="ep-emoji">🫲</span>
+        <span class="ep-emoji">🤝</span><span class="ep-emoji">🙏</span><span class="ep-emoji">✍️</span><span class="ep-emoji">💅</span><span class="ep-emoji">🤳</span><span class="ep-emoji">💪</span>
+        <span class="ep-emoji">🦾</span><span class="ep-emoji">🦵</span><span class="ep-emoji">🦶</span><span class="ep-emoji">👏</span><span class="ep-emoji">🙌</span><span class="ep-emoji">🤲</span>
+        <span class="ep-emoji">👐</span><span class="ep-emoji">🫶</span><span class="ep-emoji">🤜</span><span class="ep-emoji">🤛</span><span class="ep-emoji">✊</span><span class="ep-emoji">👊</span>
+      </div>
+    </div>
+
+    <!-- ⑤ Animals & Nature -->
+    <div class="ep-section" id="sec-animals">
+      <div class="ep-grid">
+        <span class="ep-emoji">🐶</span><span class="ep-emoji">🐱</span><span class="ep-emoji">🐭</span><span class="ep-emoji">🐹</span><span class="ep-emoji">🐰</span><span class="ep-emoji">🦊</span>
+        <span class="ep-emoji">🐻</span><span class="ep-emoji">🐼</span><span class="ep-emoji">🐨</span><span class="ep-emoji">🐯</span><span class="ep-emoji">🦁</span><span class="ep-emoji">🐮</span>
+        <span class="ep-emoji">🐷</span><span class="ep-emoji">🐸</span><span class="ep-emoji">🐵</span><span class="ep-emoji">🐔</span><span class="ep-emoji">🐧</span><span class="ep-emoji">🐦</span>
+        <span class="ep-emoji">🦅</span><span class="ep-emoji">🦆</span><span class="ep-emoji">🦉</span><span class="ep-emoji">🦋</span><span class="ep-emoji">🐝</span><span class="ep-emoji">🪲</span>
+        <span class="ep-emoji">🐛</span><span class="ep-emoji">🦀</span><span class="ep-emoji">🐠</span><span class="ep-emoji">🐬</span><span class="ep-emoji">🦈</span><span class="ep-emoji">🐊</span>
+        <span class="ep-emoji">🐢</span><span class="ep-emoji">🦎</span><span class="ep-emoji">🐍</span><span class="ep-emoji">🐘</span><span class="ep-emoji">🦏</span><span class="ep-emoji">🦛</span>
+        <span class="ep-emoji">🦒</span><span class="ep-emoji">🦓</span><span class="ep-emoji">🐑</span><span class="ep-emoji">🐐</span><span class="ep-emoji">🦌</span><span class="ep-emoji">🐾</span>
+      </div>
+    </div>
+
+    <!-- ⑥ Food & Drink -->
+    <div class="ep-section" id="sec-food">
+      <div class="ep-grid">
+        <span class="ep-emoji">🍎</span><span class="ep-emoji">🍊</span><span class="ep-emoji">🍋</span><span class="ep-emoji">🍇</span><span class="ep-emoji">🍓</span><span class="ep-emoji">🫐</span>
+        <span class="ep-emoji">🍌</span><span class="ep-emoji">🍉</span><span class="ep-emoji">🍑</span><span class="ep-emoji">🥭</span><span class="ep-emoji">🍍</span><span class="ep-emoji">🥝</span>
+        <span class="ep-emoji">🥑</span><span class="ep-emoji">🥦</span><span class="ep-emoji">🌽</span><span class="ep-emoji">🌶️</span><span class="ep-emoji">🧄</span><span class="ep-emoji">🧅</span>
+        <span class="ep-emoji">🍔</span><span class="ep-emoji">🍕</span><span class="ep-emoji">🌮</span><span class="ep-emoji">🌯</span><span class="ep-emoji">🥗</span><span class="ep-emoji">🍜</span>
+        <span class="ep-emoji">🍣</span><span class="ep-emoji">🍱</span><span class="ep-emoji">🍛</span><span class="ep-emoji">🍖</span><span class="ep-emoji">🍗</span><span class="ep-emoji">🥩</span>
+        <span class="ep-emoji">🍳</span><span class="ep-emoji">🥞</span><span class="ep-emoji">🧇</span><span class="ep-emoji">🧆</span><span class="ep-emoji">🧀</span><span class="ep-emoji">🥪</span>
+        <span class="ep-emoji">🍰</span><span class="ep-emoji">🎂</span><span class="ep-emoji">🍩</span><span class="ep-emoji">🍪</span><span class="ep-emoji">🍫</span><span class="ep-emoji">🍬</span>
+        <span class="ep-emoji">🧋</span><span class="ep-emoji">☕</span><span class="ep-emoji">🍵</span><span class="ep-emoji">🧃</span><span class="ep-emoji">🍺</span><span class="ep-emoji">🥤</span>
+      </div>
+    </div>
+
+    <!-- ⑦ Travel & Places -->
+    <div class="ep-section" id="sec-travel">
+      <div class="ep-grid">
+        <span class="ep-emoji">✈️</span><span class="ep-emoji">🚀</span><span class="ep-emoji">🛸</span><span class="ep-emoji">🚁</span><span class="ep-emoji">🛳️</span><span class="ep-emoji">⛵</span>
+        <span class="ep-emoji">🚂</span><span class="ep-emoji">🚌</span><span class="ep-emoji">🚎</span><span class="ep-emoji">🚗</span><span class="ep-emoji">🚕</span><span class="ep-emoji">🚙</span>
+        <span class="ep-emoji">🚚</span><span class="ep-emoji">🚛</span><span class="ep-emoji">🛻</span><span class="ep-emoji">🏍️</span><span class="ep-emoji">🛵</span><span class="ep-emoji">🚲</span>
+        <span class="ep-emoji">🚦</span><span class="ep-emoji">🚧</span><span class="ep-emoji">🏠</span><span class="ep-emoji">🏡</span><span class="ep-emoji">🏢</span><span class="ep-emoji">🏥</span>
+        <span class="ep-emoji">🏫</span><span class="ep-emoji">🏘️</span><span class="ep-emoji">🌉</span><span class="ep-emoji">🌆</span><span class="ep-emoji">🌇</span><span class="ep-emoji">🏕️</span>
+        <span class="ep-emoji">🏖️</span><span class="ep-emoji">🏔️</span><span class="ep-emoji">🗺️</span><span class="ep-emoji">🧭</span><span class="ep-emoji">📍</span><span class="ep-emoji">📌</span>
+        <span class="ep-emoji">🗼</span><span class="ep-emoji">🗽</span><span class="ep-emoji">⛪</span><span class="ep-emoji">🕌</span><span class="ep-emoji">🛕</span><span class="ep-emoji">⛩️</span>
+      </div>
+    </div>
+
+    <!-- ⑧ Nature & Weather -->
+    <div class="ep-section" id="sec-nature">
+      <div class="ep-grid">
+        <span class="ep-emoji">🌿</span><span class="ep-emoji">🌱</span><span class="ep-emoji">🌲</span><span class="ep-emoji">🌳</span><span class="ep-emoji">🌴</span><span class="ep-emoji">🌵</span>
+        <span class="ep-emoji">🎋</span><span class="ep-emoji">🎍</span><span class="ep-emoji">🍀</span><span class="ep-emoji">🌾</span><span class="ep-emoji">🌺</span><span class="ep-emoji">🌸</span>
+        <span class="ep-emoji">🌼</span><span class="ep-emoji">🌻</span><span class="ep-emoji">🌹</span><span class="ep-emoji">🌍</span><span class="ep-emoji">🌎</span><span class="ep-emoji">🌏</span>
+        <span class="ep-emoji">🌊</span><span class="ep-emoji">💧</span><span class="ep-emoji">🌬️</span><span class="ep-emoji">🌀</span><span class="ep-emoji">🌩️</span><span class="ep-emoji">⛈️</span>
+        <span class="ep-emoji">🌧️</span><span class="ep-emoji">🌦️</span><span class="ep-emoji">🌤️</span><span class="ep-emoji">☀️</span><span class="ep-emoji">🌈</span><span class="ep-emoji">❄️</span>
+        <span class="ep-emoji">☃️</span><span class="ep-emoji">⛄</span><span class="ep-emoji">🌙</span><span class="ep-emoji">⭐</span><span class="ep-emoji">🌟</span><span class="ep-emoji">✨</span>
+        <span class="ep-emoji">🌠</span><span class="ep-emoji">🌌</span><span class="ep-emoji">♻️</span><span class="ep-emoji">🌡️</span><span class="ep-emoji">🔥</span><span class="ep-emoji">💥</span>
+      </div>
+    </div>
+
+    <!-- ⑨ Objects -->
+    <div class="ep-section" id="sec-objects">
+      <div class="ep-grid">
+        <span class="ep-emoji">💡</span><span class="ep-emoji">🔦</span><span class="ep-emoji">🕯️</span><span class="ep-emoji">📱</span><span class="ep-emoji">💻</span><span class="ep-emoji">🖥️</span>
+        <span class="ep-emoji">⌨️</span><span class="ep-emoji">🖨️</span><span class="ep-emoji">📷</span><span class="ep-emoji">📞</span><span class="ep-emoji">☎️</span><span class="ep-emoji">🔋</span>
+        <span class="ep-emoji">🔌</span><span class="ep-emoji">💾</span><span class="ep-emoji">📀</span><span class="ep-emoji">🧰</span><span class="ep-emoji">🔧</span><span class="ep-emoji">🔨</span>
+        <span class="ep-emoji">⚙️</span><span class="ep-emoji">🪛</span><span class="ep-emoji">🔑</span><span class="ep-emoji">🗝️</span><span class="ep-emoji">🔐</span><span class="ep-emoji">🔒</span>
+        <span class="ep-emoji">🔓</span><span class="ep-emoji">🏆</span><span class="ep-emoji">🥇</span><span class="ep-emoji">🎖️</span><span class="ep-emoji">🎗️</span><span class="ep-emoji">📅</span>
+        <span class="ep-emoji">📆</span><span class="ep-emoji">🗓️</span><span class="ep-emoji">📝</span><span class="ep-emoji">📋</span><span class="ep-emoji">📊</span><span class="ep-emoji">📈</span>
+        <span class="ep-emoji">📉</span><span class="ep-emoji">🗑️</span><span class="ep-emoji">📦</span><span class="ep-emoji">🧾</span><span class="ep-emoji">💊</span><span class="ep-emoji">🩺</span>
+        <span class="ep-emoji">🚑</span><span class="ep-emoji">🏥</span><span class="ep-emoji">🎵</span><span class="ep-emoji">🎶</span><span class="ep-emoji">🎮</span><span class="ep-emoji">🎲</span>
+      </div>
+    </div>
+
+    <!-- ⑩ Symbols -->
+    <div class="ep-section" id="sec-symbols">
+      <div class="ep-grid">
+        <span class="ep-emoji">✅</span><span class="ep-emoji">❌</span><span class="ep-emoji">❎</span><span class="ep-emoji">🆗</span><span class="ep-emoji">🆕</span><span class="ep-emoji">🆙</span>
+        <span class="ep-emoji">🆒</span><span class="ep-emoji">🆓</span><span class="ep-emoji">🔴</span><span class="ep-emoji">🟠</span><span class="ep-emoji">🟡</span><span class="ep-emoji">🟢</span>
+        <span class="ep-emoji">🔵</span><span class="ep-emoji">🟣</span><span class="ep-emoji">⚫</span><span class="ep-emoji">⚪</span><span class="ep-emoji">🟤</span><span class="ep-emoji">🔶</span>
+        <span class="ep-emoji">🔷</span><span class="ep-emoji">🔸</span><span class="ep-emoji">🔹</span><span class="ep-emoji">▶️</span><span class="ep-emoji">⏩</span><span class="ep-emoji">⏸️</span>
+        <span class="ep-emoji">⏹️</span><span class="ep-emoji">🔁</span><span class="ep-emoji">🔂</span><span class="ep-emoji">🔀</span><span class="ep-emoji">➕</span><span class="ep-emoji">➖</span>
+        <span class="ep-emoji">➗</span><span class="ep-emoji">✖️</span><span class="ep-emoji">♾️</span><span class="ep-emoji">💯</span><span class="ep-emoji">❓</span><span class="ep-emoji">❗</span>
+        <span class="ep-emoji">‼️</span><span class="ep-emoji">⁉️</span><span class="ep-emoji">🔔</span><span class="ep-emoji">🔕</span><span class="ep-emoji">🔇</span><span class="ep-emoji">🔊</span>
+        <span class="ep-emoji">🚫</span><span class="ep-emoji">⛔</span><span class="ep-emoji">🚷</span><span class="ep-emoji">🚯</span><span class="ep-emoji">♻️</span><span class="ep-emoji">✔️</span>
+        <span class="ep-emoji">☑️</span><span class="ep-emoji">🔅</span><span class="ep-emoji">🔆</span><span class="ep-emoji">📶</span><span class="ep-emoji">🔃</span><span class="ep-emoji">💫</span>
+      </div>
+    </div>
+
+    <!-- ⑪ Alerts (ReporTrash-specific) -->
+    <div class="ep-section" id="sec-alerts">
+      <div class="ep-cat-label">📣 Announcements</div>
+      <div class="ep-grid">
+        <span class="ep-emoji">📢</span><span class="ep-emoji">📣</span><span class="ep-emoji">🔔</span><span class="ep-emoji">⚠️</span><span class="ep-emoji">🚨</span><span class="ep-emoji">❗</span>
+        <span class="ep-emoji">🔴</span><span class="ep-emoji">🟡</span><span class="ep-emoji">🟢</span><span class="ep-emoji">🆘</span><span class="ep-emoji">🚧</span><span class="ep-emoji">⛔</span>
+      </div>
+      <div class="ep-cat-label">♻️ Waste & Environment</div>
+      <div class="ep-grid">
+        <span class="ep-emoji">♻️</span><span class="ep-emoji">🗑️</span><span class="ep-emoji">🌿</span><span class="ep-emoji">🌱</span><span class="ep-emoji">🌍</span><span class="ep-emoji">🌊</span>
+        <span class="ep-emoji">🚛</span><span class="ep-emoji">🏘️</span><span class="ep-emoji">💧</span><span class="ep-emoji">🌬️</span><span class="ep-emoji">☀️</span><span class="ep-emoji">🌈</span>
+      </div>
+      <div class="ep-cat-label">✅ Status & Info</div>
+      <div class="ep-grid">
+        <span class="ep-emoji">✅</span><span class="ep-emoji">❌</span><span class="ep-emoji">📅</span><span class="ep-emoji">📍</span><span class="ep-emoji">🕐</span><span class="ep-emoji">💡</span>
+        <span class="ep-emoji">📌</span><span class="ep-emoji">📝</span><span class="ep-emoji">👥</span><span class="ep-emoji">🙏</span><span class="ep-emoji">👍</span><span class="ep-emoji">💪</span>
+      </div>
+    </div>
+
+  </div><!-- /ep-body -->
+</div><!-- /sharedEmojiPicker -->
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ═══════════════════════════════════════════
+   Shared Emoji Picker
+═══════════════════════════════════════════ */
+const picker = document.getElementById('sharedEmojiPicker');
+let pickerTargetEditorId = null;
+let savedRange = null;
+
+// Tab switching
+document.getElementById('epTabs').addEventListener('click', function(e) {
+  const tab = e.target.closest('.ep-tab');
+  if (!tab) return;
+  document.querySelectorAll('.ep-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ep-section').forEach(s => s.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById('sec-' + tab.dataset.sec).classList.add('active');
+});
+
+// Emoji click inside picker
+picker.addEventListener('click', function(e) {
+  const em = e.target.closest('.ep-emoji');
+  if (!em) return;
+  insertEmoji(em.textContent.trim());
+  closePicker();
+});
+
+function openEmojiPicker(triggerBtn, editorId) {
+  pickerTargetEditorId = editorId;
+  saveSelectionFor(editorId);
+
+  // Briefly show to measure
+  picker.style.display = 'flex';
+  const pw = picker.offsetWidth  || 320;
+  const ph = picker.offsetHeight || 360;
+  picker.style.display = '';
+
+  const rect = triggerBtn.getBoundingClientRect();
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  let left = rect.left;
+  let top  = rect.bottom + 6;
+  if (left + pw > vw - 8) left = vw - pw - 8;
+  if (top  + ph > vh - 8) top  = rect.top - ph - 6;
+  if (left < 8) left = 8;
+  if (top  < 8) top  = 8;
+
+  picker.style.left = left + 'px';
+  picker.style.top  = top  + 'px';
+  picker.classList.add('open');
+}
+
+function closePicker() {
+  picker.classList.remove('open');
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#sharedEmojiPicker') && !e.target.closest('.emoji-trigger-btn')) {
+    closePicker();
+  }
+});
+
+function saveSelectionFor(editorId) {
+  const editor = document.getElementById(editorId);
+  if (!editor) return;
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0) {
+    const r = sel.getRangeAt(0);
+    if (editor.contains(r.commonAncestorContainer)) {
+      savedRange = r.cloneRange();
+      return;
+    }
+  }
+  // Default: place at end
+  const r = document.createRange();
+  r.selectNodeContents(editor);
+  r.collapse(false);
+  savedRange = r;
+}
+
+function insertEmoji(emoji) {
+  const editor = document.getElementById(pickerTargetEditorId);
+  if (!editor) return;
+  editor.focus();
+
+  if (savedRange) {
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    const node = document.createTextNode(emoji);
+    range.insertNode(node);
+    range.setStartAfter(node);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    savedRange = range.cloneRange();
+  } else {
+    editor.textContent += emoji;
+  }
+  editor.dispatchEvent(new Event('input'));
+}
+
+// Keep track of selection in any editor
+document.addEventListener('mouseup', e => {
+  const ed = e.target.closest('.rich-content-area');
+  if (ed) { pickerTargetEditorId = ed.id; saveSelectionFor(ed.id); }
+});
+document.addEventListener('keyup', e => {
+  const ed = e.target.closest('.rich-content-area');
+  if (ed) { pickerTargetEditorId = ed.id; saveSelectionFor(ed.id); }
+});
+
+/* ═══════════════════════════════════════════
+   Rich Text Helpers
+═══════════════════════════════════════════ */
+function fmt(command, toolbarId) {
+  const toolbar = document.getElementById(toolbarId);
+  const editor  = toolbar.closest('.rich-editor-wrap').querySelector('.rich-content-area');
+  editor.focus();
+  document.execCommand(command, false, null);
+  updateToolbarState(toolbarId);
+  editor.dispatchEvent(new Event('input'));
+}
+
+function updateToolbarState(toolbarId) {
+  const toolbar = document.getElementById(toolbarId);
+  if (!toolbar) return;
+  const btns = toolbar.querySelectorAll('.toolbar-btn');
+  ['bold','italic','underline'].forEach((cmd, i) => {
+    if (btns[i]) btns[i].classList.toggle('active', document.queryCommandState(cmd));
+  });
+}
+
+function syncContent(editorId, hiddenId) {
+  document.getElementById(hiddenId).value = document.getElementById(editorId).innerHTML;
+}
+
+/* ═══════════════════════════════════════════
+   Announcement Icon Emoji Selector
+═══════════════════════════════════════════ */
+function pickEmoji(e) {
+  document.getElementById('emoji').value = e;
+  document.getElementById('emojiPreview').textContent = e;
+  document.querySelectorAll('.emoji-pick-btn').forEach(btn => btn.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+}
+
+/* ═══════════════════════════════════════════
+   Create Announcement
+═══════════════════════════════════════════ */
+async function createAnnouncement(event) {
+  event.preventDefault();
+  syncContent('contentEditor', 'content');
+
+  const title    = document.getElementById('title').value;
+  const content  = document.getElementById('content').value;
+  const priority = document.getElementById('priority').value;
+  const targetPurokEl = document.getElementById('targetPurok');
+  const targetPurok   = targetPurokEl.dataset.value !== undefined ? targetPurokEl.dataset.value : targetPurokEl.value;
+  const emoji    = document.getElementById('emoji').value;
+  const sendNotification = document.getElementById('sendNotification').checked;
+
+  if (!title || !content || content === '<br>') {
+    showToast('Please fill in all required fields', 'error');
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('content', content);
+  fd.append('priority', priority);
+  fd.append('target_purok', targetPurok);
+  fd.append('emoji', emoji);
+  fd.append('send_notification', sendNotification);
+  fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+
+  const btn = event.submitter;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/dashboard/admin/announcements/create/', {
+      method: 'POST', body: fd,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    if (!res.ok) throw new Error('Network response was not ok');
+    const data = await res.json();
+    if (data.success) {
+      showToast('Announcement posted successfully!', 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showToast(data.error || 'Failed to post announcement', 'error');
+      btn.innerHTML = originalText; btn.disabled = false;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    showToast('Network error. Please try again.', 'error');
+    btn.innerHTML = originalText; btn.disabled = false;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   Edit / Save / Delete
+═══════════════════════════════════════════ */
+function showEditForm(id) { document.getElementById(`edit-form-${id}`).style.display = 'block'; }
+function cancelEdit(id)   { document.getElementById(`edit-form-${id}`).style.display = 'none'; }
+
+async function saveEdit(id) {
+  syncContent(`edit-content-editor-${id}`, `edit-content-${id}`);
+
+  const title    = document.getElementById(`edit-title-${id}`).value;
+  const content  = document.getElementById(`edit-content-${id}`).value;
+  const priority = document.getElementById(`edit-priority-${id}`).value;
+
+  if (!title || !content) { showToast('Please fill in all fields', 'error'); return; }
+
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('content', content);
+  fd.append('priority', priority);
+  fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+
+  const btn = event.target;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`/dashboard/admin/announcements/${id}/edit/`, {
+      method: 'POST', body: fd,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    if (!res.ok) throw new Error('Network response was not ok');
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById(`content-${id}`).innerHTML = content;
+      document.getElementById(`edit-form-${id}`).style.display = 'none';
+      showToast('Announcement updated successfully!', 'success');
+    } else {
+      showToast(data.error || 'Failed to update announcement', 'error');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    showToast('Network error. Please try again.', 'error');
+  } finally {
+    btn.innerHTML = originalText; btn.disabled = false;
+  }
+}
+
+async function deleteAnnouncement(id) {
+  if (!confirm('Are you sure you want to delete this announcement?')) return;
+  const fd = new FormData();
+  fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+  try {
+    const res = await fetch(`/dashboard/admin/announcements/${id}/delete/`, {
+      method: 'POST', body: fd,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    if (!res.ok) throw new Error('Network response was not ok');
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById(`announcement-${id}`).remove();
+      showToast('Announcement deleted', 'success');
+    } else {
+      showToast(data.error || 'Failed to delete announcement', 'error');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    showToast('Network error. Please try again.', 'error');
+  }
+}
+</script>
+
+<style>
+.purok-select-wrap { position: relative; }
+.purok-chevron { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.75rem; pointer-events: none; transition: transform 0.2s; }
+.purok-select-wrap.open .purok-chevron { transform: translateY(-50%) rotate(180deg); }
+.purok-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #0d1f2d; border: 1px solid rgba(0,255,135,0.15); border-radius: 14px; max-height: 220px; overflow-y: auto; z-index: 999; box-shadow: 0 8px 30px rgba(0,0,0,0.3); scrollbar-width: thin; }
+.purok-dropdown::-webkit-scrollbar { width: 4px; }
+.purok-dropdown::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.purok-select-wrap.open .purok-dropdown { display: block; }
+.purok-option { padding: 10px 14px; font-size: 0.85rem; cursor: pointer; transition: background 0.15s; color: var(--text-secondary); text-transform: capitalize; }
+.purok-option:hover { background: rgba(0,255,135,0.08); color: var(--accent); }
+.purok-option.blank-option { color: var(--text-muted); font-style: italic; border-bottom: 1px solid var(--glass-border); font-size: 0.8rem; }
+.purok-no-result { padding: 10px 14px; font-size: 0.82rem; color: var(--text-muted); font-style: italic; }
+/* Light mode overrides for purok dropdown */
+body.light-mode .purok-dropdown { background: #ffffff; border-color: rgba(0,0,0,0.14); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+body.light-mode .purok-dropdown::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); }
+body.light-mode .purok-option { color: #030a0e; }
+body.light-mode .purok-option:hover { background: rgba(5,150,105,0.08); color: #059669; }
+body.light-mode .purok-option.blank-option { color: rgba(3,10,14,0.45); border-bottom-color: rgba(0,0,0,0.1); }
+body.light-mode .purok-no-result { color: rgba(3,10,14,0.45); }
+</style>
+
+<script>
+const PUROK_LIST = ['acaciahan','alum','aratilis','atis','avocado','bayabas','cattleya','centennial','chesnut','chico','durian','duranta','gemelina','golden duranta','ipil-ipil','islam','kalinaw','kasaligan','kawayan','labana','laminusa','lanzones','madasigon','mahogany','malipayon','malunggay','manggahan','mangga-jumao-as','mangga-ravina','masipag','matamis','molave','narra','pagtoo','palmera','panaghiusa','papaya','riverside','rosal','rosas','sambag','sampaguita','san francisco','santol','silangan','star apple','talisay','tambis','tugas','waling-waling','yellowbell'];
+function cap(s){return s.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');}
+function buildPurokDropdown(wrapId){const wrap=document.getElementById(wrapId);if(!wrap)return;const dd=document.getElementById(wrapId+'-dropdown');const includeBlank=wrap.dataset.includeBlank!=='false';const blankLabel=wrap.dataset.blankLabel||'— Leave blank —';dd.innerHTML='';if(includeBlank){const o=document.createElement('div');o.className='purok-option blank-option';o.textContent=blankLabel;o.onmousedown=()=>selectPurok(wrapId,'','',true);dd.appendChild(o);}PUROK_LIST.forEach(p=>{const o=document.createElement('div');o.className='purok-option';o.textContent=cap(p);o.onmousedown=()=>selectPurok(wrapId,p,cap(p),false);dd.appendChild(o);});}
+function filterPurokDropdown(wrapId){const wrap=document.getElementById(wrapId);const input=wrap.querySelector('.purok-search-input');const dd=document.getElementById(wrapId+'-dropdown');const q=input.value.toLowerCase().trim();let any=false;dd.querySelectorAll('.purok-option').forEach(o=>{const m=o.textContent.toLowerCase().includes(q);o.style.display=m?'':'none';if(m)any=true;});let nr=dd.querySelector('.purok-no-result');if(!any){if(!nr){nr=document.createElement('div');nr.className='purok-no-result';dd.appendChild(nr);}nr.textContent='No match for "'+input.value+'"';nr.style.display='';}else if(nr)nr.style.display='none';}
+function openPurokDropdown(wrapId){document.getElementById(wrapId).classList.add('open');filterPurokDropdown(wrapId);}
+function closePurokDropdown(wrapId){setTimeout(()=>{const w=document.getElementById(wrapId);if(w)w.classList.remove('open');},150);}
+function selectPurok(wrapId,value,display,isBlank){const wrap=document.getElementById(wrapId);const input=wrap.querySelector('.purok-search-input');input.value=isBlank?'':display;input.dataset.value=value;wrap.classList.remove('open');}
+document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.purok-select-wrap').forEach(w=>{buildPurokDropdown(w.id);});});
+</script>
+{% endblock %}
