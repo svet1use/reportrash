@@ -4530,22 +4530,19 @@ def user_chat_page(request):
     """User chat page with AI and human support"""
     return render(request, 'waste_management/user_chat.html')
 
-
 from django.http import JsonResponse
 from django.core.management import call_command
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
 import traceback
 
 @csrf_exempt
 def migrate_database(request):
-    """Temporary endpoint to run migrations"""
-    # Only allow in production or with a secret key
     secret = request.GET.get('secret', '')
     if secret != 'migrate_reportrash_2024':
         return JsonResponse({'error': 'Unauthorized'}, status=401)
     
     try:
-        # Run migrations
         call_command('migrate', interactive=False)
         return JsonResponse({'status': 'success', 'message': 'Migrations completed successfully'})
     except Exception as e:
@@ -4554,27 +4551,6 @@ def migrate_database(request):
             'message': str(e),
             'traceback': traceback.format_exc()
         }, status=500)
-
-# Temporary migration endpoint
-from django.core.management import call_command
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-
-@csrf_exempt
-def migrate_database(request):
-    secret = request.GET.get('secret', '')
-    if secret != 'migrate_reportrash_2024':
-        return JsonResponse({'error': 'Unauthorized'}, status=401)
-    
-    try:
-        call_command('migrate', interactive=False)
-        return JsonResponse({'status': 'success', 'message': 'Migrations completed'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-from django.contrib.auth.models import User
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 def create_admin(request):

@@ -4,6 +4,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from waste_management import views
 
+
+
 urlpatterns = [
     # ========== CUSTOM ADMIN ROUTES (BEFORE Django admin) ==========
     path('dashboard/admin-chats/', views.admin_chat_page, name='admin_chat'),
@@ -23,6 +25,7 @@ urlpatterns = [
     path('dashboard/admin/reports/flag/', views.flag_report, name='flag_report'),
     path('dashboard/admin/reports/unflag/', views.unflag_report, name='unflag_report'),
     
+
     # Admin pending users
     path('dashboard/admin/pending-users/', views.admin_pending_users_view, name='admin_pending_users'),
     path('dashboard/admin/users/<int:user_id>/approve/', views.approve_user_view, name='approve_user'),
