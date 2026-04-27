@@ -2,9 +2,105 @@
 {% block title %}Notifications — ReporTrash{% endblock %}
 
 {% block extra_styles %}
+
 /* ============================================
-   NOTIFICATIONS PAGE STYLES
+   MOBILE RESPONSIVE - NOTIFICATIONS
    ============================================ */
+@media (max-width: 768px) {
+  .page-h1 {
+    font-size: 1.3rem;
+  }
+  
+  .filters {
+    padding: 0 12px 16px;
+    gap: 6px;
+  }
+  
+  .filter-chip {
+    padding: 5px 12px;
+    font-size: 0.7rem;
+  }
+  
+  .notification-list {
+    padding: 0 12px;
+  }
+  
+  .notification-item {
+    padding: 12px;
+    gap: 12px;
+  }
+  
+  .notification-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+  
+  .notification-title {
+    font-size: 0.9rem;
+  }
+  
+  .notification-message {
+    font-size: 0.8rem;
+  }
+  
+  .notification-meta {
+    font-size: 0.65rem;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .notification-actions {
+    margin-left: 0;
+  }
+  
+  .notification-btn {
+    padding: 4px 10px;
+    font-size: 0.7rem;
+  }
+  
+  .pagination {
+    gap: 5px;
+    margin-top: 20px;
+  }
+  
+  .pagination-btn {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+  }
+  
+  .empty-state {
+    padding: 40px 16px;
+  }
+  
+  .empty-icon {
+    font-size: 3rem;
+  }
+  
+  .empty-title {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .filters {
+    gap: 4px;
+  }
+  
+  .filter-chip {
+    padding: 4px 8px;
+    font-size: 0.6rem;
+  }
+  
+  .notification-item {
+    flex-direction: column;
+  }
+  
+  .notification-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
 .page-header {
   padding: 20px 16px 12px;
 }
@@ -37,7 +133,6 @@
   gap: 16px;
   align-items: flex-start;
   transition: all 0.3s ease;
-  position: relative;
 }
 
 .notification-item:hover {
@@ -47,8 +142,7 @@
 }
 
 .notification-item.unread {
-  background: rgba(0,255,135,0.03);
-  border-left: 3px solid var(--accent);
+  border-left: 4px solid var(--accent);
 }
 
 .notification-icon {
@@ -64,7 +158,6 @@
 
 .notification-content {
   flex: 1;
-  min-width: 0;
 }
 
 .notification-title {
@@ -75,18 +168,16 @@
 
 .notification-message {
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   margin-bottom: 8px;
   line-height: 1.5;
-  word-break: break-word;
 }
 
 .notification-meta {
   display: flex;
   gap: 16px;
   align-items: center;
-  flex-wrap: wrap;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   font-family: 'DM Mono', monospace;
 }
@@ -95,22 +186,12 @@
   padding: 2px 8px;
   border-radius: 12px;
   background: rgba(255,255,255,0.05);
-  font-size: 0.65rem;
-}
-
-.unread-dot {
-  width: 8px;
-  height: 8px;
-  background: var(--accent);
-  border-radius: 50%;
-  display: inline-block;
-  margin-left: 8px;
 }
 
 .notification-actions {
   display: flex;
   gap: 8px;
-  flex-shrink: 0;
+  margin-left: 16px;
 }
 
 .notification-btn {
@@ -119,7 +200,7 @@
   border-radius: 8px;
   padding: 6px 12px;
   color: var(--text-secondary);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.3s ease;
   text-decoration: none;
@@ -134,13 +215,18 @@
   background: rgba(0,255,135,0.05);
 }
 
+.notification-btn.danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(239,68,68,0.05);
+}
+
 .filters {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 20px;
   justify-content: center;
-  padding: 0 16px;
 }
 
 .filter-chip {
@@ -172,8 +258,6 @@
   justify-content: center;
   gap: 8px;
   margin-top: 30px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
 }
 
 .pagination-btn {
@@ -226,21 +310,19 @@
   margin-bottom: 24px;
 }
 
-/* Announcement expand styles */
+/* ── Announcement inline expand ── */
 .announcement-expand {
   overflow: hidden;
   max-height: 0;
   transition: max-height 0.35s ease, opacity 0.3s ease;
   opacity: 0;
-  margin-top: 12px;
   padding-left: 64px;
 }
-
 .announcement-expand.open {
   max-height: 600px;
   opacity: 1;
+  padding-bottom: 12px;
 }
-
 .announcement-expand-inner {
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(0,255,135,0.12);
@@ -252,158 +334,280 @@
   white-space: pre-wrap;
   word-break: break-word;
 }
-
 .expand-hint {
   font-size: 0.68rem;
   color: var(--accent);
   font-family: 'DM Mono', monospace;
-  margin-top: 8px;
+  margin-top: 4px;
   display: flex;
   align-items: center;
   gap: 4px;
   opacity: 0.7;
-  cursor: pointer;
 }
-
 .expand-chevron {
   transition: transform 0.3s ease;
   display: inline-block;
   font-size: 0.6rem;
 }
-
-.expand-chevron.open {
-  transform: rotate(180deg);
-}
-
-.priority-badge {
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.65rem;
-  font-weight: 600;
-}
-
-.priority-urgent {
-  background: rgba(239,68,68,0.15);
-  color: #ef4444;
-}
-
-.priority-high {
-  background: rgba(245,158,11,0.15);
-  color: #f59e0b;
-}
-
-.priority-medium {
-  background: rgba(0,212,255,0.15);
-  color: #00d4ff;
-}
-
-.priority-low {
-  background: rgba(148,163,184,0.15);
-  color: #94a3b8;
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .page-h1 {
-    font-size: 1.3rem;
-  }
-  
-  .filters {
-    gap: 6px;
-  }
-  
-  .filter-chip {
-    padding: 5px 12px;
-    font-size: 0.7rem;
-  }
-  
-  .notification-item {
-    padding: 14px;
-    gap: 12px;
-  }
-  
-  .notification-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-  }
-  
-  .notification-title {
-    font-size: 0.9rem;
-  }
-  
-  .notification-message {
-    font-size: 0.8rem;
-  }
-  
-  .announcement-expand {
-    padding-left: 52px;
-  }
-}
-
+.expand-chevron.open { transform: rotate(180deg); }
 @media (max-width: 480px) {
-  .notification-item {
-    flex-wrap: wrap;
-  }
-  
-  .notification-actions {
-    width: 100%;
-    justify-content: flex-end;
-    margin-top: 8px;
-    margin-left: 52px;
-  }
-  
-  .announcement-expand {
-    padding-left: 0;
-    margin-top: 12px;
-  }
-  
-  .announcement-expand.open {
-    padding-left: 0;
-  }
-  
-  .expand-hint {
-    font-size: 0.6rem;
-  }
+  .announcement-expand, .announcement-expand.open { padding-left: 0; }
+}
+/* ============================================
+   LIGHT MODE OVERRIDES FOR NOTIFICATIONS PAGE
+   Black Borders & Visible Text
+   ============================================ */
+
+/* All notification containers get BLACK borders */
+body.light-mode .notification-item,
+body.light-mode .empty-state,
+body.light-mode .filter-chip,
+body.light-mode .pagination-btn,
+body.light-mode .modal,
+body.light-mode .announcement-expand-inner {
+  border-color: #000000 !important;
+  border-width: 1.5px !important;
 }
 
-/* Light Mode */
 body.light-mode .notification-item {
   background: #ffffff;
 }
 
-body.light-mode .notification-item.unread {
-  background: rgba(5, 150, 105, 0.05);
-}
-
 body.light-mode .notification-item:hover {
   background: #fafafa;
+  border-color: #000000 !important;
 }
 
+body.light-mode .notification-item.unread {
+  border-left-color: #059669 !important;
+  border-left-width: 4px !important;
+}
+
+body.light-mode .empty-state {
+  background: #ffffff;
+}
+
+/* Filter chips */
 body.light-mode .filter-chip {
   background: #f5f5f5;
+  border-color: #000000 !important;
+  color: #4a5568;
+}
+
+body.light-mode .filter-chip:hover {
+  border-color: #000000 !important;
+  color: #059669;
+  background: rgba(5, 150, 105, 0.05);
 }
 
 body.light-mode .filter-chip.active {
   background: #059669;
-  color: white;
+  border-color: #000000 !important;
+  color: #ffffff;
 }
 
+/* Pagination buttons */
+body.light-mode .pagination-btn {
+  background: #f5f5f5;
+  border-color: #000000 !important;
+  color: #4a5568;
+}
+
+body.light-mode .pagination-btn:hover {
+  border-color: #000000 !important;
+  color: #059669;
+  background: rgba(5, 150, 105, 0.05);
+}
+
+body.light-mode .pagination-btn.active {
+  background: #059669;
+  border-color: #000000 !important;
+  color: #ffffff;
+}
+
+/* Notification buttons */
+body.light-mode .notification-btn {
+  border-color: #000000 !important;
+  color: #4a5568;
+  background: #f5f5f5;
+}
+
+body.light-mode .notification-btn:hover {
+  border-color: #000000 !important;
+  color: #059669;
+  background: rgba(5, 150, 105, 0.05);
+}
+
+body.light-mode .notification-btn.danger:hover {
+  border-color: #000000 !important;
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.05);
+}
+
+/* Announcement expand inner */
 body.light-mode .announcement-expand-inner {
   background: #f5f5f5;
-  border-color: #e2e8f0;
+  border-color: #000000 !important;
+  color: #1a202c;
 }
 
-body.light-mode .notification-type {
-  background: rgba(0,0,0,0.05);
+/* Modal */
+body.light-mode .modal {
+  background: #ffffff;
+  border-color: #000000 !important;
+}
+
+body.light-mode .modal .btn-glass {
+  border-color: #000000 !important;
+  background: #f5f5f5;
+  color: #4a5568;
+}
+
+body.light-mode .modal .btn-glass:hover {
+  background: #e5e5e5;
+  border-color: #000000 !important;
+  color: #059669;
+}
+
+/* All text becomes BLACK for visibility */
+body.light-mode .page-sub,
+body.light-mode .notification-message,
+body.light-mode .notification-meta,
+body.light-mode .notification-type,
+body.light-mode .empty-sub,
+body.light-mode .expand-hint,
+body.light-mode .priority-badge,
+body.light-mode .modal div[style*="color: var(--text-muted)"],
+body.light-mode .modal div[style*="color: var(--text-secondary)"] {
+  color: #4a5568 !important;
+}
+
+/* Notification title stays darker */
+body.light-mode .notification-title {
+  color: #1a202c !important;
+}
+
+/* Empty state */
+body.light-mode .empty-icon {
+  opacity: 0.3;
+  color: #4a5568;
+}
+
+body.light-mode .empty-title {
+  color: #1a202c;
+}
+
+/* Priority badges */
+body.light-mode .priority-badge.priority-urgent {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+body.light-mode .priority-badge.priority-high {
+  background: rgba(217, 119, 6, 0.1);
+  color: #d97706;
+}
+
+body.light-mode .priority-badge.priority-medium {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+body.light-mode .priority-badge.priority-low {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+
+/* Notification icons in light mode */
+body.light-mode .notification-icon[style*="background:rgba(0,255,135,0.15)"] {
+  background: rgba(5, 150, 105, 0.1) !important;
+}
+
+body.light-mode .notification-icon[style*="background:rgba(0,212,255,0.15)"] {
+  background: rgba(2, 132, 199, 0.1) !important;
+}
+
+body.light-mode .notification-icon[style*="background:rgba(239,68,68,0.15)"] {
+  background: rgba(220, 38, 38, 0.1) !important;
+}
+
+body.light-mode .notification-icon[style*="background:rgba(168,85,247,0.15)"] {
+  background: rgba(147, 51, 234, 0.1) !important;
+}
+
+body.light-mode .notification-icon[style*="background:rgba(245,158,11,0.15)"] {
+  background: rgba(217, 119, 6, 0.1) !important;
+}
+
+/* Keep colored icons */
+body.light-mode .notification-icon i.fa-bullhorn {
+  color: #059669 !important;
+}
+
+body.light-mode .notification-icon i.fa-clipboard-check {
+  color: #0284c7 !important;
+}
+
+body.light-mode .notification-icon i.fa-heart {
+  color: #dc2626 !important;
+}
+
+body.light-mode .notification-icon i.fa-reply {
+  color: #059669 !important;
+}
+
+body.light-mode .notification-icon i.fa-star {
+  color: #d97706 !important;
+}
+
+body.light-mode .notification-icon i.fa-at {
+  color: #0284c7 !important;
+}
+
+body.light-mode .notification-icon i.fa-user-tag {
+  color: #9333ea !important;
+}
+
+/* Unread indicator */
+body.light-mode .notification-meta span[style*="color:var(--accent)"] {
+  color: #059669 !important;
+}
+
+/* Expand hint */
+body.light-mode .expand-hint {
+  color: #059669 !important;
+}
+
+/* Modal body content */
+body.light-mode .modal div[style*="background:rgba(255,255,255,0.04)"] {
+  background: #f5f5f5 !important;
+  border-color: #000000 !important;
+  color: #1a202c !important;
 }
 {% endblock %}
 
 {% block content %}
+
+<!-- Notification Detail Modal -->
+<div class="modal-overlay" id="notifModal">
+  <div class="modal" style="max-width:560px; padding:28px;">
+    <div class="modal-handle"></div>
+    <div id="notifModalBody"></div>
+    <div style="display:flex; gap:10px; margin-top:22px;">
+      <button class="btn btn-glass" onclick="closeNotifModal()" style="flex:1; justify-content:center;">
+        <i class="fas fa-times"></i> Close
+      </button>
+      <button class="btn btn-primary" id="notifMarkReadBtn" style="flex:1; justify-content:center; display:none;" onclick="markAsReadFromModal()">
+        <i class="fas fa-check"></i> Mark as Read
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="page-wrap">
   <div class="page-header">
     <div class="page-h1"><i class="fas fa-bell"></i> Notifications</div>
-    <div class="page-sub">Stay updated with your latest activities</div>
+    <div class="page-sub">View all your notifications</div>
   </div>
 
   <div class="filters">
@@ -412,96 +616,91 @@ body.light-mode .notification-type {
     <a href="?filter=announcement" class="filter-chip {% if filter == 'announcement' %}active{% endif %}">Announcements</a>
     <a href="?filter=report" class="filter-chip {% if filter == 'report' %}active{% endif %}">Reports</a>
     <a href="?filter=level_up" class="filter-chip {% if filter == 'level_up' %}active{% endif %}">Level Ups</a>
-    <a href="?filter=like" class="filter-chip {% if filter == 'like' %}active{% endif %}">Likes</a>
-    <a href="?filter=reply" class="filter-chip {% if filter == 'reply' %}active{% endif %}">Replies</a>
+    <a href="?filter=like" class="filter-chip {% if filter == 'like' %}active{% endif %}"><i class="fas fa-heart"></i> Likes</a>
+    <a href="?filter=reply" class="filter-chip {% if filter == 'reply' %}active{% endif %}"><i class="fas fa-reply"></i> Replies</a>
+    <a href="?filter=share" class="filter-chip {% if filter == 'share' %}active{% endif %}"><i class="fas fa-share-alt"></i> Shares</a>
+    <a href="?filter=mention" class="filter-chip {% if filter == 'mention' %}active{% endif %}"><i class="fas fa-at"></i> Mentions</a>
+    <a href="?filter=tag" class="filter-chip {% if filter == 'tag' %}active{% endif %}"><i class="fas fa-user-tag"></i> Tags</a>
   </div>
 
   <div class="notification-list">
     {% for notification in notifications %}
-    <div class="notification-item {% if not notification.is_read %}unread{% endif %}" 
-         data-id="{{ notification.id }}"
-         data-read="{{ notification.is_read|yesno:'true,false' }}">
-      
-      <!-- Icon based on type -->
-      <div class="notification-icon" style="
-        {% if notification.notification_type == 'announcement' %}background:rgba(0,255,135,0.15); color:var(--accent);
-        {% elif notification.notification_type == 'report' %}background:rgba(0,212,255,0.15); color:var(--accent2);
-        {% elif notification.notification_type == 'level_up' %}background:rgba(245,158,11,0.15); color:var(--warning);
-        {% elif notification.notification_type == 'like' %}background:rgba(239,68,68,0.15); color:#ef4444;
-        {% elif notification.notification_type == 'reply' %}background:rgba(0,255,135,0.15); color:var(--accent);
-        {% elif notification.notification_type == 'mention' %}background:rgba(0,212,255,0.15); color:var(--accent2);
-        {% elif notification.notification_type == 'tag' %}background:rgba(168,85,247,0.15); color:var(--accent4);
-        {% else %}background:rgba(148,163,184,0.15); color:var(--text-muted);{% endif %}">
-        <i class="fas 
-          {% if notification.notification_type == 'announcement' %}fa-bullhorn
-          {% elif notification.notification_type == 'report' %}fa-clipboard-list
-          {% elif notification.notification_type == 'level_up' %}fa-star
-          {% elif notification.notification_type == 'like' %}fa-heart
-          {% elif notification.notification_type == 'reply' %}fa-reply
-          {% elif notification.notification_type == 'mention' %}fa-at
-          {% elif notification.notification_type == 'tag' %}fa-user-tag
-          {% else %}fa-bell{% endif %}"></i>
-      </div>
-      
-      <!-- Content -->
-      <div class="notification-content">
-        <div class="notification-title">
-          {{ notification.title }}
-          {% if not notification.is_read %}<span class="unread-dot"></span>{% endif %}
+
+    {# ── Announcement: inline-expand card ── #}
+    {% if notification.notification_type == 'announcement' %}
+    <div class="notification-item {% if not notification.is_read %}unread{% endif %}"
+      style="cursor:pointer; flex-direction:column; align-items:stretch;"
+      id="notif-{{ notification.id }}"
+      onclick="toggleAnnouncement({{ notification.id }}, {% if not notification.is_read %}false{% else %}true{% endif %})">
+      <div style="display:flex; gap:16px; align-items:flex-start;">
+        <div class="notification-icon" style="background:rgba(0,255,135,0.15); color:var(--accent); flex-shrink:0;">
+          <i class="fas fa-bullhorn"></i>
         </div>
-        <div class="notification-message">{{ notification.message|truncatechars:120|safe }}</div>
-        <div class="notification-meta">
-          <span><i class="far fa-clock"></i> {{ notification.created_at|timesince }} ago</span>
-          <span class="notification-type">{{ notification.get_notification_type_display }}</span>
-          {% if notification.notification_type == 'announcement' and notification.announcement %}
-            <span class="priority-badge priority-{{ notification.announcement.priority }}">
+        <div class="notification-content" style="flex:1;">
+          <div class="notification-title">{{ notification.title }}</div>
+          <div class="notification-message">{{ notification.message|safe }}</div>
+          <div class="notification-meta">
+            <span><i class="far fa-clock"></i> {{ notification.created_at|timesince }} ago</span>
+            {% if notification.announcement %}
+            <span class="priority-badge priority-{{ notification.announcement.priority }}" style="padding:2px 8px; border-radius:12px; font-size:0.65rem; font-weight:600;">
               {{ notification.announcement.priority|title }}
             </span>
-          {% endif %}
-        </div>
-        
-        <!-- Expand hint for announcements -->
-        {% if notification.notification_type == 'announcement' %}
-        <div class="expand-hint" onclick="event.stopPropagation(); toggleAnnouncement({{ notification.id }})">
-          <i class="fas fa-chevron-down expand-chevron" id="chevron-{{ notification.id }}"></i>
-          <span>Read full announcement</span>
-        </div>
-        <div class="announcement-expand" id="expand-{{ notification.id }}">
-          <div class="announcement-expand-inner">
-            {% if notification.announcement %}
-              {% if notification.announcement.emoji %}<span style="font-size:1.2rem; margin-right:6px;">{{ notification.announcement.emoji }}</span>{% endif %}
-              {{ notification.announcement.content|safe }}
-              {% if notification.announcement.target_barangay %}
-              <div style="margin-top:12px; font-size:0.75rem; opacity:0.7;">
-                <i class="fas fa-map-marker-alt"></i> Target: {{ notification.announcement.target_barangay }}
-              </div>
-              {% endif %}
-            {% else %}
-              {{ notification.message|safe }}
+            {% endif %}
+            {% if not notification.is_read %}
+              <span style="color:var(--accent);">● Unread</span>
             {% endif %}
           </div>
+          <div class="expand-hint" id="hint-{{ notification.id }}">
+            <i class="fas fa-chevron-down expand-chevron" id="chevron-{{ notification.id }}"></i> Tap to read full announcement
+          </div>
         </div>
-        {% endif %}
+        <div onclick="event.stopPropagation()">
+          {% if not notification.is_read %}
+          <button class="notification-btn" onclick="markAsRead({{ notification.id }})">
+            <i class="fas fa-check"></i> Mark read
+          </button>
+          {% endif %}
+        </div>
       </div>
-      
-      <!-- Actions -->
-      <div class="notification-actions" onclick="event.stopPropagation()">
-        {% if notification.notification_type == 'announcement' %}
-          <!-- No action button for announcements, use expand instead -->
-        {% elif notification.notification_type == 'report' %}
-          <button class="notification-btn" onclick="viewReport({{ notification.id }}, {{ notification.related_report.id|default:'null' }})">
-            <i class="fas fa-eye"></i> View
-          </button>
-        {% elif notification.notification_type in 'like,reply,mention,tag' %}
-          <button class="notification-btn" onclick="viewCommunity({{ notification.id }}, {{ notification.related_post.id|default:'null' }})">
-            <i class="fas fa-comment"></i> View
-          </button>
-        {% else %}
-          <button class="notification-btn" onclick="viewDetails({{ notification.id }}, '{{ notification.title|escapejs }}', '{{ notification.message|escapejs }}', '{{ notification.created_at|date:'F d, Y g:i A' }}')">
-            <i class="fas fa-eye"></i> View
-          </button>
-        {% endif %}
-        
+      {# Inline expandable content #}
+      <div class="announcement-expand" id="expand-{{ notification.id }}">
+        <div class="announcement-expand-inner">
+          {% if notification.announcement %}
+            {% if notification.announcement.emoji %}<span style="font-size:1.2rem; margin-right:6px;">{{ notification.announcement.emoji }}</span>{% endif %}
+            {{ notification.announcement.content|safe }}
+            {% if notification.announcement.target_barangay %}
+            <div style="margin-top:12px; font-size:0.75rem; color:var(--text-muted); font-family:'DM Mono',monospace;">
+              <i class="fas fa-map-marker-alt"></i> For: {{ notification.announcement.target_barangay }}
+            </div>
+            {% endif %}
+          {% else %}
+            {{ notification.message }}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# ── Report update: redirect to report detail ── #}
+    {% elif notification.notification_type == 'report' %}
+    <div class="notification-item {% if not notification.is_read %}unread{% endif %}"
+      style="cursor:pointer;"
+      data-id="{{ notification.id }}"
+      data-read="{% if notification.is_read %}true{% else %}false{% endif %}"
+      {% if notification.related_report %}data-report-id="{{ notification.related_report.id }}"{% endif %}
+      onclick="goToReport(this)">
+      <div class="notification-icon" style="background:rgba(0,212,255,0.15); color:var(--accent2);">
+        <i class="fas fa-clipboard-check"></i>
+      </div>
+      <div class="notification-content">
+        <div class="notification-title">{{ notification.title }}</div>
+        <div class="notification-message">{{ notification.message|safe }}</div>
+        <div class="notification-meta">
+          <span><i class="far fa-clock"></i> {{ notification.created_at|timesince }} ago</span>
+          <span class="notification-type">Report Update</span>
+          {% if not notification.is_read %}<span style="color:var(--accent);">● Unread</span>{% endif %}
+        </div>
+      </div>
+      <div onclick="event.stopPropagation()">
         {% if not notification.is_read %}
         <button class="notification-btn" onclick="markAsRead({{ notification.id }})">
           <i class="fas fa-check"></i> Mark read
@@ -509,159 +708,289 @@ body.light-mode .notification-type {
         {% endif %}
       </div>
     </div>
+
+    {# ── Community (like / reply / share / mention / tag): redirect to post ── #}
+    {% elif notification.notification_type in 'like,reply,share,mention,tag' %}
+    <div class="notification-item {% if not notification.is_read %}unread{% endif %}"
+      style="cursor:pointer;"
+      data-id="{{ notification.id }}"
+      data-type="{{ notification.notification_type }}"
+      data-read="{% if notification.is_read %}true{% else %}false{% endif %}"
+      {% if notification.related_post %}data-post-id="{{ notification.related_post.id }}"{% endif %}
+      onclick="goCommunity(this)">
+      <div class="notification-icon" style="background:
+        {% if notification.notification_type == 'like' %}rgba(239,68,68,0.15); color:#ef4444;
+        {% elif notification.notification_type == 'reply' %}rgba(0,255,135,0.15); color:var(--accent);
+        {% elif notification.notification_type == 'mention' %}rgba(0,212,255,0.15); color:var(--accent2);
+        {% elif notification.notification_type == 'tag' %}rgba(168,85,247,0.15); color:var(--accent4);
+        {% else %}rgba(168,85,247,0.15); color:var(--accent4);{% endif %}">
+        <i class="fas {% if notification.notification_type == 'like' %}fa-heart{% elif notification.notification_type == 'reply' %}fa-reply{% elif notification.notification_type == 'mention' %}fa-at{% elif notification.notification_type == 'tag' %}fa-user-tag{% else %}fa-share-alt{% endif %}"></i>
+      </div>
+      <div class="notification-content">
+        <div class="notification-title">{{ notification.title }}</div>
+        <div class="notification-message">{{ notification.message|safe }}</div>
+        <div class="notification-meta">
+          <span><i class="far fa-clock"></i> {{ notification.created_at|timesince }} ago</span>
+          <span class="notification-type">
+            {% if notification.notification_type == 'like' %}❤️ Like
+            {% elif notification.notification_type == 'reply' %}💬 Reply
+            {% elif notification.notification_type == 'mention' %}@ Mention
+            {% elif notification.notification_type == 'tag' %}🏷️ Tag
+            {% else %}🔗 Share{% endif %}
+          </span>
+          {% if not notification.is_read %}<span style="color:var(--accent);">● Unread</span>{% endif %}
+        </div>
+      </div>
+      <div onclick="event.stopPropagation()">
+        {% if not notification.is_read %}
+        <button class="notification-btn" onclick="markAsRead({{ notification.id }})">
+          <i class="fas fa-check"></i> Mark read
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {# ── Default (level_up, system, etc.) ── #}
+    {% else %}
+    <div class="notification-item {% if not notification.is_read %}unread{% endif %}"
+      style="cursor:pointer;"
+      data-id="{{ notification.id }}"
+      data-type="{{ notification.notification_type }}"
+      data-title="{{ notification.title|escapejs }}"
+      data-message-id="notif-msg-{{ notification.id }}"
+      data-date="{{ notification.created_at|date:'F d, Y g:i A' }}"
+      data-read="{% if notification.is_read %}true{% else %}false{% endif %}"
+      onclick="openNotifModal(this)">
+      <template id="notif-msg-{{ notification.id }}">{{ notification.message }}</template>
+      <div class="notification-icon" style="background:rgba(245,158,11,0.15); color:var(--warning);">
+        <i class="fas {% if notification.notification_type == 'level_up' %}fa-star{% else %}fa-info-circle{% endif %}"></i>
+      </div>
+      <div class="notification-content">
+        <div class="notification-title">{{ notification.title }}</div>
+        <div class="notification-message">{{ notification.message|safe }}</div>
+        <div class="notification-meta">
+          <span><i class="far fa-clock"></i> {{ notification.created_at|timesince }} ago</span>
+          <span class="notification-type">{{ notification.notification_type|title }}</span>
+          {% if not notification.is_read %}<span style="color:var(--accent);">● Unread</span>{% endif %}
+        </div>
+      </div>
+      <div onclick="event.stopPropagation()">
+        {% if not notification.is_read %}
+        <button class="notification-btn" onclick="markAsRead({{ notification.id }})">
+          <i class="fas fa-check"></i> Mark read
+        </button>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
     {% empty %}
     <div class="empty-state">
       <div class="empty-icon"><i class="far fa-bell-slash"></i></div>
       <div class="empty-title">No notifications</div>
       <div class="empty-sub">
-        {% if filter != 'all' and filter %}
+        {% if filter != 'all' %}
           No notifications match the selected filter.
         {% else %}
           You don't have any notifications yet.
-          When you submit reports or receive updates, they'll appear here.
         {% endif %}
       </div>
-      {% if filter != 'all' and filter %}
+      {% if filter != 'all' %}
       <a href="?filter=all" class="btn btn-glass">Clear filter</a>
       {% endif %}
     </div>
     {% endfor %}
 
-    <!-- Pagination -->
     {% if has_other_pages %}
     <div class="pagination">
       {% if notifications.has_previous %}
-      <a href="?page=1&filter={{ filter }}" class="pagination-btn"><i class="fas fa-angle-double-left"></i></a>
-      <a href="?page={{ notifications.previous_page_number }}&filter={{ filter }}" class="pagination-btn"><i class="fas fa-angle-left"></i></a>
+      <a href="?page=1&filter={{ filter }}" class="pagination-btn">First</a>
+      <a href="?page={{ notifications.previous_page_number }}&filter={{ filter }}" class="pagination-btn">Previous</a>
       {% endif %}
 
-      <span class="pagination-btn active">{{ notifications.number }}</span>
+      {% for num in notifications.paginator.page_range %}
+        {% if notifications.number == num %}
+          <span class="pagination-btn active">{{ num }}</span>
+        {% elif num > notifications.number|add:'-3' and num < notifications.number|add:'3' %}
+          <a href="?page={{ num }}&filter={{ filter }}" class="pagination-btn">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
 
       {% if notifications.has_next %}
-      <a href="?page={{ notifications.next_page_number }}&filter={{ filter }}" class="pagination-btn"><i class="fas fa-angle-right"></i></a>
-      <a href="?page={{ notifications.paginator.num_pages }}&filter={{ filter }}" class="pagination-btn"><i class="fas fa-angle-double-right"></i></a>
+      <a href="?page={{ notifications.next_page_number }}&filter={{ filter }}" class="pagination-btn">Next</a>
+      <a href="?page={{ notifications.paginator.num_pages }}&filter={{ filter }}" class="pagination-btn">Last</a>
       {% endif %}
     </div>
     {% endif %}
-  </div>
-</div>
-
-<!-- Notification Details Modal -->
-<div class="modal-overlay" id="notifDetailModal">
-  <div class="modal" style="max-width:500px; padding:24px;">
-    <div class="modal-handle"></div>
-    <div id="modalContent"></div>
-    <button class="btn btn-glass" onclick="closeDetailModal()" style="width:100%; margin-top:16px;">
-      <i class="fas fa-times"></i> Close
-    </button>
   </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-function getCookie(name) {
-  let value = `; ${document.cookie}`;
-  let parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-}
 
-function showToast(msg, type) {
-  const toastContainer = document.getElementById('toastContainer');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.innerHTML = `<span>${msg}</span>`;
-  toastContainer.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
+  // ── Announcement: toggle inline expand ──
+  function toggleAnnouncement(id, isRead) {
+    const expand  = document.getElementById(`expand-${id}`);
+    const chevron = document.getElementById(`chevron-${id}`);
+    const hint    = document.getElementById(`hint-${id}`);
+    const card    = document.getElementById(`notif-${id}`);
 
-async function markAsRead(id) {
-  try {
-    const response = await fetch(`/notifications/${id}/mark-read/`, {
+    const opening = !expand.classList.contains('open');
+    expand.classList.toggle('open');
+    chevron.classList.toggle('open');
+
+    if (opening) {
+      if (hint) hint.style.display = 'none';
+      card.classList.remove('unread');
+      if (!isRead) _markRead(id);
+    } else {
+      if (hint) hint.style.display = 'flex';
+    }
+  }
+
+  // ── Report: go directly to the report detail page ──
+  function goToReport(el) {
+    const id      = el.dataset.id;
+    const reportId = el.dataset.reportId;
+    if (el.dataset.read !== 'true') _markRead(id);
+    window.location.href = reportId ? `/report/${reportId}/` : '/history/';
+  }
+
+  // ── Community (like/reply/share): go directly to the post ──
+  function goCommunity(el) {
+    const id     = el.dataset.id;
+    const postId = el.dataset.postId;
+    if (el.dataset.read !== 'true') _markRead(id);
+    window.location.href = postId ? `/community/#post-${postId}` : '/community/';
+  }
+
+  // ── Default modal (level_up, system, etc.) ──
+  let _currentNotifId = null;
+
+  function openNotifModal(el) {
+    const d = el.dataset;
+    _currentNotifId = d.id;
+    const isRead = d.read === 'true';
+
+    // Read HTML content from <template> to preserve bold/italic/underline
+    const msgTemplate = document.getElementById(d.messageId);
+    const msgHTML = msgTemplate ? msgTemplate.innerHTML : d.message || '';
+
+    document.getElementById('notifModalBody').innerHTML = `
+      <div style="display:flex; align-items:center; gap:14px; margin-bottom:20px;">
+        <div style="width:56px; height:56px; border-radius:16px; flex-shrink:0;
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:1.6rem; background:rgba(245,158,11,0.15); color:var(--warning);">
+          <i class="fas ${d.type === 'level_up' ? 'fa-star' : 'fa-info-circle'}"></i>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:800; word-break:break-word;">
+            ${d.title}
+          </div>
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04); border:1px solid var(--glass-border);
+                  border-radius:16px; padding:20px; font-size:0.95rem; line-height:1.8;
+                  color:var(--text-secondary); white-space:pre-line; word-break:break-word;">
+        ${msgHTML}
+      </div>
+      <div style="margin-top:14px; font-size:0.75rem; color:var(--text-muted); font-family:'DM Mono',monospace;">
+        <i class="far fa-calendar-alt"></i> ${d.date}
+        ${!isRead ? '<span style="margin-left:8px; color:var(--accent);">● Unread</span>' : ''}
+      </div>`;
+
+    document.getElementById('notifMarkReadBtn').style.display = isRead ? 'none' : 'flex';
+    document.getElementById('notifModal').classList.add('open');
+    if (!isRead) setTimeout(() => _markRead(d.id), 800);
+  }
+
+  function closeNotifModal() {
+    document.getElementById('notifModal').classList.remove('open');
+    _currentNotifId = null;
+  }
+
+  document.getElementById('notifModal').addEventListener('click', function(e) {
+    if (e.target === this) closeNotifModal();
+  });
+
+  function markAsReadFromModal() {
+    if (_currentNotifId) _markRead(_currentNotifId);
+    closeNotifModal();
+  }
+
+  // ── Core mark-read helper ──
+  function _markRead(id) {
+    fetch(`/notifications/${id}/mark-read/`, {
       method: 'POST',
       headers: { 'X-CSRFToken': getCookie('csrftoken') }
-    });
-    const data = await response.json();
-    if (data.success) {
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) return;
+      // Remove unread styling from any card that carries this id
+      const card = document.getElementById(`notif-${id}`);
+      if (card) card.classList.remove('unread');
       const item = document.querySelector(`.notification-item[data-id="${id}"]`);
       if (item) {
         item.classList.remove('unread');
-        const dot = item.querySelector('.unread-dot');
-        if (dot) dot.remove();
+        item.dataset.read = 'true';
       }
-      showToast('Marked as read', 'success');
-    }
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
-
-function toggleAnnouncement(id) {
-  const expand = document.getElementById(`expand-${id}`);
-  const chevron = document.getElementById(`chevron-${id}`);
-  const hint = expand.previousElementSibling;
-  
-  expand.classList.toggle('open');
-  if (chevron) chevron.classList.toggle('open');
-  
-  // Auto-mark as read when expanded
-  const item = document.querySelector(`.notification-item[data-id="${id}"]`);
-  if (item && item.classList.contains('unread')) {
-    markAsRead(id);
-  }
-}
-
-function viewReport(id, reportId) {
-  if (reportId) {
-    markAsRead(id);
-    window.location.href = `/report/${reportId}/`;
-  } else {
-    window.location.href = '/history/';
-  }
-}
-
-function viewCommunity(id, postId) {
-  markAsRead(id);
-  if (postId) {
-    window.location.href = `/community/#post-${postId}`;
-  } else {
-    window.location.href = '/community/';
-  }
-}
-
-function viewDetails(id, title, message, date) {
-  markAsRead(id);
-  const modal = document.getElementById('notifDetailModal');
-  const content = document.getElementById('modalContent');
-  content.innerHTML = `
-    <div style="text-align:center;">
-      <div style="width:50px;height:50px;border-radius:50%;background:rgba(0,255,135,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-        <i class="fas fa-bell" style="color:var(--accent);font-size:1.3rem;"></i>
-      </div>
-      <h3 style="font-family:'Syne',sans-serif;margin-bottom:8px;">${title}</h3>
-      <p style="color:var(--text-secondary);margin-bottom:12px;">${message}</p>
-      <p style="font-size:0.7rem;color:var(--text-muted);"><i class="far fa-clock"></i> ${date}</p>
-    </div>
-  `;
-  modal.classList.add('open');
-}
-
-function closeDetailModal() {
-  document.getElementById('notifDetailModal').classList.remove('open');
-}
-
-// Close modal when clicking outside
-document.getElementById('notifDetailModal')?.addEventListener('click', function(e) {
-  if (e.target === this) closeDetailModal();
-});
-
-// Mark all as read
-document.querySelectorAll('.notification-btn').forEach(btn => {
-  if (btn.innerText.includes('Mark read')) {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
+      const dot = (card || item)?.querySelector('.notification-meta span[style*="var(--accent)"]');
+      if (dot) dot.remove();
     });
   }
-});
+
+  function markAsRead(id) { _markRead(id); showToast('Marked as read', 'success'); }
+
+  function markAllAsRead() {
+    fetch('/notifications/mark-all-read/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    })
+    .then(r => r.json())
+    .then(data => { if (data.success) location.reload(); });
+  }
+
+  // Check for new notifications and play sound
+let lastNotificationCount = {{ unread_notifications_count|default:0 }};
+
+function checkNewNotifications() {
+    fetch('/api/notifications/unread-count/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.count > lastNotificationCount) {
+                // New notification arrived!
+                playNotificationSound();
+                
+                // Optional: Show browser notification
+                if (Notification.permission === 'granted') {
+                    const diff = data.count - lastNotificationCount;
+                    new Notification('ReporTrash', {
+                        body: `You have ${diff} new notification${diff > 1 ? 's' : ''}`,
+                        icon: '/static/images/logo.png'
+                    });
+                }
+            }
+            lastNotificationCount = data.count;
+        })
+        .catch(err => console.log('Error:', err));
+}
+
+// Request notification permission
+function requestNotifPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+}
+
+// Check every 10 seconds for new notifications
+setInterval(checkNewNotifications, 10000);
+
+// Check immediately on page load
+setTimeout(checkNewNotifications, 1000);
+
+// Request permission
+requestNotifPermission();
 </script>
 {% endblock %}

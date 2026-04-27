@@ -942,58 +942,6 @@ body.light-mode .nav-item.nav-report.active .nav-icon-wrap i {
 body.light-mode .nav-item.nav-report.active .nav-label {
   color: #059669 !important;
 }
-
-/* Notification Dropdown Styles */
-.notif-item {
-  transition: background 0.2s ease;
-}
-
-.notif-item:hover {
-  background: rgba(255,255,255,0.03) !important;
-}
-
-.notif-dropdown {
-  z-index: 1050;
-}
-
-.notif-dropdown button:hover {
-  background: rgba(255,255,255,0.05);
-}
-
-.unread-count-badge {
-  background: rgba(0,255,135,0.15);
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.7rem;
-  color: var(--accent);
-}
-
-/* Light mode notification dropdown */
-body.light-mode .notif-item {
-  border-bottom-color: rgba(0,0,0,0.08) !important;
-}
-
-body.light-mode .notif-item:hover {
-  background: rgba(0,0,0,0.03) !important;
-}
-
-body.light-mode .notif-dropdown {
-  background: #ffffff;
-  border-color: #000000 !important;
-}
-
-body.light-mode .notif-dropdown button {
-  color: #1a202c;
-}
-
-body.light-mode .notif-dropdown button:hover {
-  background: #f5f5f5;
-}
-
-body.light-mode .unread-count-badge {
-  background: rgba(5, 150, 105, 0.1);
-  color: #059669;
-}
 </style>
 </head>
 <body>
@@ -1122,89 +1070,72 @@ body.light-mode .unread-count-badge {
 
   {% endif %}
 {% endif %}
-<!-- Notification Dropdown Modal - Clean Version -->
-<div class="modal-overlay" id="notifModal">
-  <div class="modal notif-modal" style="max-width: 480px; max-height: 80vh; overflow-y: auto;">
-    <div class="modal-handle"></div>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-      <h3 style="font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700;">
-        <i class="fas fa-bell"></i> Notifications
-      </h3>
-      <div style="display: flex; gap: 12px; align-items: center;">
-        <button onclick="markAllNotificationsRead()" class="notif-mark-all-btn" style="background: none; border: none; color: var(--accent); cursor: pointer; font-size: 0.7rem; font-family: 'DM Mono', monospace;">
-          <i class="fas fa-check-double"></i> Mark all read
-        </button>
-        <span class="unread-count-badge" style="background: rgba(0,255,135,0.15); padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; color: var(--accent);">
-          {{ unread_notifications_count }} unread
-        </span>
-      </div>
+
+  <div class="modal-overlay" id="notifModal">
+    <div class="modal notif-modal">
+  <div class="modal-handle"></div>
+  <div style="font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+    <span><i class="fas fa-bell"></i> Notifications</span>
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <button onclick="markAllNotificationsRead()" style="background: none; border: none; color: var(--accent); cursor: pointer; font-size: 0.7rem; font-family: 'DM Mono', monospace;">
+        <i class="fas fa-check-double"></i> Mark all read
+      </button>
+      <span id="unreadCount" style="font-size:0.7rem;background:rgba(0,255,135,0.1);padding:4px 8px;border-radius:20px;">{{ unread_notifications_count }}</span>
     </div>
-    
-    <div id="notifList" style="max-height: 400px; overflow-y: auto;">
-      {% for notification in notifications %}
-      <div class="notif-item" 
-           data-id="{{ notification.id }}" 
-           data-url="{% if notification.url %}{{ notification.url }}{% elif notification.notification_type == 'report' %}/history/{% elif notification.notification_type == 'announcement' %}/announcements/{% elif notification.notification_type in 'like,reply,mention,tag' %}/community/{% else %}/notifications/{% endif %}"
-           style="padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: background 0.2s; {% if not notification.is_read %}background: rgba(0,255,135,0.05);{% endif %}">
-        
-        <div style="display: flex; gap: 12px; align-items: flex-start;">
-          <!-- Icon -->
-          <div class="notif-icon" style="width: 36px; height: 36px; min-width: 36px; border-radius: 50%; background: rgba(0,255,135,0.15); display: flex; align-items: center; justify-content: center;">
-            <i class="fas {% if notification.notification_type == 'announcement' %}fa-bullhorn{% elif notification.notification_type == 'report' %}fa-clipboard-list{% elif notification.notification_type == 'level_up' %}fa-star{% elif notification.notification_type == 'like' %}fa-heart{% elif notification.notification_type == 'reply' %}fa-reply{% elif notification.notification_type == 'mention' %}fa-at{% else %}fa-bell{% endif %}" style="color: var(--accent); font-size: 0.9rem;"></i>
-          </div>
-          
-          <!-- Content -->
-          <div style="flex: 1; min-width: 0;">
-            <div style="font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-              {{ notification.title }}
-              {% if not notification.is_read %}
-                <span style="display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%;"></span>
-              {% endif %}
-            </div>
-            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; word-break: break-word;">
-              {{ notification.message|truncatechars:60 }}
-            </div>
-            <div style="font-size: 0.6rem; color: var(--text-muted); margin-top: 4px;">
-              {{ notification.created_at|timesince }} ago
-            </div>
-          </div>
-          
-          <!-- Three-dot menu -->
-          <div style="position: relative; flex-shrink: 0;" onclick="event.stopPropagation()">
-            <button class="notif-dots-btn" onclick="toggleNotifMenu(event, {{ notification.id }})" 
-                    style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem;">
-              <i class="fas fa-ellipsis-v"></i>
-            </button>
-            <div class="notif-dropdown" id="notif-menu-{{ notification.id }}" 
-                 style="display: none; position: absolute; right: 0; top: 28px; background: var(--bg-deep); border: 1px solid var(--glass-border); border-radius: 12px; min-width: 150px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); overflow: hidden;">
-              {% if not notification.is_read %}
-              <button onclick="markOneRead(event, {{ notification.id }})" 
-                      style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: none; border: none; color: var(--text-primary); font-size: 0.75rem; cursor: pointer; text-align: left;">
-                <i class="fas fa-check" style="color: var(--accent); width: 14px;"></i> Mark as read
-              </button>
-              {% endif %}
-              <button onclick="deleteNotif(event, {{ notification.id }})" 
-                      style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: none; border: none; color: var(--danger); font-size: 0.75rem; cursor: pointer; text-align: left;">
-                <i class="fas fa-trash" style="width: 14px;"></i> Delete
-              </button>
-            </div>
-          </div>
+  </div>
+ <div id="notifList">
+    {% for notification in notifications %}
+    <div class="notif-item" 
+         data-id="{{ notification.id }}" 
+         data-url="{% if notification.url %}{{ notification.url }}{% elif notification.notification_type == 'report' or notification.notification_type == 'report_update' or notification.notification_type == 'collected' %}/history/{% elif notification.notification_type == 'like' or notification.notification_type == 'reply' or notification.notification_type == 'share' or notification.notification_type == 'mention' or notification.notification_type == 'tag' %}/community/{% if notification.related_post %}#post-{{ notification.related_post.id }}{% endif %}{% elif notification.notification_type == 'comment' or notification.notification_type == 'post' %}/community/{% if notification.related_post %}#post-{{ notification.related_post.id }}{% endif %}{% elif notification.notification_type == 'level_up' or notification.notification_type == 'points' %}/profile/{% elif notification.notification_type == 'announcement' %}/announcements/{% if notification.announcement %}?ann_id={{ notification.announcement.id }}#announcement-{{ notification.announcement.id }}{% endif %}{% else %}/notifications/{% endif %}"
+         style="padding:12px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;gap:12px;cursor:pointer;border-radius:8px;margin:4px 0;transition:background 0.2s;{% if not notification.is_read %}background:rgba(0,255,135,0.05);{% endif %}"
+         onclick="handleNotifClick(event, this)">
+      <div class="notif-icon" style="width:36px;height:36px;min-width:36px;border-radius:50%;background:rgba(0,255,135,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="fas {% if notification.notification_type == 'report' or notification.notification_type == 'report_update' or notification.notification_type == 'collected' %}fa-file-alt{% elif notification.notification_type == 'level_up' %}fa-star{% elif notification.notification_type == 'comment' or notification.notification_type == 'reply' %}fa-comment{% elif notification.notification_type == 'like' %}fa-heart{% elif notification.notification_type == 'mention' %}fa-at{% elif notification.notification_type == 'tag' %}fa-user-tag{% elif notification.notification_type == 'announcement' %}fa-bullhorn{% elif notification.notification_type == 'registration' %}fa-user-plus{% else %}fa-bell{% endif %}" style="color:var(--accent);"></i>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:0.85rem;display:flex;align-items:center;gap:6px;">
+          {{ notification.title }}
+          {% if not notification.is_read %}<span class="notif-unread-dot" style="display:inline-block;width:7px;height:7px;min-width:7px;background:var(--accent);border-radius:50%;flex-shrink:0;"></span>{% endif %}
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;word-break:break-word;">{{ notification.message|truncatechars:80|safe }}</div>
+        <div style="font-size:0.65rem;color:var(--text-muted);margin-top:4px;">{{ notification.created_at|timesince }} ago</div>
+      </div>
+      <!-- Three-dot menu -->
+      <div class="notif-menu-wrap" style="position:relative;flex-shrink:0;" onclick="event.stopPropagation()">
+        <button class="notif-dots-btn" onclick="toggleNotifMenu(event, {{ notification.id }})" 
+                style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px 6px;border-radius:6px;font-size:0.85rem;line-height:1;transition:color 0.2s,background 0.2s;"
+                title="Options">
+          <i class="fas fa-ellipsis-v"></i>
+        </button>
+        <div class="notif-dropdown" id="notif-menu-{{ notification.id }}" 
+             style="display:none;position:absolute;right:0;top:28px;background:var(--bg-deep);border:1px solid var(--glass-border);border-radius:12px;min-width:170px;z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,0.4);overflow:hidden;">
+          {% if not notification.is_read %}
+          <button onclick="markOneRead(event, {{ notification.id }})" 
+                  style="width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;background:none;border:none;color:var(--text-primary);font-size:0.8rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:background 0.2s;">
+            <i class="fas fa-check" style="color:var(--accent);width:14px;"></i> Mark as read
+          </button>
+          {% endif %}
+          <button onclick="deleteNotif(event, {{ notification.id }})" 
+                  style="width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;background:none;border:none;color:var(--danger);font-size:0.8rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:background 0.2s;">
+            <i class="fas fa-trash" style="width:14px;"></i> Delete
+          </button>
         </div>
       </div>
-      {% empty %}
-      <div style="text-align: center; padding: 40px 20px;">
-        <i class="fas fa-bell-slash" style="font-size: 2rem; margin-bottom: 12px; opacity: 0.5;"></i>
-        <p style="color: var(--text-muted); font-size: 0.8rem;">No notifications yet</p>
-      </div>
-      {% endfor %}
     </div>
-    
-    <a href="/notifications/" onclick="document.getElementById('notifModal').classList.remove('open')" 
-       style="display: block; text-align: center; margin-top: 16px; padding: 10px; border-radius: 12px; background: rgba(0,255,135,0.08); color: var(--accent); text-decoration: none; font-size: 0.75rem; font-family: 'DM Mono', monospace;">
-      <i class="fas fa-arrow-right"></i> View all notifications
-    </a>
-  </div>
+    {% empty %}
+    <div style="text-align:center;padding:40px 20px;">
+      <i class="fas fa-bell-slash" style="font-size:2.5rem;margin-bottom:12px;opacity:0.5;"></i>
+      <p style="color:var(--text-muted);">No notifications yet</p>
+      <p style="font-size:0.7rem;color:var(--text-muted);">When you submit reports or receive updates, they'll appear here</p>
+    </div>
+    {% endfor %}
 </div>
+  <a href="/notifications/" onclick="document.getElementById('notifModal').classList.remove('open')" style="display:block;text-align:center;margin-top:14px;padding:10px;border-radius:12px;background:rgba(0,255,135,0.08);color:var(--accent);text-decoration:none;font-size:0.8rem;font-family:'DM Mono',monospace;border:1px solid rgba(0,255,135,0.15);">
+    <i class="fas fa-arrow-right"></i> View all notifications
+  </a>
+</div>
+  </div>
 
     <script>
     // Theme toggle
